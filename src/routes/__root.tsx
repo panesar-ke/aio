@@ -16,6 +16,8 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { TRPCRouter } from '@/integrations/trpc/router'
 import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { useAppSession } from '@/lib/session.ts'
+import { ErrorComponent } from '@/components/custom/error-components.tsx'
+import { FullPageLoader } from '@/components/custom/loaders.tsx'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -75,6 +77,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       <TanStackQueryLayout />
     </RootDocument>
   ),
+  errorComponent: ({ error }) => <ErrorComponent message={error.message} />,
+  pendingComponent: () => <FullPageLoader />,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
