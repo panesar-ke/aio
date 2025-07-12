@@ -17,6 +17,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedLogoutRouteImport } from './routes/_authed/logout'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as AuthedProcurementRouteRouteImport } from './routes/_authed/procurement/route'
+import { Route as AuthedProcurementMaterialRequisitionRouteImport } from './routes/_authed/procurement/material-requisition'
 import { ServerRoute as ApiTrpcSplatServerRouteImport } from './routes/api.trpc.$'
 
 const rootServerRouteImport = createServerRootRoute()
@@ -49,6 +52,22 @@ const authLoginRoute = authLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => authRouteRoute,
 } as any)
+const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const AuthedProcurementRouteRoute = AuthedProcurementRouteRouteImport.update({
+  id: '/procurement',
+  path: '/procurement',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedProcurementMaterialRequisitionRoute =
+  AuthedProcurementMaterialRequisitionRouteImport.update({
+    id: '/material-requisition',
+    path: '/material-requisition',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
 const ApiTrpcSplatServerRoute = ApiTrpcSplatServerRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -57,38 +76,64 @@ const ApiTrpcSplatServerRoute = ApiTrpcSplatServerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof authRouteRouteWithChildren
+  '/procurement': typeof AuthedProcurementRouteRouteWithChildren
+  '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
+  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof authRouteRouteWithChildren
+  '/procurement': typeof AuthedProcurementRouteRouteWithChildren
+  '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
+  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authed': typeof AuthedRouteWithChildren
+  '/_authed/procurement': typeof AuthedProcurementRouteRouteWithChildren
+  '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logout': typeof AuthedLogoutRoute
+  '/_authed/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard' | '/logout'
+  fullPaths:
+    | '/'
+    | '/procurement'
+    | '/forgot-password'
+    | '/login'
+    | '/dashboard'
+    | '/logout'
+    | '/procurement/material-requisition'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard' | '/logout'
+  to:
+    | '/'
+    | '/procurement'
+    | '/forgot-password'
+    | '/login'
+    | '/dashboard'
+    | '/logout'
+    | '/procurement/material-requisition'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
     | '/_authed'
+    | '/_authed/procurement'
+    | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/_authed/dashboard'
     | '/_authed/logout'
+    | '/_authed/procurement/material-requisition'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,6 +207,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(auth)/forgot-password': {
+      id: '/(auth)/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/_authed/procurement': {
+      id: '/_authed/procurement'
+      path: '/procurement'
+      fullPath: '/procurement'
+      preLoaderRoute: typeof AuthedProcurementRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/procurement/material-requisition': {
+      id: '/_authed/procurement/material-requisition'
+      path: '/material-requisition'
+      fullPath: '/procurement/material-requisition'
+      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
   }
 }
 declare module '@tanstack/react-start/server' {
@@ -177,10 +243,12 @@ declare module '@tanstack/react-start/server' {
 }
 
 interface authRouteRouteChildren {
+  authForgotPasswordRoute: typeof authForgotPasswordRoute
   authLoginRoute: typeof authLoginRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
+  authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
 }
 
@@ -188,12 +256,29 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface AuthedProcurementRouteRouteChildren {
+  AuthedProcurementMaterialRequisitionRoute: typeof AuthedProcurementMaterialRequisitionRoute
+}
+
+const AuthedProcurementRouteRouteChildren: AuthedProcurementRouteRouteChildren =
+  {
+    AuthedProcurementMaterialRequisitionRoute:
+      AuthedProcurementMaterialRequisitionRoute,
+  }
+
+const AuthedProcurementRouteRouteWithChildren =
+  AuthedProcurementRouteRoute._addFileChildren(
+    AuthedProcurementRouteRouteChildren,
+  )
+
 interface AuthedRouteChildren {
+  AuthedProcurementRouteRoute: typeof AuthedProcurementRouteRouteWithChildren
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedLogoutRoute: typeof AuthedLogoutRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedProcurementRouteRoute: AuthedProcurementRouteRouteWithChildren,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedLogoutRoute: AuthedLogoutRoute,
 }
