@@ -1,5 +1,4 @@
-import { useRouter } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { CustomAlert } from '@/components/custom/custom-alert'
 import { useError } from '@/hooks/use-error'
 import { loginFn } from '@/features/auth/server-functions'
+import { LoadingSwap } from '@/components/ui/loading-swap'
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -29,9 +29,13 @@ export function LoginForm() {
     },
     resolver: zodResolver(loginSchema),
   })
-  const { clearErrors, errors, onError } = useError()
+  const { clearErrors } = useError()
   const router = useRouter()
-  const { mutate, isPending } = useMutation({
+  const {
+    mutate,
+    isPending,
+    data: response,
+  } = useMutation({
     mutationFn: async (data: z.infer<typeof loginSchema>) => {
       return await loginFn({
         data: { userName: data.userName, password: data.password },
@@ -45,9 +49,9 @@ export function LoginForm() {
       { userName: data.userName, password: data.password },
       {
         onSuccess: async (ctx) => {
-          if (ctx.success) {
+          if (!ctx.error) {
             await router.invalidate()
-            router.navigate({ to: '/' })
+            router.navigate({ to: '/dashboard' })
             return
           }
         },
@@ -57,7 +61,9 @@ export function LoginForm() {
 
   return (
     <div className="space-y-4">
-      {errors && <CustomAlert variant="error" description={errors} />}
+      {response?.error && (
+        <CustomAlert variant="error" description={response.message} />
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -86,7 +92,7 @@ export function LoginForm() {
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
                   <Link
-                    href="/forgot-password"
+                    to="/forgot-password"
                     className="text-link text-sm transition-all hover:underline"
                   >
                     Forgot Password?
@@ -105,11 +111,13 @@ export function LoginForm() {
           />
           <Button
             type="submit"
-            className="w-full"
+            className="w-full "
             size="lg"
             disabled={isPending}
           >
-            Sign In
+            <LoadingSwap loadingText="Authenticating..." isLoading={isPending}>
+              LOGIN
+            </LoadingSwap>
           </Button>
         </form>
       </Form>
