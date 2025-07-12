@@ -21,7 +21,9 @@ export default function PageHeader({
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
       <div className="space-y-0.5">
-        <h1 className="text-2xl font-semibold font-display">{title}</h1>
+        <h1 className="text-2xl font-semibold font-display text-primary">
+          {title}
+        </h1>
         {description && (
           <p className="text-muted-foreground text-sm">{description}</p>
         )}
