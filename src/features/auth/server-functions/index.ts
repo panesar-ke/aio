@@ -13,17 +13,17 @@ export const loginFn = createServerFn({ method: 'POST' })
     })
 
     if (!user) {
-      return { success: false, message: 'User not found', status: 404 }
+      return { error: true, message: 'User not found', status: 404 }
     }
 
     if (!user.active) {
-      return { success: false, message: 'Account is deactivated', status: 403 }
+      return { error: true, message: 'Account is deactivated', status: 403 }
     }
 
     const isValid = await bcrypt.compare(data.password, user.password)
 
     if (!isValid) {
-      return { success: false, message: 'Invalid credentials', status: 401 }
+      return { error: true, message: 'Invalid credentials', status: 401 }
     }
 
     const session = await useAppSession()
@@ -35,7 +35,7 @@ export const loginFn = createServerFn({ method: 'POST' })
       name: user.name,
     })
 
-    return { success: true, message: 'Login Success', status: 200 }
+    return { message: 'Login Success', status: 200 }
   })
 
 export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
