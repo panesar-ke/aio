@@ -30,7 +30,7 @@ const queryClient = new QueryClient({
     hydrate: { deserializeData: superjson.deserialize },
     queries: {
       staleTime: 1000 * 60 * 60,
-      staleTime: 1000 * 60 * 60,
+      gcTime: 1000 * 60 * 60,
     },
   },
 })
