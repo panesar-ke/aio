@@ -27,7 +27,7 @@ export default function PageHeader({
         )}
       </div>
       {path && (
-        <Button size="lg" asChild className="w-full sm:w-auto">
+        <Button size="lg" asChild className="sm:w-max">
           <Link to={path} className="flex items-center gap-x-2">
             <Plus />
             <span>{buttonText || 'Create New'}</span>
