@@ -1,21 +1,13 @@
-// import { TRPCError } from '@trpc/server'
-import type { TRPCRouterRecord } from '@trpc/server'
-// import { z } from 'zod'
-
-import { createTRPCRouter, publicProcedure } from '@/integrations/trpc/init'
-
-const peopleRouter = {
-  list: publicProcedure.query(async () => [
-    {
-      name: 'John Doe',
-    },
-    {
-      name: 'Jane Doe',
-    },
-  ]),
-} satisfies TRPCRouterRecord
+import { createTRPCRouter, protectedProcedure } from '@/integrations/trpc/init'
+import db from '@/drizzle/db'
 
 export const trpcRouter = createTRPCRouter({
-  people: peopleRouter,
+  forms: protectedProcedure.query(async () => {
+    // TODO: By user
+    return db.query.forms.findMany({
+      columns: { id: true, formName: true, path: true, module: true },
+      orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
+    })
+  }),
 })
 export type TRPCRouter = typeof trpcRouter
