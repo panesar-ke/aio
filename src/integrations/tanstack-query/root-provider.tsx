@@ -10,7 +10,7 @@ import { env } from '@/env/server'
 function getUrl() {
   const base = (() => {
     if (typeof window !== 'undefined') return ''
-    return `http://localhost:${env.PORT ?? 3000}`
+    return `http://localhost:${env.PORT}`
   })()
   return `${base}/api/trpc`
 }
@@ -28,6 +28,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     dehydrate: { serializeData: superjson.serialize },
     hydrate: { deserializeData: superjson.deserialize },
+    queries: {
+      staleTime: 1000 * 60 * 60,
+      staleTime: 1000 * 60 * 60,
+    },
   },
 })
 
