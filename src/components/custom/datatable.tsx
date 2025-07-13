@@ -37,10 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 interface DataTableProps<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>
   data: Array<TData>
+  denseCell?: boolean
   withPaginationButtons?: boolean
 }
 
@@ -48,6 +50,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   withPaginationButtons = true,
+  denseCell = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -93,7 +96,10 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn('', { 'py-2': denseCell })}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
