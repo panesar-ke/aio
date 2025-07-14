@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import bcrypt from 'bcryptjs'
 import db from '@/drizzle/db'
 import { useAppSession } from '@/lib/session'
+import { authMiddleware } from '@/middlewares/auth-middleware'
 
 export const loginFn = createServerFn({ method: 'POST' })
   .validator((d: { userName: string; password: string }) => d)
@@ -45,3 +46,12 @@ export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
     href: '/login',
   })
 })
+
+export const getForms = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
+    return await db.query.forms.findMany({
+      columns: { id: true, formName: true, path: true, module: true },
+      orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
+    })
+  })
