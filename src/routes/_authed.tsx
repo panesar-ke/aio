@@ -1,5 +1,11 @@
 import { Suspense } from 'react'
-import { Link, Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  redirect,
+  useRouterState,
+} from '@tanstack/react-router'
 import { ErrorBoundary } from 'react-error-boundary'
 import { BellDot, Lock, LogOutIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -24,6 +30,18 @@ export const Route = createFileRoute('/_authed')({
   },
   component: RouteComponent,
 })
+
+function RouterSpinner() {
+  const isLoading = useRouterState({ select: (s) => s.status === 'pending' })
+  if (!isLoading) return null
+  return (
+    <div
+      className={`inline-block animate-spin px-3 transition opacity-1 duration-500`}
+    >
+      ⍥
+    </div>
+  )
+}
 
 function RouteComponent() {
   return (
@@ -60,6 +78,7 @@ function RouteComponent() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
+          <RouterSpinner />
           <Outlet />
         </div>
       </SidebarInset>
