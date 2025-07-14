@@ -10,13 +10,14 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-import { useTRPC } from '@/integrations/trpc/react'
+// import { useTRPC } from '@/integrations/trpc/react'
 import { Navigation } from '@/components/layout/nav-menu'
 import { Skeleton } from '@/components/ui/skeleton'
+import { authQueryOptions } from '@/features/auth/lib/query-options'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const trpc = useTRPC()
-  const { data } = useSuspenseQuery(trpc.forms.queryOptions())
+  // const trpc = useTRPC()
+  const { data } = useSuspenseQuery(authQueryOptions.userForms())
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { authQueryOptions } from '@/features/auth/lib/query-options'
 
 export const Route = createFileRoute('/_authed')({
   beforeLoad: ({ context, location }) => {
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/_authed')({
     }
   },
   loader: async ({ context }) => {
-    await context.queryClient.prefetchQuery(context.trpc.forms.queryOptions())
+    await context.queryClient.prefetchQuery(authQueryOptions.userForms())
   },
   component: RouteComponent,
 })
