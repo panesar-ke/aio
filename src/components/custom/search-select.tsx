@@ -45,7 +45,7 @@ export function SearchSelect({
             role="combobox"
             type="button"
             className={cn(
-              'w-full justify-between rounded-md shadow-none h-10 transition-colors hover:bg-transparent border-input',
+              'w-full justify-between rounded-md shadow-none h-10 transition-colors hover:bg-transparent border-input overflow-hidden whitespace-nowrap truncate',
               !value && 'text-muted-foreground',
             )}
           >
@@ -70,6 +70,7 @@ export function SearchSelect({
                     onChange?.(opt.value)
                     setOpen(false)
                   }}
+                  className="max-w-xl truncate"
                 >
                   {opt.label}
                   <CheckIcon
