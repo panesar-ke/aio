@@ -1,6 +1,9 @@
+import { getSession } from '@tanstack/react-start/server'
 import { TRPCError, initTRPC } from '@trpc/server'
 import superjson from 'superjson'
-import { useAppSession } from '@/lib/session'
+import { env } from '@/env/server'
+
+// import { useAppSession } from '@/lib/session'
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -9,15 +12,17 @@ const t = initTRPC.create({
 export const createTRPCRouter = t.router
 export const publicProcedure = t.procedure
 export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  const { data } = await useAppSession()
-  if (!data.id) {
+  const session = await getSession({
+    password: env.SESSION_SECRET,
+  })
+  if (!session.id) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
   return next({
     ctx: {
       ...ctx,
-      user: data,
+      user: session.data,
     },
   })
 })
