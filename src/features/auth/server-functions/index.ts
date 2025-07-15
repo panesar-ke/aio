@@ -55,3 +55,7 @@ export const getForms = createServerFn({ method: 'GET' })
       orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
     })
   })
+
+export const getUser = createServerFn()
+  .middleware([authMiddleware])
+  .handler(({ context }) => context.user)
