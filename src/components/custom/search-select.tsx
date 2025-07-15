@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
-import type { Option } from '@/types/index.types'
+import type { IsPending, Option } from '@/types/index.types'
 import { Button } from '@/components/ui/button'
 import { FormControl } from '@/components/ui/form'
 import {
@@ -25,6 +25,7 @@ interface SearchSelectProps {
   value?: string
   placeholder?: string
   onChange?: (value: string) => void
+  isPending?: boolean
 }
 
 export function SearchSelect({
@@ -34,6 +35,7 @@ export function SearchSelect({
   searchText,
   options,
   onChange,
+  isPending = false,
 }: SearchSelectProps) {
   const [open, setOpen] = useState(false)
   return (
@@ -44,6 +46,7 @@ export function SearchSelect({
             variant="outline"
             role="combobox"
             type="button"
+            disabled={isPending}
             className={cn(
               'w-full justify-between rounded-md shadow-none h-10 transition-colors hover:bg-transparent border-input overflow-hidden whitespace-nowrap truncate',
               !value && 'text-muted-foreground',
