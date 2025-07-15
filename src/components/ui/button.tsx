@@ -22,12 +22,12 @@ const buttonVariants = cva(
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
         tertiary:
-          'border bg-tertiary shadow-xs hover:bg-tertiary/90 hover:text-tertiary-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border-tertiary bg-tertiary shadow-xs hover:bg-tertiary/90 hover:text-tertiary-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
       },
       size: {
-        default: 'rounded-full h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 rounded-full gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-10 rounded-full px-6 has-[>svg]:px-4',
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-8 gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 px-6 has-[>svg]:px-4',
         icon: 'size-9',
       },
     },
