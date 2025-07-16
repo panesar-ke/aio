@@ -78,3 +78,16 @@ export function LoadingSpinner() {
     </div>
   )
 }
+
+export function ButtonLoader({
+  loadingText = 'Loading...',
+}: {
+  loadingText?: string
+}) {
+  return (
+    <>
+      <Loader2 className="animate-spin" />
+      <span className="ml-2 text-muted-foreground">{loadingText}</span>
+    </>
+  )
+}
