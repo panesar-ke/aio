@@ -13,8 +13,6 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
-import type { TRPCRouter } from '@/integrations/trpc/router'
-import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { useAppSession } from '@/lib/session.ts'
 import {
   ErrorComponent,
@@ -24,8 +22,6 @@ import { FullPageLoader } from '@/components/custom/loaders.tsx'
 
 interface MyRouterContext {
   queryClient: QueryClient
-
-  trpc: TRPCOptionsProxy<TRPCRouter>
 }
 
 const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
