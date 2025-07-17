@@ -4,8 +4,8 @@ import superjson from 'superjson'
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    dehydrate: { serializeData: superjson.serialize },
-    hydrate: { deserializeData: superjson.deserialize },
+    // dehydrate: { serializeData: superjson.serialize },
+    // hydrate: { deserializeData: superjson.deserialize },
     queries: {
       staleTime: 1000 * 60 * 60,
       gcTime: 1000 * 60 * 60,
