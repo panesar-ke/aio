@@ -44,8 +44,8 @@ export function ViewDetailsAction() {
 export function DeleteAction() {
   return (
     <>
-      <Trash2Icon className="size-3 text-destructive" />
-      <span className="text-destructive text-sm">Delete</span>
+      <Trash2Icon className="size-3 text-destructive -ml-1" />
+      <span className="text-destructive text-xs">Delete</span>
     </>
   )
 }
