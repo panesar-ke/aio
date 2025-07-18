@@ -10,6 +10,10 @@ import db from '@/drizzle/db'
 import { mrqDetails, mrqHeaders } from '@/drizzle/schema'
 import { getUser } from '@/features/auth/server-functions'
 
+if (typeof window !== 'undefined') {
+  throw new Error('actions.ts should not be imported on the client')
+}
+
 export async function createRequisition({
   values,
   id,
@@ -17,9 +21,6 @@ export async function createRequisition({
   values: MaterialRequisitionFormValues
   id?: string
 }) {
-  if (typeof window !== 'undefined') {
-    throw new Error('actions.ts should not be imported on the client')
-  }
   const user = await getUser()
   const documentNo = id
     ? (await getRequisition({ data: id }))?.id
@@ -124,10 +125,6 @@ export async function updateRequisitionUrl({
   fileUrl: string
   requisitionId: string
 }) {
-  if (typeof window !== 'undefined') {
-    throw new Error('actions.ts should not be imported on the client')
-  }
-
   await db
     .update(mrqHeaders)
     .set({ fileUrl })
@@ -136,5 +133,29 @@ export async function updateRequisitionUrl({
   return {
     error: false,
     message: 'Requisition URL updated successfully',
+  }
+}
+
+export const deleteRequisition = async ({
+  requisitionId,
+}: {
+  requisitionId: string
+}) => {
+  const requisition = await getRequisition({ data: requisitionId })
+  if (!requisition) {
+    return {
+      error: true,
+      message: 'Requisition not found',
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(mrqDetails).where(eq(mrqDetails.headerId, requisition.id))
+    await tx.delete(mrqHeaders).where(eq(mrqHeaders.reference, requisitionId))
+  })
+
+  return {
+    error: false,
+    message: 'Requisition deleted successfully',
   }
 }
