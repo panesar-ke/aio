@@ -87,7 +87,7 @@ export function ButtonLoader({
   return (
     <>
       <Loader2 className="animate-spin" />
-      <span className="ml-2 text-muted-foreground">{loadingText}</span>
+      <span className="text-muted-foreground">{loadingText}</span>
     </>
   )
 }
