@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createServerRootRoute } from '@tanstack/react-start/server'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
@@ -19,10 +17,10 @@ import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthedProcurementRouteRouteImport } from './routes/_authed/procurement/route'
-import { Route as AuthedProcurementMaterialRequisitionRouteImport } from './routes/_authed/procurement/material-requisition'
-import { ServerRoute as ApiTrpcSplatServerRouteImport } from './routes/api.trpc.$'
-
-const rootServerRouteImport = createServerRootRoute()
+import { Route as AuthedProcurementMaterialRequisitionIndexRouteImport } from './routes/_authed/procurement/material-requisition/index'
+import { Route as AuthedProcurementMaterialRequisitionNewRouteImport } from './routes/_authed/procurement/material-requisition/new'
+import { Route as AuthedProcurementMaterialRequisitionRequisitionIdEditRouteImport } from './routes/_authed/procurement/material-requisition/$requisitionId.edit'
+import { Route as AuthedProcurementMaterialRequisitionRequisitionIdDetailsRouteImport } from './routes/_authed/procurement/material-requisition/$requisitionId.details'
 
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
@@ -62,17 +60,30 @@ const AuthedProcurementRouteRoute = AuthedProcurementRouteRouteImport.update({
   path: '/procurement',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedProcurementMaterialRequisitionRoute =
-  AuthedProcurementMaterialRequisitionRouteImport.update({
-    id: '/material-requisition',
-    path: '/material-requisition',
+const AuthedProcurementMaterialRequisitionIndexRoute =
+  AuthedProcurementMaterialRequisitionIndexRouteImport.update({
+    id: '/material-requisition/',
+    path: '/material-requisition/',
     getParentRoute: () => AuthedProcurementRouteRoute,
   } as any)
-const ApiTrpcSplatServerRoute = ApiTrpcSplatServerRouteImport.update({
-  id: '/api/trpc/$',
-  path: '/api/trpc/$',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
+const AuthedProcurementMaterialRequisitionNewRoute =
+  AuthedProcurementMaterialRequisitionNewRouteImport.update({
+    id: '/material-requisition/new',
+    path: '/material-requisition/new',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
+const AuthedProcurementMaterialRequisitionRequisitionIdEditRoute =
+  AuthedProcurementMaterialRequisitionRequisitionIdEditRouteImport.update({
+    id: '/material-requisition/$requisitionId/edit',
+    path: '/material-requisition/$requisitionId/edit',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
+const AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute =
+  AuthedProcurementMaterialRequisitionRequisitionIdDetailsRouteImport.update({
+    id: '/material-requisition/$requisitionId/details',
+    path: '/material-requisition/$requisitionId/details',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof authRouteRouteWithChildren
@@ -81,7 +92,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof authLoginRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
-  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
+  '/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
+  '/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof authRouteRouteWithChildren
@@ -90,7 +104,10 @@ export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
-  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
+  '/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
+  '/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,7 +119,10 @@ export interface FileRoutesById {
   '/(auth)/login': typeof authLoginRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logout': typeof AuthedLogoutRoute
-  '/_authed/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionRoute
+  '/_authed/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/_authed/procurement/material-requisition/': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/_authed/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
+  '/_authed/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -113,7 +133,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard'
     | '/logout'
+    | '/procurement/material-requisition/new'
     | '/procurement/material-requisition'
+    | '/procurement/material-requisition/$requisitionId/details'
+    | '/procurement/material-requisition/$requisitionId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,7 +145,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard'
     | '/logout'
+    | '/procurement/material-requisition/new'
     | '/procurement/material-requisition'
+    | '/procurement/material-requisition/$requisitionId/details'
+    | '/procurement/material-requisition/$requisitionId/edit'
   id:
     | '__root__'
     | '/'
@@ -133,34 +159,16 @@ export interface FileRouteTypes {
     | '/(auth)/login'
     | '/_authed/dashboard'
     | '/_authed/logout'
-    | '/_authed/procurement/material-requisition'
+    | '/_authed/procurement/material-requisition/new'
+    | '/_authed/procurement/material-requisition/'
+    | '/_authed/procurement/material-requisition/$requisitionId/details'
+    | '/_authed/procurement/material-requisition/$requisitionId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   AuthedRoute: typeof AuthedRouteWithChildren
-}
-export interface FileServerRoutesByFullPath {
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
-}
-export interface FileServerRoutesByTo {
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
-}
-export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
-}
-export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/trpc/$'
-  fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/trpc/$'
-  id: '__root__' | '/api/trpc/$'
-  fileServerRoutesById: FileServerRoutesById
-}
-export interface RootServerRouteChildren {
-  ApiTrpcSplatServerRoute: typeof ApiTrpcSplatServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,23 +229,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProcurementRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/procurement/material-requisition': {
-      id: '/_authed/procurement/material-requisition'
+    '/_authed/procurement/material-requisition/': {
+      id: '/_authed/procurement/material-requisition/'
       path: '/material-requisition'
       fullPath: '/procurement/material-requisition'
-      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionRouteImport
+      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionIndexRouteImport
       parentRoute: typeof AuthedProcurementRouteRoute
     }
-  }
-}
-declare module '@tanstack/react-start/server' {
-  interface ServerFileRoutesByPath {
-    '/api/trpc/$': {
-      id: '/api/trpc/$'
-      path: '/api/trpc/$'
-      fullPath: '/api/trpc/$'
-      preLoaderRoute: typeof ApiTrpcSplatServerRouteImport
-      parentRoute: typeof rootServerRouteImport
+    '/_authed/procurement/material-requisition/new': {
+      id: '/_authed/procurement/material-requisition/new'
+      path: '/material-requisition/new'
+      fullPath: '/procurement/material-requisition/new'
+      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionNewRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
+    '/_authed/procurement/material-requisition/$requisitionId/edit': {
+      id: '/_authed/procurement/material-requisition/$requisitionId/edit'
+      path: '/material-requisition/$requisitionId/edit'
+      fullPath: '/procurement/material-requisition/$requisitionId/edit'
+      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
+    '/_authed/procurement/material-requisition/$requisitionId/details': {
+      id: '/_authed/procurement/material-requisition/$requisitionId/details'
+      path: '/material-requisition/$requisitionId/details'
+      fullPath: '/procurement/material-requisition/$requisitionId/details'
+      preLoaderRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
     }
   }
 }
@@ -257,13 +275,22 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 )
 
 interface AuthedProcurementRouteRouteChildren {
-  AuthedProcurementMaterialRequisitionRoute: typeof AuthedProcurementMaterialRequisitionRoute
+  AuthedProcurementMaterialRequisitionNewRoute: typeof AuthedProcurementMaterialRequisitionNewRoute
+  AuthedProcurementMaterialRequisitionIndexRoute: typeof AuthedProcurementMaterialRequisitionIndexRoute
+  AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
+  AuthedProcurementMaterialRequisitionRequisitionIdEditRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
 }
 
 const AuthedProcurementRouteRouteChildren: AuthedProcurementRouteRouteChildren =
   {
-    AuthedProcurementMaterialRequisitionRoute:
-      AuthedProcurementMaterialRequisitionRoute,
+    AuthedProcurementMaterialRequisitionNewRoute:
+      AuthedProcurementMaterialRequisitionNewRoute,
+    AuthedProcurementMaterialRequisitionIndexRoute:
+      AuthedProcurementMaterialRequisitionIndexRoute,
+    AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute:
+      AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute,
+    AuthedProcurementMaterialRequisitionRequisitionIdEditRoute:
+      AuthedProcurementMaterialRequisitionRequisitionIdEditRoute,
   }
 
 const AuthedProcurementRouteRouteWithChildren =
@@ -294,9 +321,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiTrpcSplatServerRoute: ApiTrpcSplatServerRoute,
-}
-export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>()
