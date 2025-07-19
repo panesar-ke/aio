@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableSkeleton } from '@/components/custom/table-skeleton'
 
@@ -67,5 +68,26 @@ export function ReportLoader() {
         columnWidths={['w-36', 'w-24', 'w-56', 'w-44', 'w-24', 'w-32']}
       />
     </div>
+  )
+}
+
+export function LoadingSpinner() {
+  return (
+    <div className="flex justify-center mt-56">
+      <Loader2 className="animate-spin text-primary" size={40} />
+    </div>
+  )
+}
+
+export function ButtonLoader({
+  loadingText = 'Loading...',
+}: {
+  loadingText?: string
+}) {
+  return (
+    <>
+      <Loader2 className="animate-spin" />
+      <span className="ml-2 text-muted-foreground">{loadingText}</span>
+    </>
   )
 }

@@ -13,6 +13,7 @@ export const env = createEnv({
     BCRYPT_ROUNDS: z.string().min(1),
     SESSION_SECRET: z.string().min(1),
     PORT: z.string().min(1),
+    SENTRY_AUTH_TOKEN: z.string().min(1),
   },
   runtimeEnv: process.env,
 })
