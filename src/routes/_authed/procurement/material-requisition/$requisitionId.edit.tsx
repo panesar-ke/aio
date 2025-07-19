@@ -19,6 +19,11 @@ export const Route = createFileRoute(
     if (!requisition) {
       throw notFound()
     }
+
+    if (requisition.linked) {
+      throw new Error('You cannot edit a linked requisition')
+    }
+
     return { requisition, projects, products, services }
   },
   component: RouteComponent,
