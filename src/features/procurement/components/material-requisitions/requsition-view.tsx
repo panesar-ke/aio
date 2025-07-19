@@ -27,13 +27,6 @@ type RequisitionData = {
   }[]
 }
 
-async function generateFile(data: RequisitionData) {
-  try {
-  } catch (error) {
-    throw new Error(apiErrorHandler(error))
-  }
-}
-
 export function RequisitionView({ requisitionId }: { requisitionId: string }) {
   const { data } = useSuspenseQuery(
     materialRequisitionsQueryOptions.requisition(requisitionId),
