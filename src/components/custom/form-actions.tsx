@@ -1,6 +1,8 @@
+import { CircleCheckBigIcon, CircleXIcon } from 'lucide-react'
 import type { IsEdit, IsPending } from '@/types/index.types'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ButtonLoader } from '@/components/custom/loaders'
 
 interface FormActionsProps extends IsPending, IsEdit {
   resetFn: () => void
@@ -22,7 +24,20 @@ export default function FormActions({
   return (
     <div className={cn('flex items-center gap-x-2 justify-end', className)}>
       <Button type="submit" disabled={isPending}>
-        {defaultButtonNames ? (isEdit ? 'Update' : 'Save') : actionButtonText}
+        {!isPending ? (
+          <ButtonLoader loadingText="Processing..." />
+        ) : (
+          <>
+            <CircleCheckBigIcon />
+            <span>
+              {defaultButtonNames
+                ? isEdit
+                  ? 'Update'
+                  : 'Save'
+                : actionButtonText}
+            </span>
+          </>
+        )}
       </Button>
       <Button
         type="reset"
@@ -30,7 +45,8 @@ export default function FormActions({
         disabled={isPending}
         onClick={resetFn}
       >
-        {defaultButtonNames ? 'Cancel' : cancelButtonText}
+        <CircleXIcon />
+        <span>{defaultButtonNames ? 'Cancel' : cancelButtonText}</span>
       </Button>
     </div>
   )
