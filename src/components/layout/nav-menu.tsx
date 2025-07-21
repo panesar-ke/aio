@@ -83,7 +83,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton className="capitalize" tooltip={item.title}>
-                  {<item.icon />}
+                  {<item.icon className="text-primary" />}
                   <span>{item.title}</span>
                   <Plus className="ml-auto icon text-muted-foreground group-data-[state=open]/collapsible:hidden" />
                   <Minus className="hidden ml-auto icon text-muted-foreground group-data-[state=open]/collapsible:block" />
