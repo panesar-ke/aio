@@ -1119,6 +1119,7 @@ export const ordersHeader = pgTable(
     ).default(false),
     vehicleId: integer('vehicle_id'),
     grnReceipt: boolean('grn_receipt').default(false),
+    fileUrl: text('file_url'),
   },
   (table) => [
     foreignKey({

@@ -1,0 +1,1 @@
+ALTER TABLE "orders_header" ADD COLUMN "file_url" text;
