@@ -1,4 +1,4 @@
-import { Link, useRouter } from '@tanstack/react-router'
+import { getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -21,7 +21,10 @@ import { useError } from '@/hooks/use-error'
 import { loginFn } from '@/features/auth/server-functions'
 import { LoadingSwap } from '@/components/ui/loading-swap'
 
+const route = getRouteApi('/(auth)/login')
 export function LoginForm() {
+  const search = route.useSearch() as { redirect?: string }
+  const redirectTo = search?.redirect || '/dashboard'
   const form = useForm<z.infer<typeof loginSchema>>({
     defaultValues: {
       userName: '',
@@ -51,7 +54,7 @@ export function LoginForm() {
         onSuccess: async (ctx) => {
           if (!ctx.error) {
             await router.invalidate()
-            router.navigate({ to: '/dashboard' })
+            router.navigate({ to: redirectTo })
             return
           }
         },
