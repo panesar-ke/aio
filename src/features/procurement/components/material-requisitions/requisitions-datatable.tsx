@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger'
 import CustomDropdownContent from '@/components/custom/custom-dropdown-content'
 import {
+  AutomateAction,
   DeleteAction,
   EditAction,
   ViewDetailsAction,
@@ -22,16 +23,19 @@ import { deleteRequisition } from '@/features/procurement/services/server-fns'
 
 export function RequisitionsDataTable() {
   const queryClient = useQueryClient()
-  async function handleDelete(requisitionId: string) {
-    const response = await deleteRequisition({ data: requisitionId })
-    if (response.error) return { error: true, message: response.message }
-    queryClient.invalidateQueries({ queryKey: ['material_requisitions'] })
-    queryClient.invalidateQueries({
-      queryKey: ['material_requisitions', requisitionId],
-    })
+  const handleDelete = useCallback(
+    async (requisitionId: string) => {
+      const response = await deleteRequisition({ data: requisitionId })
+      if (response.error) return { error: true, message: response.message }
+      queryClient.invalidateQueries({ queryKey: ['material_requisitions'] })
+      queryClient.invalidateQueries({
+        queryKey: ['material_requisitions', requisitionId],
+      })
 
-    return { error: false, message: 'Requisition deleted successfully' }
-  }
+      return { error: false, message: 'Requisition deleted successfully' }
+    },
+    [queryClient],
+  )
   const { data } = useSuspenseQuery(materialRequisitionsQueryOptions.all())
   const columns: Array<ColumnDef<MaterialRequisitionTableRow>> = useMemo(
     () => [
@@ -71,7 +75,7 @@ export function RequisitionsDataTable() {
         cell: ({ row }) => (
           <div className="space-y-1">
             <div className="text-sm font-medium capitalize">
-              {row.original.createdBy}
+              {row.original.user.name}
             </div>
             <div className="text-xs text-muted-foreground">
               {dateFormat(row.original.createdOn, 'long')}
@@ -90,14 +94,24 @@ export function RequisitionsDataTable() {
             <CustomDropdownTrigger />
             <CustomDropdownContent>
               {!linked && (
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/procurement/material-requisition/$requisitionId/edit"
-                    params={{ requisitionId: reference }}
-                  >
-                    <EditAction />
-                  </Link>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/procurement/material-requisition/$requisitionId/edit"
+                      params={{ requisitionId: reference }}
+                    >
+                      <EditAction />
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/procurement/purchase-order/new"
+                      search={{ requisitionId: reference }}
+                    >
+                      <AutomateAction text="Generate LPO" />
+                    </Link>
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuItem asChild>
                 <Link
@@ -107,20 +121,22 @@ export function RequisitionsDataTable() {
                   <ViewDetailsAction />
                 </Link>
               </DropdownMenuItem>
-              <ActionButton
-                variant="ghost"
-                className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
-                action={handleDelete.bind(null, reference)}
-                requireAreYouSure={true}
-              >
-                <DeleteAction />
-              </ActionButton>
+              {!linked && (
+                <ActionButton
+                  variant="ghost"
+                  className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
+                  action={handleDelete.bind(null, reference)}
+                  requireAreYouSure={true}
+                >
+                  <DeleteAction />
+                </ActionButton>
+              )}
             </CustomDropdownContent>
           </DropdownMenu>
         ),
       },
     ],
-    [],
+    [handleDelete],
   )
   return <DataTable data={data} columns={columns} denseCell />
 }
