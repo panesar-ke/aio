@@ -45,7 +45,7 @@ const INITIAL_DETAILS = [
     itemOrServiceId: '',
     qty: 0,
     remarks: '',
-    requestId: new Date().getTime(),
+    requestId: Date.now(),
   },
 ]
 
@@ -73,7 +73,7 @@ export function RequisitionForm({
             itemOrServiceId: itemId || serviceId || '',
             qty: Number(qty) || 0,
             remarks: remarks || '',
-            requestId: requestId || new Date().getTime(),
+            requestId: requestId || Date.now(),
           }),
         ) || INITIAL_DETAILS,
     },
