@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { notFound } from '@tanstack/react-router'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { authMiddleware } from '@/middlewares/auth-middleware'
 import db from '@/drizzle/db'
@@ -141,7 +142,7 @@ export const createRequisition = createServerFn({
 export const getRequisition = createServerFn()
   .validator((id: string) => id)
   .handler(async ({ data }) => {
-    return await db.query.mrqHeaders.findFirst({
+    const requisition = await db.query.mrqHeaders.findFirst({
       where: (model, { eq: equal }) => equal(model.reference, data),
       with: {
         mrqDetails: {
@@ -158,6 +159,12 @@ export const getRequisition = createServerFn()
         },
       },
     })
+
+    if (!requisition) {
+      throw notFound()
+    }
+
+    return requisition
   })
 
 export const updateRequisitionUrl = createServerFn({ method: 'POST' })
