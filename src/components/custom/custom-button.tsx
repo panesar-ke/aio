@@ -3,12 +3,13 @@ import {
   MoreVertical,
   PencilIcon,
   PrinterIcon,
+  SparkleIcon,
   Trash2Icon,
 } from 'lucide-react'
 
 export function MoreButton() {
   return (
-    <button>
+    <button type="button">
       <MoreVertical className="size-4 text-muted-foreground" />
     </button>
   )
@@ -37,6 +38,15 @@ export function ViewDetailsAction() {
     <>
       <FileSpreadsheetIcon className="size-3 text-muted-foreground" />
       <span className="text-xs">Details</span>
+    </>
+  )
+}
+
+export function AutomateAction({ text }: { text: string }) {
+  return (
+    <>
+      <SparkleIcon className="size-3 text-muted-foreground" />
+      <span className="text-xs">{text}</span>
     </>
   )
 }
