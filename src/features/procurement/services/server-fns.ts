@@ -1,14 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
-import { and, asc, desc, eq, getTableColumns } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
 import { authMiddleware } from '@/middlewares/auth-middleware'
 import db from '@/drizzle/db'
-import {
-  mrqHeaders,
-  products,
-  projects,
-  services,
-  users,
-} from '@/drizzle/schema'
+import { mrqHeaders, products, projects, services } from '@/drizzle/schema'
 import { transformOptions } from '@/lib/helpers/formatters'
 import { materialRequisitionFormSchema } from '@/features/procurement/utils/schemas'
 import {
@@ -22,16 +16,30 @@ export const getMaterialRequisitions = createServerFn({
 })
   .middleware([authMiddleware])
   .handler(async () => {
-    return await db
-      .select({
-        ...getTableColumns(mrqHeaders),
-        createdBy: users.name,
-      })
-      .from(mrqHeaders)
-      .where(eq(mrqHeaders.isDeleted, false))
-      .innerJoin(users, eq(mrqHeaders.createdBy, users.id))
-      .orderBy(desc(mrqHeaders.createdOn))
-      .limit(100)
+    const requisitions = await db.query.mrqHeaders.findMany({
+      where: (model, { eq: equal }) => equal(model.isDeleted, false),
+      with: {
+        user: { columns: { id: true, name: true } },
+        mrqDetails: { columns: { linked: true } },
+      },
+      orderBy: (model, { desc }) => desc(model.createdOn),
+      limit: 100,
+    })
+
+    return requisitions.map((req) => ({
+      ...req,
+      linked: req.mrqDetails.some((detail) => detail.linked),
+    }))
+    // return await db
+    //   .select({
+    //     ...getTableColumns(mrqHeaders),
+    //     createdBy: users.name,
+    //   })
+    //   .from(mrqHeaders)
+    //   .where(eq(mrqHeaders.isDeleted, false))
+    //   .innerJoin(users, eq(mrqHeaders.createdBy, users.id))
+    //   .orderBy(desc(mrqHeaders.createdOn))
+    //   .limit(100)
   })
 
 export const getSelectableProducts = createServerFn({
