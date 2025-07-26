@@ -40,3 +40,8 @@ export function apiErrorHandler(err: unknown) {
   }
   return error
 }
+
+export function isValidEmail(email: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
