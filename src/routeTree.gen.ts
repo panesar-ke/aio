@@ -17,8 +17,12 @@ import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthedProcurementRouteRouteImport } from './routes/_authed/procurement/route'
+import { Route as AuthedProcurementPurchaseOrderIndexRouteImport } from './routes/_authed/procurement/purchase-order/index'
 import { Route as AuthedProcurementMaterialRequisitionIndexRouteImport } from './routes/_authed/procurement/material-requisition/index'
+import { Route as AuthedProcurementPurchaseOrderNewRouteImport } from './routes/_authed/procurement/purchase-order/new'
 import { Route as AuthedProcurementMaterialRequisitionNewRouteImport } from './routes/_authed/procurement/material-requisition/new'
+import { Route as AuthedProcurementPurchaseOrderOrderIdEditRouteImport } from './routes/_authed/procurement/purchase-order/$orderId.edit'
+import { Route as AuthedProcurementPurchaseOrderOrderIdDetailsRouteImport } from './routes/_authed/procurement/purchase-order/$orderId.details'
 import { Route as AuthedProcurementMaterialRequisitionRequisitionIdEditRouteImport } from './routes/_authed/procurement/material-requisition/$requisitionId.edit'
 import { Route as AuthedProcurementMaterialRequisitionRequisitionIdDetailsRouteImport } from './routes/_authed/procurement/material-requisition/$requisitionId.details'
 
@@ -60,16 +64,40 @@ const AuthedProcurementRouteRoute = AuthedProcurementRouteRouteImport.update({
   path: '/procurement',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedProcurementPurchaseOrderIndexRoute =
+  AuthedProcurementPurchaseOrderIndexRouteImport.update({
+    id: '/purchase-order/',
+    path: '/purchase-order/',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
 const AuthedProcurementMaterialRequisitionIndexRoute =
   AuthedProcurementMaterialRequisitionIndexRouteImport.update({
     id: '/material-requisition/',
     path: '/material-requisition/',
     getParentRoute: () => AuthedProcurementRouteRoute,
   } as any)
+const AuthedProcurementPurchaseOrderNewRoute =
+  AuthedProcurementPurchaseOrderNewRouteImport.update({
+    id: '/purchase-order/new',
+    path: '/purchase-order/new',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
 const AuthedProcurementMaterialRequisitionNewRoute =
   AuthedProcurementMaterialRequisitionNewRouteImport.update({
     id: '/material-requisition/new',
     path: '/material-requisition/new',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
+const AuthedProcurementPurchaseOrderOrderIdEditRoute =
+  AuthedProcurementPurchaseOrderOrderIdEditRouteImport.update({
+    id: '/purchase-order/$orderId/edit',
+    path: '/purchase-order/$orderId/edit',
+    getParentRoute: () => AuthedProcurementRouteRoute,
+  } as any)
+const AuthedProcurementPurchaseOrderOrderIdDetailsRoute =
+  AuthedProcurementPurchaseOrderOrderIdDetailsRouteImport.update({
+    id: '/purchase-order/$orderId/details',
+    path: '/purchase-order/$orderId/details',
     getParentRoute: () => AuthedProcurementRouteRoute,
   } as any)
 const AuthedProcurementMaterialRequisitionRequisitionIdEditRoute =
@@ -93,9 +121,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
   '/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/procurement/purchase-order/new': typeof AuthedProcurementPurchaseOrderNewRoute
   '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/procurement/purchase-order': typeof AuthedProcurementPurchaseOrderIndexRoute
   '/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
   '/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
+  '/procurement/purchase-order/$orderId/details': typeof AuthedProcurementPurchaseOrderOrderIdDetailsRoute
+  '/procurement/purchase-order/$orderId/edit': typeof AuthedProcurementPurchaseOrderOrderIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof authRouteRouteWithChildren
@@ -105,9 +137,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/logout': typeof AuthedLogoutRoute
   '/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/procurement/purchase-order/new': typeof AuthedProcurementPurchaseOrderNewRoute
   '/procurement/material-requisition': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/procurement/purchase-order': typeof AuthedProcurementPurchaseOrderIndexRoute
   '/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
   '/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
+  '/procurement/purchase-order/$orderId/details': typeof AuthedProcurementPurchaseOrderOrderIdDetailsRoute
+  '/procurement/purchase-order/$orderId/edit': typeof AuthedProcurementPurchaseOrderOrderIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,9 +156,13 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logout': typeof AuthedLogoutRoute
   '/_authed/procurement/material-requisition/new': typeof AuthedProcurementMaterialRequisitionNewRoute
+  '/_authed/procurement/purchase-order/new': typeof AuthedProcurementPurchaseOrderNewRoute
   '/_authed/procurement/material-requisition/': typeof AuthedProcurementMaterialRequisitionIndexRoute
+  '/_authed/procurement/purchase-order/': typeof AuthedProcurementPurchaseOrderIndexRoute
   '/_authed/procurement/material-requisition/$requisitionId/details': typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
   '/_authed/procurement/material-requisition/$requisitionId/edit': typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
+  '/_authed/procurement/purchase-order/$orderId/details': typeof AuthedProcurementPurchaseOrderOrderIdDetailsRoute
+  '/_authed/procurement/purchase-order/$orderId/edit': typeof AuthedProcurementPurchaseOrderOrderIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,9 +174,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/logout'
     | '/procurement/material-requisition/new'
+    | '/procurement/purchase-order/new'
     | '/procurement/material-requisition'
+    | '/procurement/purchase-order'
     | '/procurement/material-requisition/$requisitionId/details'
     | '/procurement/material-requisition/$requisitionId/edit'
+    | '/procurement/purchase-order/$orderId/details'
+    | '/procurement/purchase-order/$orderId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -146,9 +190,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/logout'
     | '/procurement/material-requisition/new'
+    | '/procurement/purchase-order/new'
     | '/procurement/material-requisition'
+    | '/procurement/purchase-order'
     | '/procurement/material-requisition/$requisitionId/details'
     | '/procurement/material-requisition/$requisitionId/edit'
+    | '/procurement/purchase-order/$orderId/details'
+    | '/procurement/purchase-order/$orderId/edit'
   id:
     | '__root__'
     | '/'
@@ -160,9 +208,13 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/logout'
     | '/_authed/procurement/material-requisition/new'
+    | '/_authed/procurement/purchase-order/new'
     | '/_authed/procurement/material-requisition/'
+    | '/_authed/procurement/purchase-order/'
     | '/_authed/procurement/material-requisition/$requisitionId/details'
     | '/_authed/procurement/material-requisition/$requisitionId/edit'
+    | '/_authed/procurement/purchase-order/$orderId/details'
+    | '/_authed/procurement/purchase-order/$orderId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -229,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProcurementRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/procurement/purchase-order/': {
+      id: '/_authed/procurement/purchase-order/'
+      path: '/purchase-order'
+      fullPath: '/procurement/purchase-order'
+      preLoaderRoute: typeof AuthedProcurementPurchaseOrderIndexRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
     '/_authed/procurement/material-requisition/': {
       id: '/_authed/procurement/material-requisition/'
       path: '/material-requisition'
@@ -236,11 +295,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProcurementMaterialRequisitionIndexRouteImport
       parentRoute: typeof AuthedProcurementRouteRoute
     }
+    '/_authed/procurement/purchase-order/new': {
+      id: '/_authed/procurement/purchase-order/new'
+      path: '/purchase-order/new'
+      fullPath: '/procurement/purchase-order/new'
+      preLoaderRoute: typeof AuthedProcurementPurchaseOrderNewRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
     '/_authed/procurement/material-requisition/new': {
       id: '/_authed/procurement/material-requisition/new'
       path: '/material-requisition/new'
       fullPath: '/procurement/material-requisition/new'
       preLoaderRoute: typeof AuthedProcurementMaterialRequisitionNewRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
+    '/_authed/procurement/purchase-order/$orderId/edit': {
+      id: '/_authed/procurement/purchase-order/$orderId/edit'
+      path: '/purchase-order/$orderId/edit'
+      fullPath: '/procurement/purchase-order/$orderId/edit'
+      preLoaderRoute: typeof AuthedProcurementPurchaseOrderOrderIdEditRouteImport
+      parentRoute: typeof AuthedProcurementRouteRoute
+    }
+    '/_authed/procurement/purchase-order/$orderId/details': {
+      id: '/_authed/procurement/purchase-order/$orderId/details'
+      path: '/purchase-order/$orderId/details'
+      fullPath: '/procurement/purchase-order/$orderId/details'
+      preLoaderRoute: typeof AuthedProcurementPurchaseOrderOrderIdDetailsRouteImport
       parentRoute: typeof AuthedProcurementRouteRoute
     }
     '/_authed/procurement/material-requisition/$requisitionId/edit': {
@@ -276,21 +356,33 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 interface AuthedProcurementRouteRouteChildren {
   AuthedProcurementMaterialRequisitionNewRoute: typeof AuthedProcurementMaterialRequisitionNewRoute
+  AuthedProcurementPurchaseOrderNewRoute: typeof AuthedProcurementPurchaseOrderNewRoute
   AuthedProcurementMaterialRequisitionIndexRoute: typeof AuthedProcurementMaterialRequisitionIndexRoute
+  AuthedProcurementPurchaseOrderIndexRoute: typeof AuthedProcurementPurchaseOrderIndexRoute
   AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute
   AuthedProcurementMaterialRequisitionRequisitionIdEditRoute: typeof AuthedProcurementMaterialRequisitionRequisitionIdEditRoute
+  AuthedProcurementPurchaseOrderOrderIdDetailsRoute: typeof AuthedProcurementPurchaseOrderOrderIdDetailsRoute
+  AuthedProcurementPurchaseOrderOrderIdEditRoute: typeof AuthedProcurementPurchaseOrderOrderIdEditRoute
 }
 
 const AuthedProcurementRouteRouteChildren: AuthedProcurementRouteRouteChildren =
   {
     AuthedProcurementMaterialRequisitionNewRoute:
       AuthedProcurementMaterialRequisitionNewRoute,
+    AuthedProcurementPurchaseOrderNewRoute:
+      AuthedProcurementPurchaseOrderNewRoute,
     AuthedProcurementMaterialRequisitionIndexRoute:
       AuthedProcurementMaterialRequisitionIndexRoute,
+    AuthedProcurementPurchaseOrderIndexRoute:
+      AuthedProcurementPurchaseOrderIndexRoute,
     AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute:
       AuthedProcurementMaterialRequisitionRequisitionIdDetailsRoute,
     AuthedProcurementMaterialRequisitionRequisitionIdEditRoute:
       AuthedProcurementMaterialRequisitionRequisitionIdEditRoute,
+    AuthedProcurementPurchaseOrderOrderIdDetailsRoute:
+      AuthedProcurementPurchaseOrderOrderIdDetailsRoute,
+    AuthedProcurementPurchaseOrderOrderIdEditRoute:
+      AuthedProcurementPurchaseOrderOrderIdEditRoute,
   }
 
 const AuthedProcurementRouteRouteWithChildren =

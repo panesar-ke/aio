@@ -3,6 +3,7 @@ import z from 'zod'
 import { optionalStringSchemaEntry } from '@/lib/schema-rules'
 import {
   globalOptions,
+  materialRequisitionsQueryOptions,
   purchaseOrdersQueryOptions,
 } from '@/features/procurement/utils/query-options'
 import { getPurchaseOrderNo } from '@/features/procurement/services/orders/server-fns'
@@ -16,7 +17,10 @@ const orderSearchSchema = z.object({
 export const Route = createFileRoute('/_authed/procurement/purchase-order/new')(
   {
     validateSearch: orderSearchSchema,
-    loader: async ({ context }) => {
+    loaderDeps: ({ search: { requisitionId } }) => ({
+      requisitionId,
+    }),
+    loader: async ({ context, deps: { requisitionId } }) => {
       const [
         purchaseOrderNo,
         selectableProjects,
@@ -24,6 +28,7 @@ export const Route = createFileRoute('/_authed/procurement/purchase-order/new')(
         selectableServices,
         pendingOrders,
         activeVendors,
+        requisitionData,
       ] = await Promise.all([
         getPurchaseOrderNo(),
         context.queryClient.ensureQueryData(globalOptions.selectableProjects()),
@@ -35,6 +40,11 @@ export const Route = createFileRoute('/_authed/procurement/purchase-order/new')(
         context.queryClient.ensureQueryData(
           purchaseOrdersQueryOptions.activeVendors(),
         ),
+        requisitionId
+          ? context.queryClient.ensureQueryData(
+              materialRequisitionsQueryOptions.requisition(requisitionId),
+            )
+          : Promise.resolve(null),
       ])
       return {
         purchaseOrderNo,
@@ -43,6 +53,12 @@ export const Route = createFileRoute('/_authed/procurement/purchase-order/new')(
         selectableServices,
         pendingOrders,
         activeVendors,
+        requisitionData: requisitionData
+          ? {
+              documentDate: new Date(requisitionData.documentDate),
+              details: requisitionData.mrqDetails,
+            }
+          : null,
       }
     },
     component: RouteComponent,
@@ -62,6 +78,7 @@ function RouteComponent() {
         orderNo={routerData.purchaseOrderNo}
         pendingOrders={routerData.pendingOrders}
         vendors={routerData.activeVendors}
+        requisitionData={routerData.requisitionData}
       />
     </div>
   )
