@@ -1,56 +1,44 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
-
+import { cache } from 'react';
+import db from '@/drizzle/db';
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
+  SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  useSidebar,
-} from '@/components/ui/sidebar'
+} from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
+import Logo from '@/components/layout/logo';
+import { generateRandomString } from '@/lib/utils';
+import { Navigation } from '@/components/layout/navigation';
 
-// import { useTRPC } from '@/integrations/trpc/react'
-import { Navigation } from '@/components/layout/nav-menu'
-import { Skeleton } from '@/components/ui/skeleton'
-import { authQueryOptions } from '@/features/auth/lib/query-options'
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // const trpc = useTRPC()
-  const { data } = useSuspenseQuery(authQueryOptions.userForms())
+export async function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const forms = await fetchForms();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
       <SidebarContent>
-        <Navigation forms={data} />
+        <Navigation forms={forms} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
 
-function Logo() {
-  const { open } = useSidebar()
-
-  if (!open) {
-    return (
-      <img
-        src="/logos/favicon-black.svg"
-        alt="Panesar Logo"
-        className="size-6"
-      />
-    )
-  }
-  return (
-    <img
-      src="/logos/logo-light.svg"
-      alt="Panesar Logo"
-      className="w-1/3 h-auto py-4 mx-auto"
-    />
-  )
-}
+const fetchForms = cache(async () => {
+  //TODO: Fetch forms based on user role
+  return await db.query.forms.findMany({
+    columns: { id: true, formName: true, path: true, module: true },
+    where: (forms, { eq }) => eq(forms.active, true),
+    orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
+  });
+});
 
 export function SidebarSkeleton() {
   return (
@@ -59,17 +47,24 @@ export function SidebarSkeleton() {
         <Logo />
       </SidebarHeader>
       <SidebarContent>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <SidebarMenuItem key={index}>
-            <SidebarMenuButton>
-              <Skeleton className="size-4" />
-              <Skeleton className="w-56 h-4" />
-              <Skeleton className="size-4" />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+        <SidebarMenu>
+          {Array.from({ length: 5 }).map(() => (
+            <SidebarMenuItem key={generateRandomString(5)}>
+              <SidebarMenuButton>
+                <Skeleton className="size-4" />
+                <Skeleton className="w-56 h-4" />
+                <Skeleton className="size-4" />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
+
+//logout action
+// async function handleLogout() {
+//   await logoutAction();
+// }

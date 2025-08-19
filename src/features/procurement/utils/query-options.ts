@@ -1,11 +1,11 @@
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query';
 import {
   getMaterialRequisitions,
   getRequisition,
   getSelectableProducts,
   getSelectableProjects,
   getSelectableServices,
-} from '@/features/procurement/services/server-fns'
+} from '@/features/procurement/services/material-requisitions/data';
 
 export const globalOptions = {
   selectableProjects: () =>
@@ -23,7 +23,7 @@ export const globalOptions = {
       queryKey: ['services', 'selectable'],
       queryFn: getSelectableServices,
     }),
-}
+};
 
 export const materialRequisitionsQueryOptions = {
   all: () =>
@@ -34,6 +34,26 @@ export const materialRequisitionsQueryOptions = {
   requisition: (id: string) =>
     queryOptions({
       queryKey: ['material_requisitions', id],
-      queryFn: () => getRequisition({ data: id }),
+      queryFn: () => getRequisition(id),
     }),
-}
+};
+
+// export const purchaseOrdersQueryOptions = {
+//   all: (q?: string) =>
+//     queryOptions({
+//       queryKey: ['purchase_orders', q],
+//       queryFn: () => getPurchaseOrders({ data: q }),
+//     }),
+//   order: (id: string) =>
+//     queryOptions({
+//       queryKey: ['purchase_orders', id],
+//       queryFn: () => getPurchaseOrder({ data: id }),
+//     }),
+//   pendingOrders: () =>
+//     queryOptions({ queryKey: ['pending_orders'], queryFn: getPendingRequests }),
+//   activeVendors: () =>
+//     queryOptions({
+//       queryKey: ['vendors', 'active'],
+//       queryFn: getActiveVendors,
+//     }),
+// }

@@ -1,14 +1,15 @@
-import { Link } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
-import type { TRoutes } from '@/types/index.types'
-import { Button } from '@/components/ui/button'
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
-  title: string
-  buttonText?: string
-  path?: TRoutes
-  description?: string
-  content?: React.ReactNode
+  title: string;
+  buttonText?: string;
+  path?: string;
+  description?: string;
+  content?: React.ReactNode;
+  Icon?: LucideIcon;
 }
 
 export default function PageHeader({
@@ -17,6 +18,7 @@ export default function PageHeader({
   description,
   buttonText,
   content,
+  Icon = Plus, // Default icon if none is provided
 }: PageHeaderProps) {
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -30,13 +32,13 @@ export default function PageHeader({
       </div>
       {path && (
         <Button size="lg" asChild className="sm:w-max">
-          <Link to={path} className="flex items-center gap-x-2">
-            <Plus />
+          <Link href={path} className="flex items-center gap-x-2">
+            {<Icon />}
             <span>{buttonText || 'Create New'}</span>
           </Link>
         </Button>
       )}
       {content && content}
     </header>
-  )
+  );
 }

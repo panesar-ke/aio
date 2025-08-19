@@ -1,21 +1,22 @@
-import { Link } from '@tanstack/react-router'
+import Link from 'next/link';
 import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
   CircleGauge,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface ErrorProps {
-  title?: string
-  message?: string
+  title?: string;
+  message?: string;
   action?: {
-    label?: string
-    onClick: () => void
-  }
-  className?: string
+    label?: string;
+    onClick: () => void;
+  };
+  className?: string;
 }
 
 export function ErrorComponent({
@@ -28,7 +29,7 @@ export function ErrorComponent({
     <div
       className={cn(
         'flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4',
-        className,
+        className
       )}
     >
       <AlertCircle
@@ -44,7 +45,7 @@ export function ErrorComponent({
       </p>
       <div className="flex items-center gap-4">
         <Button asChild variant="default">
-          <Link to="..">Go Back</Link>
+          <Link href="..">Go Back</Link>
         </Button>
         {action && (
           <Button onClick={action.onClick} variant="destructive">
@@ -53,7 +54,7 @@ export function ErrorComponent({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export function NotFound() {
@@ -78,13 +79,13 @@ export function NotFound() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-fade-in animation-delay-600">
           <Button asChild size="lg">
-            <Link to="/dashboard">
+            <Link href="/dashboard">
               <CircleGauge className="w-5 h-5" />
               Go Home
             </Link>
           </Button>
           <Button asChild variant={'outline'} size="lg">
-            <Link to="..">
+            <Link href="..">
               <ArrowLeft className="w-5 h-5" />
               Go Back
             </Link>
@@ -92,13 +93,18 @@ export function NotFound() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function ResourceNotFound() {
   return (
     <div className="flex flex-col gap-y-6 items-center justify-center px-4 sm:px-6 lg:px-8 h-[calc(100dvh-10rem)]">
-      <img src="/empty.svg" alt="empty state vector" />
+      <Image
+        src="/empty.svg"
+        alt="empty state vector"
+        width={100}
+        height={100}
+      />
       <div className="text-center">
         <h4 className="text-2xl font-semibold text-accent-foreground">
           Resource not found!!
@@ -108,24 +114,24 @@ export function ResourceNotFound() {
         </p>
       </div>
       <Button asChild variant="default" size={'lg'}>
-        <Link to="..">
+        <Link href="..">
           <ArrowLeft className="w-5 h-5" />
           Go Back
         </Link>
       </Button>
     </div>
-  )
+  );
 }
 
 interface ErrorFallbackProps {
-  error: Error
-  resetErrorBoundary: (...args: Array<unknown>) => void
-  className?: string
+  error: Error;
+  resetErrorBoundary: (...args: Array<unknown>) => void;
+  className?: string;
 }
 
 interface ErrorNotificationProps {
-  className?: string
-  message?: string
+  className?: string;
+  message?: string;
 }
 
 export function ErrorNotification({
@@ -136,7 +142,7 @@ export function ErrorNotification({
     <div
       className={cn(
         'flex flex-col items-center justify-center h-[calc(100dvh-10rem)] bg-background text-foreground p-4',
-        className,
+        className
       )}
     >
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -154,7 +160,7 @@ export function ErrorNotification({
         </pre>
       )}
     </div>
-  )
+  );
 }
 
 export const ErrorFallback = ({
@@ -169,5 +175,5 @@ export const ErrorFallback = ({
         Try again
       </Button>
     </div>
-  )
-}
+  );
+};

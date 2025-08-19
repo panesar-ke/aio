@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
-import type { IsPending, Option } from '@/types/index.types'
-import { Button } from '@/components/ui/button'
-import { FormControl } from '@/components/ui/form'
+/** biome-ignore-all lint/a11y/useSemanticElements: <> */
+'use client';
+
+import { useState } from 'react';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
+import type { Option } from '@/types/index.types';
+import { Button } from '@/components/ui/button';
+import { FormControl } from '@/components/ui/form';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
+} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -15,17 +18,17 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 interface SearchSelectProps {
-  emptyText: string
-  searchText: string
-  options: Array<Option>
-  value?: string
-  placeholder?: string
-  onChange?: (value: string) => void
-  isPending?: boolean
+  emptyText: string;
+  searchText: string;
+  options: Array<Option>;
+  value?: string;
+  placeholder?: string;
+  onChange?: (value: string) => void;
+  isPending?: boolean;
 }
 
 export function SearchSelect({
@@ -37,7 +40,7 @@ export function SearchSelect({
   onChange,
   isPending = false,
 }: SearchSelectProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -49,11 +52,11 @@ export function SearchSelect({
             disabled={isPending}
             className={cn(
               'w-full justify-between rounded-md shadow-none h-10 transition-colors hover:bg-transparent border-input overflow-hidden whitespace-nowrap truncate',
-              !value && 'text-muted-foreground',
+              !value && 'text-muted-foreground'
             )}
           >
             {value
-              ? options.find((opt) => opt.value === value)?.label
+              ? options.find(opt => opt.value === value)?.label
               : placeholder}
             <ChevronsUpDownIcon className="opacity-50" />
           </Button>
@@ -65,13 +68,13 @@ export function SearchSelect({
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((opt) => (
+              {options.map(opt => (
                 <CommandItem
                   value={opt.label}
                   key={opt.value}
                   onSelect={() => {
-                    onChange?.(opt.value)
-                    setOpen(false)
+                    onChange?.(opt.value);
+                    setOpen(false);
                   }}
                   className="max-w-xl truncate"
                 >
@@ -79,7 +82,7 @@ export function SearchSelect({
                   <CheckIcon
                     className={cn(
                       'ml-auto',
-                      opt.value === value ? 'opacity-100' : 'opacity-0',
+                      opt.value === value ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                 </CommandItem>
@@ -89,5 +92,5 @@ export function SearchSelect({
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

@@ -1,7 +1,10 @@
-import { type ComponentProps, type ReactNode, useTransition } from 'react'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { LoadingSwap } from '@/components/ui/loading-swap'
+'use client';
+
+import { useTransition } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
+import { LoadingSwap } from '@/components/ui/loading-swap';
 import {
   AlertDialog,
   AlertDialogDescription,
@@ -12,7 +15,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/components/ui/alert-dialog';
+import { ToastContent } from '@/components/custom/toast';
 
 export function ActionButton({
   action,
@@ -20,18 +24,23 @@ export function ActionButton({
   areYouSureDescription = 'This action cannot be undone.',
   ...props
 }: ComponentProps<typeof Button> & {
-  action: () => Promise<{ error: boolean; message?: string }>
-  requireAreYouSure?: boolean
-  areYouSureDescription?: ReactNode
+  action: () => Promise<{ error: boolean; message?: string }>;
+  requireAreYouSure?: boolean;
+  areYouSureDescription?: ReactNode;
 }) {
-  const [isLoading, startTransition] = useTransition()
+  const [isLoading, startTransition] = useTransition();
 
   function performAction() {
     startTransition(async () => {
-      const data = await action()
-      if (data.error) toast.error(data.message ?? 'Error')
-      toast.success(data.message ?? 'Action successful')
-    })
+      const data = await action();
+      if (data.error)
+        toast.error(() => (
+          <ToastContent
+            title="Something went wrong"
+            message={data.message ?? 'Error'}
+          />
+        ));
+    });
   }
 
   if (requireAreYouSure) {
@@ -55,16 +64,16 @@ export function ActionButton({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    )
+    );
   }
 
   return (
     <Button
       {...props}
       disabled={props.disabled ?? isLoading}
-      onClick={(e) => {
-        performAction()
-        props.onClick?.(e)
+      onClick={e => {
+        performAction();
+        props.onClick?.(e);
       }}
     >
       <LoadingSwap
@@ -74,5 +83,5 @@ export function ActionButton({
         {props.children}
       </LoadingSwap>
     </Button>
-  )
+  );
 }

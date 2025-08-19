@@ -1,10 +1,11 @@
-import { Link, useRouter } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import type z from 'zod'
+'use client';
+// biome-ignore assist/source/organizeImports: <Too annoying to fix>
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import type z from 'zod';
 
-import { loginSchema } from '@/features/auth/lib/schemas'
+import { loginSchema } from '@/features/auth/actions/schema';
 import {
   Form,
   FormControl,
@@ -12,14 +13,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/custom/password-input'
-import { Button } from '@/components/ui/button'
-import { CustomAlert } from '@/components/custom/custom-alert'
-import { useError } from '@/hooks/use-error'
-import { loginFn } from '@/features/auth/server-functions'
-import { LoadingSwap } from '@/components/ui/loading-swap'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/custom/password-input';
+import { Button } from '@/components/ui/button';
+import { CustomAlert } from '@/components/custom/custom-alert';
+import { useError } from '@/hooks/use-error';
+import { loginAction } from '@/features/auth/actions/auth';
+import { setFormErrors } from '@/lib/helpers/errors';
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -28,42 +29,31 @@ export function LoginForm() {
       password: '',
     },
     resolver: zodResolver(loginSchema),
-  })
-  const { clearErrors } = useError()
-  const router = useRouter()
-  const {
-    mutate,
-    isPending,
-    data: response,
-  } = useMutation({
-    mutationFn: async (data: z.infer<typeof loginSchema>) => {
-      return await loginFn({
-        data: { userName: data.userName, password: data.password },
-      })
-    },
-  })
+  });
+  const { clearErrors, errors, onError } = useError();
+  const isPending = form.formState.isSubmitting;
 
-  function onSubmit(data: z.infer<typeof loginSchema>) {
-    clearErrors()
-    mutate(
-      { userName: data.userName, password: data.password },
-      {
-        onSuccess: async (ctx) => {
-          if (!ctx.error) {
-            await router.invalidate()
-            router.navigate({ to: '/dashboard' })
-            return
-          }
-        },
-      },
-    )
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    clearErrors();
+    const results = await loginAction(data);
+
+    if (results.errors) {
+      setFormErrors(form, results.errors);
+      return;
+    }
+
+    if (!results.success) {
+      onError(results.message);
+      return;
+    }
+
+    // Handle successful login
+    console.log('Login successful:', results);
   }
 
   return (
     <div className="space-y-4">
-      {response?.error && (
-        <CustomAlert variant="error" description={response.message} />
-      )}
+      {errors && <CustomAlert variant="error" description={errors} />}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -92,7 +82,7 @@ export function LoginForm() {
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
                   <Link
-                    to="/forgot-password"
+                    href="/forgot-password"
                     className="text-link text-sm transition-all hover:underline"
                   >
                     Forgot Password?
@@ -111,16 +101,14 @@ export function LoginForm() {
           />
           <Button
             type="submit"
-            className="w-full "
+            className="w-full"
             size="lg"
             disabled={isPending}
           >
-            <LoadingSwap loadingText="Authenticating..." isLoading={isPending}>
-              LOGIN
-            </LoadingSwap>
+            Sign In
           </Button>
         </form>
       </Form>
     </div>
-  )
+  );
 }

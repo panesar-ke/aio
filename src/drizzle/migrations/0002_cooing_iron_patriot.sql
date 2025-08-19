@@ -1,1 +1,0 @@
-ALTER TABLE "mrq_headers" ADD COLUMN "file_url" text;

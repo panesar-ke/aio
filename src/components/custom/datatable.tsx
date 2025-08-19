@@ -1,24 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-'use no memo'
-import React from 'react'
+'use no memo';
+import React from 'react';
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from 'lucide-react'
+} from 'lucide-react';
 import type {
   ColumnDef,
   Table as ReactTable,
   SortingState,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 
 import {
   Table,
@@ -27,23 +27,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData, TValue> {
-  columns: Array<ColumnDef<TData, TValue>>
-  data: Array<TData>
-  denseCell?: boolean
-  withPaginationButtons?: boolean
+  columns: Array<ColumnDef<TData, TValue>>;
+  data: Array<TData>;
+  denseCell?: boolean;
+  withPaginationButtons?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -52,7 +52,7 @@ export function DataTable<TData, TValue>({
   withPaginationButtons = true,
   denseCell = false,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
@@ -64,45 +64,45 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
     },
-  })
+  });
 
   return (
     <>
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-x-auto bg-card">
         <Table>
-          <TableHeader className="bg-secondary">
-            {table.getHeaderGroups().map((headerGroup) => (
+          <TableHeader className="">
+            {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map(header => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="h-12 px-4">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext(),
+                            header.getContext()
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map(row => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map(cell => (
                     <TableCell
                       key={cell.id}
-                      className={cn('', { 'py-2': denseCell })}
+                      className={cn('p-4', { 'px-4 py-2': denseCell })}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -123,11 +123,11 @@ export function DataTable<TData, TValue>({
       </div>
       {withPaginationButtons && <DataTablePagination table={table} />}
     </>
-  )
+  );
 }
 
 interface DataTablePaginationProps<TData> {
-  table: ReactTable<TData>
+  table: ReactTable<TData>;
 }
 
 export function DataTablePagination<TData>({
@@ -140,15 +140,15 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value))
+            onValueChange={value => {
+              table.setPageSize(Number(value));
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
+              {[10, 20, 25, 30, 40, 50].map(pageSize => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -204,5 +204,5 @@ export function DataTablePagination<TData>({
         </div>
       </div>
     </div>
-  )
+  );
 }

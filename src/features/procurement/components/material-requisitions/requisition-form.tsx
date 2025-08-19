@@ -1,14 +1,19 @@
-import { useNavigate } from '@tanstack/react-router'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2Icon } from 'lucide-react'
-import type { UseFormReturn } from 'react-hook-form'
+'use client';
+
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CircleCheckBigIcon,
+  CircleXIcon,
+  SparkleIcon,
+  Trash2Icon,
+} from 'lucide-react';
+import type { UseFormReturn } from 'react-hook-form';
 import type {
   MaterialRequisitionFormValues,
   Requisition,
-} from '@/features/procurement/utils/procurement.types'
-import type { Option } from '@/types/index.types'
+} from '@/features/procurement/utils/procurement.types';
+import type { Option } from '@/types/index.types';
 import {
   Form,
   FormControl,
@@ -16,25 +21,27 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { materialRequisitionFormSchema } from '@/features/procurement/utils/schemas'
-import { Input } from '@/components/ui/input'
-import { dateFormat } from '@/lib/helpers/formatters'
-import { Button } from '@/components/ui/button'
-import { MiniSelect } from '@/components/custom/mini-select'
-import { SearchSelect } from '@/components/custom/search-select'
-import FormActions from '@/components/custom/form-actions'
-import { generateRandomId } from '@/lib/utils'
-import { createRequisition } from '@/features/procurement/services/server-fns'
-import { useError } from '@/hooks/use-error'
-import { CustomAlert } from '@/components/custom/custom-alert'
+} from '@/components/ui/form';
+import { materialRequisitionFormSchema } from '@/features/procurement/utils/schemas';
+import { Input } from '@/components/ui/input';
+import { dateFormat } from '@/lib/helpers/formatters';
+import { Button } from '@/components/ui/button';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { SearchSelect } from '@/components/custom/search-select';
+import { generateRandomId } from '@/lib/utils';
+// import { createRequisition } from '@/features/procurement/services/server-fns'
+import { createRequisition } from '@/features/procurement/services/material-requisitions/action';
+import { useError } from '@/hooks/use-error';
+import { CustomAlert } from '@/components/custom/custom-alert';
+import { ButtonLoader } from '@/components/custom/loaders';
+import { useRef, useState } from 'react';
 
 interface RequisitionFormProps {
-  requisitionNo: number
-  projects: Array<Option>
-  products: Array<Option>
-  services: Array<Option>
-  requisition?: Requisition
+  requisitionNo: number;
+  projects: Array<Option>;
+  products: Array<Option>;
+  services: Array<Option>;
+  requisition?: Requisition;
 }
 
 const INITIAL_DETAILS = [
@@ -45,9 +52,9 @@ const INITIAL_DETAILS = [
     itemOrServiceId: '',
     qty: 0,
     remarks: '',
-    requestId: new Date().getTime(),
+    requestId: Date.now(),
   },
-]
+];
 
 export function RequisitionForm({
   products,
@@ -56,7 +63,10 @@ export function RequisitionForm({
   services,
   requisition,
 }: RequisitionFormProps) {
-  const navigate = useNavigate()
+  const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_GENERATE'>(
+    'SUBMIT'
+  );
+  const formRef = useRef<HTMLFormElement>(null);
   const form = useForm<MaterialRequisitionFormValues>({
     resolver: zodResolver(materialRequisitionFormSchema),
     defaultValues: {
@@ -73,53 +83,35 @@ export function RequisitionForm({
             itemOrServiceId: itemId || serviceId || '',
             qty: Number(qty) || 0,
             remarks: remarks || '',
-            requestId: requestId || new Date().getTime(),
-          }),
+            requestId: requestId || Date.now(),
+          })
         ) || INITIAL_DETAILS,
     },
-  })
-  const { clearErrors, errors, onError } = useError()
-  const queryClient = useQueryClient()
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (data: {
-      values: MaterialRequisitionFormValues
-      id?: string
-    }) =>
-      await createRequisition({ data: { values: data.values, id: data.id } }),
-  })
-
-  function onSubmit(data: MaterialRequisitionFormValues) {
-    clearErrors()
-    mutate(
-      { values: data, id: requisition?.reference },
-      {
-        onSuccess: (ctx) => {
-          if (ctx.error) {
-            onError(ctx.message)
-            return
-          } else {
-            form.reset()
-            queryClient.invalidateQueries({
-              queryKey: ['material_requisitions'],
-            })
-            navigate({
-              to: '/procurement/material-requisition/$requisitionId/details',
-              params: { requisitionId: ctx.data as string },
-            })
-          }
-        },
-        onError: (err) => {
-          onError(err.message)
-        },
-      },
-    )
+  });
+  const { clearErrors, errors, onError } = useError();
+  const isPending = form.formState.isSubmitting;
+  async function onSubmit(data: MaterialRequisitionFormValues) {
+    clearErrors();
+    const res = await createRequisition({
+      values: data,
+      submitType,
+      id: requisition?.reference,
+    });
+    if (res.error) {
+      onError(res.message);
+      return;
+    }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm">
       {errors && <CustomAlert description={errors} variant="error" />}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+          ref={formRef}
+        >
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -160,16 +152,62 @@ export function RequisitionForm({
             services={services}
             isPending={isPending}
           />
-          .
-          <FormActions
-            isPending={isPending}
-            resetFn={() => form.reset()}
-            className="w-full"
-          />
+          <div className="flex items-center gap-2 justify-end">
+            <Button
+              type="button"
+              size="lg"
+              disabled={isPending}
+              className="min-w-32"
+              onClick={() => {
+                setSubmitType('SUBMIT');
+                formRef.current?.requestSubmit();
+              }}
+            >
+              {isPending && submitType === 'SUBMIT' ? (
+                <ButtonLoader loadingText="Processing..." />
+              ) : (
+                <>
+                  <CircleCheckBigIcon />
+                  <span>Save</span>
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="tertiary"
+              onClick={() => {
+                setSubmitType('SUBMIT_GENERATE');
+                formRef.current?.requestSubmit();
+              }}
+              size="lg"
+              disabled={isPending}
+              className="min-w-32"
+            >
+              {isPending && submitType === 'SUBMIT_GENERATE' ? (
+                <ButtonLoader loadingText="Processing..." />
+              ) : (
+                <>
+                  <SparkleIcon />
+                  <span>Save & Generate PO</span>
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              type="reset"
+              disabled={isPending}
+              onClick={() => form.reset()}
+              className="min-w-32"
+            >
+              <CircleXIcon />
+              <span>Cancel</span>
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
-  )
+  );
 }
 
 function RequisitionDetails({
@@ -179,18 +217,18 @@ function RequisitionDetails({
   services,
   isPending,
 }: {
-  products: Array<Option>
-  projects: Array<Option>
-  services: Array<Option>
-  form: UseFormReturn<MaterialRequisitionFormValues>
-  isPending: boolean
+  products: Array<Option>;
+  projects: Array<Option>;
+  services: Array<Option>;
+  form: UseFormReturn<MaterialRequisitionFormValues>;
+  isPending: boolean;
 }) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'details',
-  })
+  });
 
-  const [details] = useWatch({ control: form.control, name: ['details'] })
+  const [details] = useWatch({ control: form.control, name: ['details'] });
 
   return (
     <div className="space-y-2">
@@ -262,7 +300,7 @@ function RequisitionDetails({
                           </FormControl>
                           {/* <FormMessage /> */}
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 </td>
@@ -290,7 +328,7 @@ function RequisitionDetails({
 
                           {/* <FormMessage /> */}
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 </td>
@@ -314,7 +352,7 @@ function RequisitionDetails({
                           </FormControl>
                           {/* <FormMessage /> */}
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 </td>
@@ -338,7 +376,7 @@ function RequisitionDetails({
                           </FormControl>
                           {/* <FormMessage /> */}
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 </td>
@@ -360,7 +398,7 @@ function RequisitionDetails({
                           </FormControl>
                           {/* <FormMessage /> */}
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 </td>
@@ -406,5 +444,5 @@ function RequisitionDetails({
         </Button>
       </div>
     </div>
-  )
+  );
 }

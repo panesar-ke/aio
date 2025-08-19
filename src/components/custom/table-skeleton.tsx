@@ -5,12 +5,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { generateRandomString } from '@/lib/utils';
 
 interface TableSkeletonProps {
-  rowCount: number
-  columnWidths: Array<string>
+  rowCount: number;
+  columnWidths: Array<string>;
 }
 
 export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
@@ -19,7 +20,7 @@ export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
       <TableHeader>
         <TableRow>
           {columnWidths.map((_, index) => (
-            <TableHead key={`th-${index}`}>
+            <TableHead key={`th-${generateRandomString(5)}`}>
               <Skeleton
                 className={`h-4 ${columnWidths[index]}`}
                 aria-hidden="true"
@@ -29,10 +30,10 @@ export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {Array.from({ length: rowCount }).map((_, rowIndex) => (
-          <TableRow key={`row-${rowIndex}`}>
+        {Array.from({ length: rowCount }).map(() => (
+          <TableRow key={`row-${generateRandomString(5)}`}>
             {columnWidths.map((width, colIndex) => (
-              <TableCell key={`row-${rowIndex}-col-${colIndex}`}>
+              <TableCell key={`row-${generateRandomString(5)}-col-${colIndex}`}>
                 <Skeleton className={`h-4 ${width}`} aria-hidden="true" />
               </TableCell>
             ))}
@@ -40,7 +41,7 @@ export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
         ))}
       </TableBody>
     </Table>
-  )
+  );
 }
 
 export function TableSkeletonWithButton({
@@ -52,5 +53,5 @@ export function TableSkeletonWithButton({
       <Skeleton className="h-10 w-36" />
       <TableSkeleton rowCount={rowCount} columnWidths={columnWidths} />
     </div>
-  )
+  );
 }

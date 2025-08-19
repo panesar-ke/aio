@@ -1,5 +1,5 @@
-import { createEnv } from '@t3-oss/env-core'
-import { z } from 'zod'
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {
@@ -12,8 +12,7 @@ export const env = createEnv({
     UPLOADTHING_APP_ID: z.string().min(1),
     BCRYPT_ROUNDS: z.string().min(1),
     SESSION_SECRET: z.string().min(1),
-    PORT: z.string().min(1),
-    SENTRY_AUTH_TOKEN: z.string().min(1),
+    // VERCEL_URL: z.string().min(1),
   },
   runtimeEnv: process.env,
-})
+});
