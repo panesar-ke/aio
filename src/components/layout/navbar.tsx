@@ -11,10 +11,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { logoutAction } from '@/features/auth/actions/auth';
+import { NavBarOptions } from '@/components/layout/nav-bar-options';
 
 export function AppNavbar() {
   return (
     <header className="flex h-16 bg-background sticky z-10 top-0 shrink-0 items-center gap-2 border-b p-4">
+      <NavBarOptions />
       <div className="ml-auto flex items-center gap-2 px-4">
         <HeaderNavItem
           toolTipContent="Change Password"
