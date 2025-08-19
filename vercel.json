@@ -2,7 +2,8 @@
   "version": 2,
   "git": {
     "deploymentEnabled": {
-      "v2": true
+      "v2": true,
+      "dev": false
     }
   }
 }
