@@ -59,7 +59,7 @@ export const createVendor = async (vendorData: unknown) => {
       message: 'Failed to create vendor. Please try again.',
     };
   }
-  redirect('/procurement/vendors');
+  // redirect('/procurement/vendors');
 };
 
 export const updateVendor = async (id: string, vendorData: unknown) => {
