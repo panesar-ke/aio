@@ -184,3 +184,8 @@ export const topVendorsSchema = z
       });
     }
   });
+
+export const projectFormSchema = z.object({
+  projectName: requiredStringSchemaEntry('Project name is required.'),
+  active: z.boolean().optional(),
+});
