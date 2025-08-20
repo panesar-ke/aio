@@ -1,7 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   Vendor,
   VendorFormValues,
@@ -23,12 +25,18 @@ import {
   updateVendor,
 } from '@/features/procurement/services/vendors/actions';
 import { ToastContent } from '@/components/custom/toast';
+import { cn } from '@/lib/utils';
+import { useModal } from '@/features/integrations/modal-provider';
 
 interface VendorFormProps {
   vendor?: Vendor;
+  fromModal?: boolean;
 }
 
-export function VendorForm({ vendor }: VendorFormProps) {
+export function VendorForm({ vendor, fromModal }: VendorFormProps) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { setClose } = useModal();
   const form = useForm<VendorFormValues>({
     defaultValues: {
       vendorName: vendor?.vendorName.toUpperCase() || '',
@@ -56,10 +64,17 @@ export function VendorForm({ vendor }: VendorFormProps) {
         />
       ));
     }
+    queryClient.invalidateQueries({ queryKey: ['vendors'] });
+    if (!fromModal && !vendor) {
+      router.push('/procurement/vendors');
+    }
+    fromModal && setClose();
   }
 
   return (
-    <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm">
+    <div
+      className={cn({ 'space-y-6 bg-card rounded-lg shadow-sm': !fromModal })}
+    >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -171,7 +186,10 @@ export function VendorForm({ vendor }: VendorFormProps) {
           />
           <FormActions
             className="col-span-full"
-            resetFn={form.reset}
+            resetFn={() => {
+              form.reset();
+              fromModal && setClose();
+            }}
             isPending={isPending}
           />
         </form>

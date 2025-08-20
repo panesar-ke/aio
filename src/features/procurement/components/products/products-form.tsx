@@ -29,6 +29,8 @@ import {
   updateProduct,
 } from '@/features/procurement/services/products/actions';
 import { ToastContent } from '@/components/custom/toast';
+import { useModal } from '@/features/integrations/modal-provider';
+import { cn } from '@/lib/utils';
 
 interface ProductsFormProps {
   categories: Array<Option>;
@@ -57,6 +59,7 @@ export function ProductsForm({
   });
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { setClose } = useModal();
 
   const isPending = form.formState.isSubmitting;
 
@@ -75,10 +78,11 @@ export function ProductsForm({
     if (!fromModal && !product) {
       router.push('/procurement/products');
     }
+    fromModal && setClose();
   }
 
   return (
-    <div className="bg-card p-6 rounded-lg shadow-sm">
+    <div className={cn({ 'bg-card p-6 rounded-lg shadow-sm': !fromModal })}>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -169,10 +173,12 @@ export function ProductsForm({
                   />
                 </FormControl>
                 <FormLabel>Is Stock Item</FormLabel>
-                <FormDescription>
-                  Check this box if the product is a stock item and should be
-                  displayed in stock reports.
-                </FormDescription>
+                {!fromModal && (
+                  <FormDescription>
+                    Check this box if the product is a stock item and should be
+                    displayed in stock reports.
+                  </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -189,10 +195,12 @@ export function ProductsForm({
                   />
                 </FormControl>
                 <FormLabel>Is Sub Item</FormLabel>
-                <FormDescription>
-                  Check this box if the product is a sub item of another
-                  product.
-                </FormDescription>
+                {!fromModal && (
+                  <FormDescription>
+                    Check this box if the product is a sub item of another
+                    product.
+                  </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -222,7 +230,10 @@ export function ProductsForm({
           )}
           <FormActions
             className="col-span-full"
-            resetFn={form.reset}
+            resetFn={() => {
+              form.reset();
+              fromModal && setClose();
+            }}
             isPending={isPending}
           />
         </form>
