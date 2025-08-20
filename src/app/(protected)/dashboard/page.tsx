@@ -1,3 +1,6 @@
+import { fetchForms } from '@/components/layout/app-sidebar';
+
 export default async function Home() {
-  return <div>Something here</div>;
+  const forms = await fetchForms();
+  return <pre>{JSON.stringify(forms, null, 2)}</pre>;
 }
