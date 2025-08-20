@@ -27,6 +27,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import type { Form } from '@/types/index.types';
+import { generateRandomString } from '@/lib/utils';
 
 interface FormattedArray {
   title: string;
@@ -35,6 +36,7 @@ interface FormattedArray {
   items: Array<{
     title: string;
     url: string;
+    id: string;
   }>;
 }
 
@@ -53,13 +55,14 @@ type IconKeys = keyof typeof icons;
 
 export function Navigation({ forms }: { forms: Array<Form> }) {
   const groupedModules = forms.reduce<
-    Record<string, Array<{ title: string; url: string }>>
+    Record<string, Array<{ id: number; title: string; url: string }>>
   >((acc, curr) => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!acc[curr.module]) {
-      acc[curr.module] = [];
-    }
-    acc[curr.module].push({ title: curr.formName, url: curr.path });
+    if (!acc[curr.module]) acc[curr.module] = [];
+    acc[curr.module].push({
+      id: curr.id,
+      title: curr.formName,
+      url: curr.path,
+    });
     return acc;
   }, {});
 
@@ -73,7 +76,10 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
     title: module,
     url: '#',
     icon: isIconKey(module) ? icons[module] : ShieldCheck,
-    items,
+    items: items.map(item => ({
+      ...item,
+      id: `${item.id}${generateRandomString(5)}`,
+    })),
   }));
   return (
     <SidebarGroup>
@@ -92,7 +98,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items.map(subItem => (
-                    <SidebarMenuSubItem key={subItem.title}>
+                    <SidebarMenuSubItem key={subItem.id}>
                       <SidebarMenuSubButton
                         asChild
                         className="text-xs font-medium text-muted-foreground"
