@@ -14,6 +14,16 @@ import Logo from '@/components/layout/logo';
 import { generateRandomString } from '@/lib/utils';
 import { Navigation } from '@/components/layout/navigation';
 
+export const fetchForms = cache(async () => {
+  //TODO: Fetch forms based on user role
+  const forms = await db.query.forms.findMany({
+    columns: { id: true, formName: true, path: true, module: true },
+    where: (forms, { eq }) => eq(forms.active, true),
+    orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
+  });
+  return forms;
+});
+
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
@@ -30,17 +40,6 @@ export async function AppSidebar({
     </Sidebar>
   );
 }
-
-const fetchForms = cache(async () => {
-  //TODO: Fetch forms based on user role
-  const forms = await db.query.forms.findMany({
-    columns: { id: true, formName: true, path: true, module: true },
-    where: (forms, { eq }) => eq(forms.active, true),
-    orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
-  });
-  console.log(forms.filter(f => f.module === 'procurement'));
-  return forms;
-});
 
 export function SidebarSkeleton() {
   return (
