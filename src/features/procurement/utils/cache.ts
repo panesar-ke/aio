@@ -51,6 +51,9 @@ export function getVendorsGlobalTag() {
 export function getVendorIdTag(id: string) {
   return getIdTag('vendors', id);
 }
+export function getProjectIdTag(id: string) {
+  return getIdTag('projects', id);
+}
 
 export function getVendorStatsGlobalTag() {
   return getGlobalTag('vendors_stats');
@@ -109,3 +112,10 @@ export const revalidateServices = (id: string) => {
 export const revalidateAutoOrder = () => {
   revalidateTag(getAutoOrdersGlobalTag());
 };
+
+export function revalidateProjects(id?: string) {
+  if (id) {
+    revalidateTag(getProjectIdTag(id));
+  }
+  revalidateTag(getProjectsGlobalTag());
+}

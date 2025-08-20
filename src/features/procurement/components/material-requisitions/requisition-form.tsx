@@ -35,6 +35,7 @@ import { useError } from '@/hooks/use-error';
 import { CustomAlert } from '@/components/custom/custom-alert';
 import { ButtonLoader } from '@/components/custom/loaders';
 import { useRef, useState } from 'react';
+import { useProcurementServices } from '../../hooks/use-procurement-services';
 
 interface RequisitionFormProps {
   requisitionNo: number;
@@ -223,6 +224,11 @@ function RequisitionDetails({
   form: UseFormReturn<MaterialRequisitionFormValues>;
   isPending: boolean;
 }) {
+  const {
+    products: queryProducts,
+    services: queryServices,
+    projects: queryProjects,
+  } = useProcurementServices();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'details',
@@ -320,8 +326,8 @@ function RequisitionDetails({
                             options={
                               // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                               details[index]?.type === 'item'
-                                ? products
-                                : services
+                                ? queryProducts || products
+                                : queryServices || services
                             }
                             searchText="Search product"
                           />
@@ -369,7 +375,7 @@ function RequisitionDetails({
                               value={field.value}
                               emptyText="Project not found"
                               placeholder="Select project"
-                              options={projects}
+                              options={queryProjects || projects}
                               searchText="Search project"
                               isPending={isPending}
                             />

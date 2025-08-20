@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
+import { ModalProvider } from '@/features/integrations/modal-provider';
 // import { Toaster } from '@/components/ui/sonner';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <ModalProvider>{children}</ModalProvider>
       <ReactQueryDevtools initialIsOpen={false} />
       {/* <Toaster /> */}
       <Toaster

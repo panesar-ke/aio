@@ -26,6 +26,8 @@ import {
 } from '@/features/procurement/services/services/actions';
 import { ToastContent } from '@/components/custom/toast';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+import { useModal } from '@/features/integrations/modal-provider';
 
 export function ServiceForm({
   service,
@@ -35,6 +37,7 @@ export function ServiceForm({
   fromModal?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const { setClose } = useModal();
   const router = useRouter();
   const form = useForm<ServiceFormValues>({
     defaultValues: {
@@ -62,10 +65,17 @@ export function ServiceForm({
     if (!fromModal && !service) {
       router.push('/procurement/services');
     }
+    if (fromModal) {
+      setClose();
+    }
   }
 
   return (
-    <div className="bg-card max-w-2xl mx-auto p-6 shadow-sm rounded-lg">
+    <div
+      className={cn('', {
+        'bg-card max-w-2xl mx-auto p-6 shadow-sm rounded-lg': !fromModal,
+      })}
+    >
       <Form {...form}>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
           <FormField
@@ -132,7 +142,10 @@ export function ServiceForm({
           )}
           <FormActions
             className="col-span-full"
-            resetFn={form.reset}
+            resetFn={() => {
+              form.reset();
+              fromModal && setClose();
+            }}
             isPending={isPending}
           />
         </form>

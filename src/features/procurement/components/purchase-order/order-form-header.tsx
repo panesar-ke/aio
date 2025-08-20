@@ -1,23 +1,25 @@
-import { MiniSelect } from '@/components/custom/mini-select'
-import { SearchSelect } from '@/components/custom/search-select'
+import { useWatch } from 'react-hook-form';
+import type { OrderForm } from '@/features/procurement/utils/procurement.types';
+import type { Option } from '@/types/index.types';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { SearchSelect } from '@/components/custom/search-select';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import type { OrderForm } from '@/features/procurement/utils/procurement.types'
-import type { Option } from '@/types/index.types'
-import { useWatch } from 'react-hook-form'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useProcurementServices } from '@/features/procurement/hooks/use-procurement-services';
 
 interface OrderFormHeaderProps extends OrderForm {
-  vendors: Array<Option>
+  vendors: Array<Option>;
 }
 
 export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
-  const [vatType] = useWatch({ control: form.control, name: ['vatType'] })
+  const [vatType] = useWatch({ control: form.control, name: ['vatType'] });
+  const { vendors: queryVendors } = useProcurementServices();
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
@@ -49,7 +51,7 @@ export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
                       ? field.value.toISOString().split('T')[0]
                       : field.value
                   }
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={e => field.onChange(new Date(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
@@ -69,7 +71,7 @@ export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
                   value={field.value}
                   emptyText="No vendors found"
                   placeholder="Select vendor"
-                  options={vendors}
+                  options={queryVendors || vendors}
                   searchText="Search vendors"
                 />
               </FormControl>
@@ -106,7 +108,7 @@ export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
                       ? field.value.toISOString().split('T')[0]
                       : field.value
                   }
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={e => field.onChange(new Date(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
@@ -156,5 +158,5 @@ export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
         />
       </div>
     </>
-  )
+  );
 }
