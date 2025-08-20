@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { CircleCheckBigIcon, KeyRoundIcon } from 'lucide-react';
 import type z from 'zod';
 
 import { loginSchema } from '@/features/auth/actions/schema';
@@ -21,6 +22,7 @@ import { CustomAlert } from '@/components/custom/custom-alert';
 import { useError } from '@/hooks/use-error';
 import { loginAction } from '@/features/auth/actions/auth';
 import { setFormErrors } from '@/lib/helpers/errors';
+import { ButtonLoader } from '@/components/custom/loaders';
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -46,9 +48,6 @@ export function LoginForm() {
       onError(results.message);
       return;
     }
-
-    // Handle successful login
-    console.log('Login successful:', results);
   }
 
   return (
@@ -105,7 +104,14 @@ export function LoginForm() {
             size="lg"
             disabled={isPending}
           >
-            Sign In
+            {isPending ? (
+              <ButtonLoader loadingText="Processing..." />
+            ) : (
+              <>
+                <KeyRoundIcon />
+                <span>Sign In</span>
+              </>
+            )}
           </Button>
         </form>
       </Form>
