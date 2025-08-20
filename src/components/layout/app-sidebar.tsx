@@ -31,14 +31,16 @@ export async function AppSidebar({
   );
 }
 
-const fetchForms = async () => {
+const fetchForms = cache(async () => {
   //TODO: Fetch forms based on user role
-  return await db.query.forms.findMany({
+  const forms = await db.query.forms.findMany({
     columns: { id: true, formName: true, path: true, module: true },
-    // where: (forms, { eq }) => eq(forms.active, true),
+    where: (forms, { eq }) => eq(forms.active, true),
     orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
   });
-};
+  console.log(forms.filter(f => f.module === 'procurement'));
+  return forms;
+});
 
 export function SidebarSkeleton() {
   return (
