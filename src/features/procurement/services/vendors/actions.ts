@@ -1,16 +1,23 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { count, eq, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import db from '@/drizzle/db';
-import { ordersHeader, vendors } from '@/drizzle/schema';
-import { vendorSchema } from '@/features/procurement/utils/schemas';
+import { ordersHeader, projects, vendors } from '@/drizzle/schema';
+import {
+  projectFormSchema,
+  vendorSchema,
+} from '@/features/procurement/utils/schemas';
 import type {
   SchemaValidationFailure,
   SchemaValidationSuccess,
 } from '@/types/index.types';
-import { revalidateVendors } from '@/features/procurement/utils/cache';
+import {
+  revalidateProjects,
+  revalidateVendors,
+} from '@/features/procurement/utils/cache';
+import { validateFields } from '@/lib/action-validator';
 
 type VendorData = z.infer<typeof vendorSchema>;
 
@@ -139,6 +146,49 @@ export const deleteVendor = async (id: string) => {
     return {
       error: true,
       message: 'Failed to delete vendor. Please try again.',
+    };
+  }
+};
+
+export const createProject = async (projectData: unknown) => {
+  const validation = validateFields(projectData, projectFormSchema);
+
+  if (validation.error !== null) {
+    return {
+      error: true,
+      message: validation.error,
+    };
+  }
+
+  const { data } = validation;
+
+  const found = await db
+    .select({
+      count: count(projects.id),
+    })
+    .from(projects)
+    .where(eq(sql`LOWER(project_name)`, data.projectName.toLowerCase()))
+    .limit(1);
+
+  if (found[0]?.count > 0) {
+    return {
+      error: true,
+      message: 'Project with this name already exists.',
+    };
+  }
+
+  try {
+    const [{ id }] = await db
+      .insert(projects)
+      .values({ ...data })
+      .returning({ id: projects.id });
+
+    revalidateProjects(id);
+  } catch (error) {
+    console.error('Error creating project:', error);
+    return {
+      error: true,
+      message: 'Failed to create project. Please try again.',
     };
   }
 };
