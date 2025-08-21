@@ -66,13 +66,7 @@ export const orderSchema = z
     ),
   })
   .superRefine(({ documentDate, invoiceDate, vat, vatType }, ctx) => {
-    if (documentDate && invoiceDate && documentDate > invoiceDate) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['invoiceDate'],
-        message: 'Invoice date cannot be earlier than document date',
-      });
-    }
+
     if (vatType !== 'NONE' && !vat) {
       ctx.addIssue({
         code: 'custom',
