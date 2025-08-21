@@ -12,6 +12,7 @@ export interface User {
   email: string;
   image: string | null;
   hasAdminPriviledges: boolean;
+  userType: 'STANDARD USER' | 'ADMIN' | 'SUPER ADMIN';
 }
 
 export interface SessionPayload extends JWTPayload {
