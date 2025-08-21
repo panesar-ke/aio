@@ -36,6 +36,7 @@ import { CustomAlert } from '@/components/custom/custom-alert';
 import { ButtonLoader } from '@/components/custom/loaders';
 import { useRef, useState } from 'react';
 import { useProcurementServices } from '../../hooks/use-procurement-services';
+import { createId } from '@paralleldrive/cuid2';
 
 interface RequisitionFormProps {
   requisitionNo: number;
@@ -47,13 +48,13 @@ interface RequisitionFormProps {
 
 const INITIAL_DETAILS = [
   {
-    id: new Date().getTime().toString(),
+    id: createId(),
     projectId: '',
     type: 'item' as MaterialRequisitionFormValues['details'][0]['type'],
     itemOrServiceId: '',
     qty: 0,
     remarks: '',
-    requestId: Date.now(),
+    requestId: new Date().getTime(),
   },
 ];
 
