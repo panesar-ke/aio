@@ -102,8 +102,7 @@ export function OrderDetails({
       </div>
       {details.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          No order details added yet. Use "Add Line" or "Pending Requests" to
-          add items.
+          No order details added yet. Use "Pending Requests" to add items.
         </div>
       )}
     </div>

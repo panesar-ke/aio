@@ -47,7 +47,7 @@ interface RequisitionFormProps {
 
 const INITIAL_DETAILS = [
   {
-    id: generateRandomId('mrq'),
+    id: new Date().getTime().toString(),
     projectId: '',
     type: 'item' as MaterialRequisitionFormValues['details'][0]['type'],
     itemOrServiceId: '',
