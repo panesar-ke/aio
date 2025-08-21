@@ -126,6 +126,7 @@ export const getCurrentUser = cache(async () => {
       hasAdminPriviledges: true,
       name: true,
       email: true,
+      userType: true,
     },
     where: (model, { eq }) => eq(model.id, session.userId),
   });
