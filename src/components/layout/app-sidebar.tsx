@@ -12,11 +12,13 @@ import Logo from '@/components/layout/logo';
 import { generateRandomString } from '@/lib/utils';
 import { Navigation } from '@/components/layout/navigation';
 import { getUserForms } from '@/features/admin/services/data';
+import { getCurrentUser } from '@/lib/session';
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const forms = await getUserForms();
+  const user = await getCurrentUser();
+  const forms = await getUserForms(user.id, user.userType);
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
