@@ -1,5 +1,6 @@
 'use server';
 import { redirect } from 'next/navigation';
+import { revalidateTag } from 'next/cache';
 import { createId } from '@paralleldrive/cuid2';
 import { eq, inArray } from 'drizzle-orm';
 import { isAxiosError } from 'axios';
@@ -24,6 +25,8 @@ import {
   calculateVatValues,
 } from '@/features/procurement/utils/calculators';
 import {
+  getMaterialRequisitionGlobalTag,
+  getPendingRequestsGlobalTag,
   getVendorStatsGlobalTag,
   revalidateMaterialRequisitions,
   revalidatePurchaseOrders,
@@ -31,7 +34,6 @@ import {
 import axios from '@/lib/axios';
 import { apiErrorHandler } from '@/lib/utils';
 import { inngest } from '@/inngest/client';
-import { revalidateTag } from 'next/cache';
 
 export const createOrder = async ({
   values,
@@ -310,4 +312,35 @@ export const sendOrderEmail = async (orderId: string) => {
     name: 'procurement/supplier.po.email',
     data: { orderId, userId: user.id },
   });
+};
+
+export const deletePendingRequests = async (requestIds: Array<string>) => {
+  if (requestIds.length === 0) {
+    return {
+      error: false,
+      message: 'No pending requests to delete',
+    };
+  }
+
+  try {
+    const formattedRequisitionIds = requestIds.map(r => Number(r));
+
+    await db
+      .delete(mrqDetails)
+      .where(inArray(mrqDetails.requestId, formattedRequisitionIds));
+
+    revalidateTag(getMaterialRequisitionGlobalTag());
+    revalidateTag(getPendingRequestsGlobalTag());
+
+    return {
+      error: false,
+      message: 'Pending requests successfully',
+    };
+  } catch (error) {
+    console.error('Error deleting pending requests:', error);
+    return {
+      error: true,
+      message: 'Failed to delete pending requests',
+    };
+  }
 };

@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback, useRef, useTransition } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -40,7 +40,11 @@ import { ButtonLoader } from '@/components/custom/loaders';
 import { OrderFormHeader } from '@/features/procurement/components/purchase-order/order-form-header';
 import { OrderDetails } from '@/features/procurement/components/purchase-order/order-details';
 import { OrderSummary } from '@/features/procurement/components/purchase-order/order-summary';
-import { createOrder } from '@/features/procurement/services/purchase-orders/actions';
+import {
+  createOrder,
+  deletePendingRequests,
+} from '@/features/procurement/services/purchase-orders/actions';
+import { ToastContent } from '@/components/custom/toast';
 
 type RequisitionData = {
   documentDate: Date;
@@ -274,6 +278,7 @@ function PendingRequests({
 }: PendingRequestsProps) {
   const [selectedRows, setSelectedRows] = useState<Array<PendingOrder>>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const columns: ColumnDef<PendingOrder>[] = useMemo(
     () => [
@@ -346,11 +351,29 @@ function PendingRequests({
     }
   }, [selectedRows, onAddSelected]);
 
-  //   useEffect(() => {
-  //     setSelectedRows([])
-  //   }, [pendingOrders])
-
   const handleDeleteSelected = useCallback(() => {
+    startTransition(async () => {
+      try {
+        const result = await deletePendingRequests(
+          selectedRows.map(row => row.requestId)
+        );
+
+        if (result.error) {
+          toast.error(() => (
+            <ToastContent title="Error" message={result.message} />
+          ));
+          return;
+        }
+      } catch (error) {
+        console.error('Error updating user rights:', error);
+        toast.error(() => (
+          <ToastContent
+            title="Error"
+            message="There was a problem while performing this action."
+          />
+        ));
+      }
+    });
     console.log('Delete selected:', selectedRows);
   }, [selectedRows]);
 
@@ -384,7 +407,7 @@ function PendingRequests({
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  disabled={selectedRows.length === 0}
+                  disabled={selectedRows.length === 0 || isPending}
                   onClick={handleAddSelected}
                   size="sm"
                 >
@@ -393,7 +416,7 @@ function PendingRequests({
                 <Button
                   type="button"
                   variant="destructive"
-                  disabled={selectedRows.length === 0}
+                  disabled={selectedRows.length === 0 || isPending}
                   onClick={handleDeleteSelected}
                   size="sm"
                 >
