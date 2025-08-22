@@ -1,11 +1,13 @@
-import { useWatch } from 'react-hook-form';
+import { useFieldArray, useWatch } from 'react-hook-form';
+import { Trash2Icon } from 'lucide-react';
+import type { OrderForm } from '@/features/procurement/utils/procurement.types';
+import type { IsPending, Option } from '@/types/index.types';
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { OrderForm } from '@/features/procurement/utils/procurement.types';
-import type { IsPending, Option } from '@/types/index.types';
 import { calculateDiscount } from '@/features/procurement/utils/calculators';
+import { Button } from '@/components/ui/button';
 
 interface OrderDetailsProps extends OrderForm, IsPending {
   services: Array<Option>;
@@ -19,6 +21,10 @@ export function OrderDetails({
   projects,
 }: OrderDetailsProps) {
   const details = useWatch({ control: form.control, name: 'details' });
+  const { remove } = useFieldArray({
+    control: form.control,
+    name: 'details',
+  });
 
   return (
     <div className="space-y-2">
@@ -83,6 +89,12 @@ export function OrderDetails({
               >
                 Net
               </th>
+              <th
+                className="text-centre py-2 px-2 font-medium"
+                style={{ width: '128px' }}
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -95,6 +107,7 @@ export function OrderDetails({
                 products={products}
                 services={services}
                 isPending={form.formState.isSubmitting}
+                onRemove={() => remove(index)}
               />
             ))}
           </tbody>
@@ -115,6 +128,7 @@ interface OrderDetailRowProps extends OrderForm, IsPending {
   projects: Array<Option>;
   products: Array<Option>;
   services: Array<Option>;
+  onRemove: () => void;
 }
 
 function OrderDetailRow({
@@ -124,21 +138,36 @@ function OrderDetailRow({
   products,
   services,
   isPending,
+  onRemove,
 }: OrderDetailRowProps) {
-  const watchedType = form.watch(`details.${index}.type`);
-  const watchedQty = form.watch(`details.${index}.qty`);
-  const watchedRate = form.watch(`details.${index}.rate`);
+  const watchedType = useWatch({
+    control: form.control,
+    name: `details.${index}.type`,
+  });
+  const watchedQty = useWatch({
+    control: form.control,
+    name: `details.${index}.qty`,
+  });
+  const watchedRate = useWatch({
+    control: form.control,
+    name: `details.${index}.rate`,
+  });
   const gross = watchedQty * watchedRate || 0;
-  const discountType = form.watch(`details.${index}.discountType`) as
-    | 'NONE'
-    | 'PERCENTAGE'
-    | 'AMOUNT';
-  const watchedDiscount = form.watch(`details.${index}.discount`) || 0;
+  const discountType = useWatch({
+    control: form.control,
+    name: `details.${index}.discountType`,
+  }) as 'NONE' | 'PERCENTAGE' | 'AMOUNT';
+  const watchedDiscount =
+    useWatch({
+      control: form.control,
+      name: `details.${index}.discount`,
+    }) || 0;
   const discountedAmount = calculateDiscount(
     discountType,
     watchedDiscount,
     gross
   );
+
   const netAmount = gross - discountedAmount; // + (watchedVat || 0)
   return (
     <tr>
@@ -253,15 +282,14 @@ function OrderDetailRow({
                       { value: 'PERCENTAGE', label: 'Percentage' },
                       { value: 'AMOUNT', label: 'Amount' },
                     ]}
-                    defaultValue={field.value}
                     disabled={isPending}
+                    {...field}
                     onChange={(value: string) => {
                       field.onChange(value as 'NONE' | 'PERCENTAGE' | 'AMOUNT');
                       if (value === 'NONE') {
                         form.setValue(`details.${index}.discount`, 0);
                       }
                     }}
-                    value={field.value}
                   />
                 </FormControl>
                 {/* <FormMessage /> */}
@@ -285,7 +313,7 @@ function OrderDetailRow({
                     value={field.value || ''}
                     autoFocus={false}
                     className="w-full"
-                    disabled={isPending || discountType === 'NONE'}
+                    disabled={discountType === 'NONE'}
                   />
                 </FormControl>
                 {/* <FormMessage /> */}
@@ -309,6 +337,21 @@ function OrderDetailRow({
           className="w-full"
           disabled
         />
+      </td>
+      <td className="py-2 px-2 text-center" style={{ width: '128px' }}>
+        <Button
+          variant="ghost"
+          className="h-6 w-6 text-destructive"
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove();
+          }}
+          type="button"
+          disabled={isPending}
+        >
+          <Trash2Icon className="h-4 w-4" />
+        </Button>
       </td>
     </tr>
   );
