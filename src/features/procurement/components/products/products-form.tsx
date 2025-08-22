@@ -78,7 +78,9 @@ export function ProductsForm({
     if (!fromModal && !product) {
       router.push('/procurement/products');
     }
-    fromModal && setClose();
+    if (fromModal && !product) {
+      setClose();
+    }
   }
 
   return (
@@ -232,7 +234,9 @@ export function ProductsForm({
             className="col-span-full"
             resetFn={() => {
               form.reset();
-              fromModal && setClose();
+              if (fromModal && !product) {
+                setClose();
+              }
             }}
             isPending={isPending}
           />

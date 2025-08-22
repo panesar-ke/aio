@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
-import { CircleCheckBigIcon, KeyRoundIcon } from 'lucide-react';
+import { KeyRoundIcon } from 'lucide-react';
 import type z from 'zod';
 
 import { loginSchema } from '@/features/auth/actions/schema';

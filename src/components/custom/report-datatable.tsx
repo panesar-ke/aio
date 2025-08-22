@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 'use no memo';
 import React from 'react';
 import {
@@ -52,7 +51,7 @@ interface DataTableProps<TData, TValue> {
   exportExcelButton?: boolean;
   exportPdfButton?: boolean;
   orientation?: 'portrait' | 'landscape';
-  // biome-ignore lint/suspicious/noExplicitAny: <>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   excelData?: Array<any>;
   customFooter?: React.ReactNode;
   defaultPageSize?: number;

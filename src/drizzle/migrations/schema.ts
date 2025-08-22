@@ -18,7 +18,7 @@ import {
   primaryKey,
   pgEnum,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+
 
 export const aalLevel = pgEnum('aal_level', ['aal3', 'aal2', 'aal1']);
 export const accountStateEnum = pgEnum('accountStateEnum', ['lead', 'account']);

@@ -38,7 +38,7 @@ export function ErrorComponent({
       />
       <h1 className="text-4xl font-bold mb-2">{title}</h1>
       <p className="text-xl mb-4">
-        We're sorry, but an error occurred while processing your request.
+        We&apos;re sorry, but an error occurred while processing your request.
       </p>
       <p className="text-muted-foreground mb-6">
         Error: {message || 'Unknown error'}
@@ -72,8 +72,8 @@ export function NotFound() {
             Oops! Page not found
           </h2>
           <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            The page you're looking for doesn't exist. It might have been moved,
-            deleted, or you entered the wrong URL.
+            The page you&apos;re looking for doesn&apos;t exist. It might have
+            been moved, deleted, or you entered the wrong URL.
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export function ErrorNotification({
         Something went wrong
       </h1>
       <p className="text-sm mb-4 text-muted-foreground">
-        We're sorry, but an error occurred while processing your request.
+        We&apos;re sorry, but an error occurred while processing your request.
       </p>
       {process.env.NODE_ENV === 'development' && (
         <pre className="text-sm bg-orange-100 px-1 py-0.5 rounded mt-1 inline-block">

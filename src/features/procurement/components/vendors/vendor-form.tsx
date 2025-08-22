@@ -68,7 +68,9 @@ export function VendorForm({ vendor, fromModal }: VendorFormProps) {
     if (!fromModal && !vendor) {
       router.push('/procurement/vendors');
     }
-    fromModal && setClose();
+    if (fromModal) {
+      setClose();
+    }
   }
 
   return (
@@ -188,7 +190,9 @@ export function VendorForm({ vendor, fromModal }: VendorFormProps) {
             className="col-span-full"
             resetFn={() => {
               form.reset();
-              fromModal && setClose();
+              if (fromModal) {
+                setClose();
+              }
             }}
             isPending={isPending}
           />

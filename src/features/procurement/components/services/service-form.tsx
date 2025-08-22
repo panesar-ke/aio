@@ -144,7 +144,9 @@ export function ServiceForm({
             className="col-span-full"
             resetFn={() => {
               form.reset();
-              fromModal && setClose();
+              if (fromModal) {
+                setClose();
+              }
             }}
             isPending={isPending}
           />

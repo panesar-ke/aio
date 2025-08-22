@@ -102,7 +102,8 @@ export function OrderDetails({
       </div>
       {details.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          No order details added yet. Use "Pending Requests" to add items.
+          No order details added yet. Use &quot;Pending Requests&quot; to add
+          items.
         </div>
       )}
     </div>
@@ -177,10 +178,7 @@ function OrderDetailRow({
                   emptyText="Product not found"
                   placeholder="Select product"
                   isPending={isPending}
-                  options={
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                    watchedType === 'item' ? products : services
-                  }
+                  options={watchedType === 'item' ? products : services}
                   searchText="Search product"
                 />
 

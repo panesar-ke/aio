@@ -65,8 +65,7 @@ export const orderSchema = z
         })
     ),
   })
-  .superRefine(({ documentDate, invoiceDate, vat, vatType }, ctx) => {
-
+  .superRefine(({ vat, vatType }, ctx) => {
     if (vatType !== 'NONE' && !vat) {
       ctx.addIssue({
         code: 'custom',
