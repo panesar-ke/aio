@@ -14,7 +14,7 @@ export default async function UserRightsPage() {
         forms={forms}
         users={transformOptions(
           users
-            .filter(u => u.active)
+            .filter(u => u.active && u.userType === 'STANDARD USER')
             .map(user => ({ id: user.id, name: user.name.toUpperCase() }))
         )}
       />

@@ -39,7 +39,7 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
 
   await createSession(user.id);
 
-  return redirect('/dashboard');
+  return redirect(user.defaultMenu || '/dashboard');
 }
 
 export async function logoutAction() {

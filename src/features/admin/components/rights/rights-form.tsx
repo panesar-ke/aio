@@ -1,21 +1,39 @@
 'use client';
 import { useEffect, useTransition } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
 import type { Form as FormType, Option } from '@/types/index.types';
-import type { UserRightsFormValue } from '@/features/admin/utils/admin.types';
+import type {
+  CloneUserRightsFormValues,
+  UserRightsFormValue,
+} from '@/features/admin/utils/admin.types';
 import { Button } from '@/components/ui/button';
-import { Form, FormField, FormControl, FormItem } from '@/components/ui/form';
+import {
+  Form,
+  FormField,
+  FormControl,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { userRightsFormSchema } from '@/features/admin/utils/schema';
+import {
+  cloneUserRightsFormSchema,
+  userRightsFormSchema,
+} from '@/features/admin/utils/schema';
 import { SearchSelect } from '@/components/custom/search-select';
 import { userRightsQueryOptions } from '@/features/admin/services/query-options';
-import { updateUserRights } from '@/features/admin/services/action';
+import {
+  cloneUserRights,
+  updateUserRights,
+} from '@/features/admin/services/action';
 import { ToastContent } from '@/components/custom/toast';
 import { ButtonLoader } from '@/components/custom/loaders';
+import { useModal } from '@/features/integrations/modal-provider';
+import CustomModal from '@/components/custom/custom-modal';
+import { FormActions } from '@/components/custom/form-actions';
 
 interface Props {
   users: Array<Option>;
@@ -116,7 +134,7 @@ export function RightsForm({ forms, users }: Props) {
   const isLoading = isPending || isLoadingRights;
   return (
     <div className="space-y-6">
-      <CloneForm />
+      <CloneForm users={users} />
       <Form {...form}>
         <form
           className="p-6 bg-card shadow-sm rounded-lg"
@@ -215,10 +233,116 @@ export function RightsForm({ forms, users }: Props) {
   );
 }
 
-function CloneForm() {
+function CloneForm({ users }: { users: Array<Option> }) {
+  const { setOpen, setClose } = useModal();
+
+  const form = useForm<CloneUserRightsFormValues>({
+    defaultValues: {
+      cloningFrom: '',
+      cloningTo: '',
+    },
+    resolver: zodResolver(cloneUserRightsFormSchema),
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: CloneUserRightsFormValues) => {
+      return await cloneUserRights(data);
+    },
+    onSuccess: ctx => {
+      if (ctx.error) {
+        toast.error(() => (
+          <ToastContent
+            message={ctx.message}
+            title="Error Cloning User Rights"
+          />
+        ));
+        return;
+      }
+      form.reset();
+      setClose();
+      toast.success(() => (
+        <ToastContent message={ctx.message} title="User Rights Cloned" />
+      ));
+    },
+    onError: err => {
+      toast.error(() => (
+        <ToastContent message={err.message} title="Error Cloning User Rights" />
+      ));
+    },
+  });
+
+  const isSubmitting = isPending || form.formState.isSubmitting;
+
+  function handleDisplayModal() {
+    setOpen(
+      <CustomModal
+        title="Clone User Rights"
+        subtitle="Clone the rights of an existing user"
+      >
+        <Form {...form}>
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit(data => mutate(data))}
+          >
+            <FormField
+              control={form.control}
+              name="cloningFrom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <SearchSelect
+                      options={users}
+                      value={field.value}
+                      onChange={field.onChange}
+                      emptyText="No users found"
+                      searchText="Search users..."
+                      placeholder="Select user to clone from"
+                      isPending={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cloningTo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <SearchSelect
+                      options={users}
+                      value={field.value}
+                      onChange={field.onChange}
+                      emptyText="No users found"
+                      searchText="Search users..."
+                      placeholder="Select user to clone to"
+                      isPending={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormActions
+              resetFn={() => {
+                form.reset();
+                setClose();
+              }}
+              isPending={isSubmitting}
+              actionButtonText="Clone Rights"
+              cancelButtonText="Cancel"
+              defaultButtonNames={false}
+            />
+          </form>
+        </Form>
+      </CustomModal>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Button variant="tertiary" size="lg">
+      <Button variant="tertiary" size="lg" onClick={handleDisplayModal}>
         <CopyIcon />
         Clone Rights
       </Button>

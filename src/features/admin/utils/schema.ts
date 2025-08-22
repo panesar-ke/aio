@@ -13,3 +13,18 @@ export const userRightsFormSchema = z.object({
     })
   ),
 });
+
+export const cloneUserRightsFormSchema = z
+  .object({
+    cloningFrom: requiredStringSchemaEntry('Cloning from user is required'),
+    cloningTo: requiredStringSchemaEntry('Cloning to user is required'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.cloningFrom === data.cloningTo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Cloning from and to users must be different',
+        path: ['cloningTo'],
+      });
+    }
+  });
