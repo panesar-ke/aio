@@ -352,27 +352,33 @@ function PendingRequests({
   }, [selectedRows, onAddSelected]);
 
   const handleDeleteSelected = useCallback(() => {
-    startTransition(async () => {
-      try {
-        const result = await deletePendingRequests(
-          selectedRows.map(row => row.requestId)
-        );
+    startTransition(() => {
+      const ids = selectedRows.map(row => String(row.requestId));
+      deletePendingRequests(ids)
+        .then(result => {
+          if (result.error) {
+            toast.error(() => (
+              <ToastContent title="Error" message={result.message} />
+            ));
+            return;
+          }
 
-        if (result.error) {
-          toast.error(() => (
-            <ToastContent title="Error" message={result.message} />
+          toast.success(() => (
+            <ToastContent
+              title="Success"
+              message={`Deleted ${ids.length} pending request(s).`}
+            />
           ));
-          return;
-        }
-      } catch (error) {
-        console.error('Error updating user rights:', error);
-        toast.error(() => (
-          <ToastContent
-            title="Error"
-            message="There was a problem while performing this action."
-          />
-        ));
-      }
+        })
+        .catch(error => {
+          console.error('Error deleting pending requests:', error);
+          toast.error(() => (
+            <ToastContent
+              title="Error"
+              message="There was a problem while performing this action."
+            />
+          ));
+        });
     });
     console.log('Delete selected:', selectedRows);
   }, [selectedRows]);
