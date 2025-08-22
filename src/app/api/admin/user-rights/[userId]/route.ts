@@ -1,4 +1,3 @@
-// src/app/api/admin/user-rights/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import db from '@/drizzle/db';
@@ -11,10 +10,10 @@ type ResponseData = {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     if (!userId) {
       return NextResponse.json<ResponseData>(
         { error: 'User ID is required' },
