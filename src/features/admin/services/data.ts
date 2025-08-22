@@ -1,5 +1,6 @@
 'use cache';
 import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { asc, eq } from 'drizzle-orm';
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
@@ -7,9 +8,8 @@ import {
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
-// import { eq } from 'drizzle-orm';
 import { User } from '@/types/index.types';
-// import { forms, userRights } from '@/drizzle/schema';
+import { forms, userRights } from '@/drizzle/schema';
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -39,18 +39,20 @@ export const getUserForms = async (
   userType: User['userType']
 ) => {
   cacheTag(getUserFormsGlobalTag(userId));
-  console.log(userType);
 
-  //   return db
-  //     .select({
-  //       id: forms.id,
-  //       formName: forms.formName,
-  //       path: forms.path,
-  //       module: forms.module,
-  //     })
-  //     .from(forms)
-  //     .innerJoin(userRights, eq(userRights.formId, forms.id));
-  //   // .where(userType === 'ADMIN' ? undefined : eq(userRights.userId, userId));
+  if (userType === 'STANDARD USER') {
+    return db
+      .select({
+        id: forms.id,
+        formName: forms.formName,
+        path: forms.path,
+        module: forms.module,
+      })
+      .from(forms)
+      .innerJoin(userRights, eq(userRights.formId, forms.id))
+      .where(eq(userRights.userId, userId))
+      .orderBy(asc(forms.moduleId), asc(forms.menuOrder));
+  }
 
   // TODO: refactor this
   return await db.query.forms.findMany({

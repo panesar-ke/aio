@@ -3,7 +3,8 @@ import { useEffect, useTransition } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CopyIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
 import type { Form as FormType, Option } from '@/types/index.types';
 import type { UserRightsFormValue } from '@/features/admin/utils/admin.types';
 import { Button } from '@/components/ui/button';
@@ -13,8 +14,8 @@ import { userRightsFormSchema } from '@/features/admin/utils/schema';
 import { SearchSelect } from '@/components/custom/search-select';
 import { userRightsQueryOptions } from '@/features/admin/services/query-options';
 import { updateUserRights } from '@/features/admin/services/action';
-import toast from 'react-hot-toast';
 import { ToastContent } from '@/components/custom/toast';
+import { ButtonLoader } from '@/components/custom/loaders';
 
 interface Props {
   users: Array<Option>;
@@ -196,8 +197,16 @@ export function RightsForm({ forms, users }: Props) {
               type="submit"
               disabled={isLoading || !selectedUserId}
               className="min-w-32"
+              size="lg"
             >
-              {isLoading ? 'Updating...' : 'Update Rights'}
+              {isLoading ? (
+                <ButtonLoader loadingText="Updating..." />
+              ) : (
+                <>
+                  <ShieldCheckIcon />
+                  <span>Update Rights</span>
+                </>
+              )}
             </Button>
           </div>
         </form>
