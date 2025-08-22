@@ -8,6 +8,7 @@ export const metadata = {
 
 export default async function UserRightsPage() {
   const [forms, users] = await Promise.all([getForms(), getUsers()]);
+  // log
   return (
     <div className="space-y-6">
       <RightsForm
