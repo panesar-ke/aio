@@ -13,6 +13,7 @@ export const env = createEnv({
     BCRYPT_ROUNDS: z.string().min(1),
     SESSION_SECRET: z.string().min(1),
     SECONDARY_API_URL: z.string().min(1),
+    ARCJET_KEY: z.string().min(1),
     // VERCEL_URL: z.string().min(1),
   },
   runtimeEnv: process.env,
