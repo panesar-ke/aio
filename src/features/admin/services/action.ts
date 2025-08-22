@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { getUserFormsGlobalTag } from '@/features/admin/utils/cache';
 import type { UserRightsFormValue } from '@/features/admin/utils/admin.types';
 import { validateFields } from '@/lib/action-validator';
-import { userRightsFormSchema } from '../utils/schema';
+import { userRightsFormSchema } from '@/features/admin/utils/schema';
 
 export async function updateUserRights(values: unknown) {
   const { data, error } = validateFields<UserRightsFormValue>(
