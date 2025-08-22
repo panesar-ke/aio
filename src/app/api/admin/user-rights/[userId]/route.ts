@@ -1,4 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+// src/app/api/admin/user-rights/[userId]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import db from '@/drizzle/db';
 import { userRights } from '@/drizzle/schema';
@@ -8,31 +9,40 @@ type ResponseData = {
   data?: Array<{ formId: number }>;
 };
 
-export async function handler(
-  request: NextApiRequest,
-  response: NextApiResponse<ResponseData>
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { userId: string } }
 ) {
-  if (request.method === 'POST') {
-    return response.status(405).json({ error: 'Method not allowed' });
-  }
-
   try {
-    const { userId } = request.query;
-
+    const { userId } = params;
     if (!userId) {
-      return response.status(400).json({ error: 'User ID is required' });
+      return NextResponse.json<ResponseData>(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
     const rights = await db
-      .select({
-        formId: userRights.formId,
-      })
+      .select({ formId: userRights.formId })
       .from(userRights)
-      .where(eq(userRights.userId, userId as string));
+      .where(eq(userRights.userId, userId));
 
-    return response.status(200).json({ data: rights, error: null });
+    return NextResponse.json<ResponseData>(
+      { data: rights, error: null },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error fetching user rights:', error);
-    return response.status(500).json({ error: 'Failed to fetch user rights' });
+    return NextResponse.json<ResponseData>(
+      { error: 'Failed to fetch user rights' },
+      { status: 500 }
+    );
   }
+}
+
+export async function POST() {
+  return NextResponse.json<ResponseData>(
+    { error: 'Method not allowed' },
+    { status: 405 }
+  );
 }
