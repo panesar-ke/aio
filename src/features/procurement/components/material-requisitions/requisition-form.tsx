@@ -323,7 +323,6 @@ function RequisitionDetails({
                             placeholder="Select product"
                             isPending={isPending}
                             options={
-                              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                               details[index]?.type === 'item'
                                 ? queryProducts || products
                                 : queryServices || services

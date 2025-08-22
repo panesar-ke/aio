@@ -7,9 +7,9 @@ import {
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
-import { eq } from 'drizzle-orm';
+// import { eq } from 'drizzle-orm';
 import { User } from '@/types/index.types';
-import { forms, userRights } from '@/drizzle/schema';
+// import { forms, userRights } from '@/drizzle/schema';
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -39,6 +39,7 @@ export const getUserForms = async (
   userType: User['userType']
 ) => {
   cacheTag(getUserFormsGlobalTag(userId));
+  console.log(userType);
 
   //   return db
   //     .select({

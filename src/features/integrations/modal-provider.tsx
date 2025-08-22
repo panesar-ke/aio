@@ -12,25 +12,21 @@ interface ModalProviderProps {
   children: React.ReactNode;
 }
 
-export type ModalData = {};
-
 interface ModalContextType {
-  data: ModalData;
   isOpen: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setOpen: (modal: ReactNode, fetchData?: () => Promise<any>) => void;
   setClose: () => void;
 }
 
 const ModalContext = createContext<ModalContextType>({
-  data: {},
   isOpen: false,
   setClose: () => {},
-  setOpen: (modal: ReactNode, fetchData?: () => Promise<any>) => {},
+  setOpen: () => {},
 });
 
 export const ModalProvider = ({ children }: ModalProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [data, setData] = useState<ModalData>({});
   const [showingModal, setShowingModal] = useState<ReactNode>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -38,25 +34,21 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
     setIsMounted(true);
   }, []);
 
-  const setOpen = async (modal: ReactNode, fetchData?: () => Promise<any>) => {
+  const setOpen = async (modal: ReactNode) => {
     if (modal) {
-      if (fetchData) {
-        setData({ ...data, ...(await fetchData()) });
-      }
       setShowingModal(modal);
       setIsOpen(true);
     }
   };
 
   const setClose = () => {
-    setData({});
     setIsOpen(false);
   };
 
   if (!isMounted) return null;
 
   return (
-    <ModalContext.Provider value={{ data, setClose, setOpen, isOpen }}>
+    <ModalContext.Provider value={{ setClose, setOpen, isOpen }}>
       {children}
       {showingModal}
     </ModalContext.Provider>

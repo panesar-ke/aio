@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <none> */
 import type { Path, UseFormReturn } from 'react-hook-form';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setFormErrors<T extends Record<string, any>>(
   form: UseFormReturn<T>,
   errors: Record<string, string[]>
