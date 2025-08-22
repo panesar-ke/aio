@@ -18,6 +18,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@arcjet/inspect": "1.0.0-beta.10",
+    "@arcjet/next": "1.0.0-beta.10",
     "@dicebear/collection": "^9.2.3",
     "@dicebear/core": "^9.2.3",
     "@hookform/resolvers": "^5.1.1",
