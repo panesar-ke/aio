@@ -92,7 +92,10 @@ export const cloneUserRights = async (values: unknown) => {
       formId: right.formId,
     }));
 
-    await db.insert(userRights).values(rightsToClone);
+    await db
+      .insert(userRights)
+      .values(rightsToClone)
+      .onConflictDoNothing({ target: [userRights.userId, userRights.formId] });
 
     revalidateTag(getUserFormsGlobalTag(cloningTo));
 
