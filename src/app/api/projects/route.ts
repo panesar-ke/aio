@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-  getSelectableProducts,
-  getSelectableProjects,
-} from '@/features/procurement/services/material-requisitions/data';
+import { getSelectableProjects } from '@/features/procurement/services/material-requisitions/data';
 
 export async function GET() {
   try {

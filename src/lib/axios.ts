@@ -1,8 +1,8 @@
 import Axios from 'axios';
-import { env } from '@/env/client';
+import { env } from '@/env/server';
 
 const axios = Axios.create({
-  baseURL: env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+  baseURL: env.SECONDARY_API_URL || 'http://localhost:8000/api',
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
   },
