@@ -37,7 +37,6 @@ export function OrderView({ order }: { order: Order }) {
       );
 
       if (res.error) {
-        console.error(res.error);
         toast(() => (
           <ToastContent
             title="Something went wron g"

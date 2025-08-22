@@ -431,7 +431,17 @@ function RequisitionDetails({
           size="sm"
           className="text-sm"
           type="button"
-          onClick={() => append(INITIAL_DETAILS)}
+          onClick={() =>
+            append({
+              id: createId(),
+              projectId: '',
+              type: 'item',
+              itemOrServiceId: '',
+              qty: 0,
+              remarks: '',
+              requestId: new Date().getTime(),
+            })
+          }
           disabled={isPending}
         >
           Add lines
