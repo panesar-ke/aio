@@ -1,5 +1,13 @@
-import { getIdTag } from '@/lib/cache';
+import { getIdTag, getGlobalTag } from '@/lib/cache';
 
-export function getFormsGlobalTag(userId: string) {
+export function getUsersGlobalTag() {
+  return getGlobalTag('users');
+}
+
+export function getFormsGlobalTag() {
+  return getGlobalTag('forms');
+}
+
+export function getUserFormsGlobalTag(userId: string) {
   return getIdTag('forms', userId);
 }
