@@ -1,6 +1,6 @@
 'use cache';
 import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
@@ -50,11 +50,10 @@ export const getUserForms = async (
       })
       .from(forms)
       .innerJoin(userRights, eq(userRights.formId, forms.id))
-      .where(eq(userRights.userId, userId))
+      .where(and(eq(userRights.userId, userId), eq(forms.active, true)))
       .orderBy(asc(forms.moduleId), asc(forms.menuOrder));
   }
 
-  // TODO: refactor this
   return await db.query.forms.findMany({
     columns: { id: true, formName: true, path: true, module: true },
     where: (forms, { eq }) => eq(forms.active, true),
