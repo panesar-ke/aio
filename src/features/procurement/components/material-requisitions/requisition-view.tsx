@@ -116,7 +116,9 @@ function RequisitionDetails({ mrq }: { mrq: Requisition }) {
               const buyingPrice = item.itemId
                 ? numberFormat(item.product?.buyingPrice || 0)
                 : numberFormat(item.service?.serviceFee || 0);
-              const gross = parseFloat(buyingPrice) * Number(item.qty);
+              const gross =
+                parseFloat(buyingPrice.replace(/[^0-9.-]+/g, '')) *
+                Number(item.qty);
               totalGross += gross;
               return (
                 <Row
