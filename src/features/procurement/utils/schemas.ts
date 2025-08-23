@@ -50,7 +50,7 @@ export const orderSchema = z
           requestId: requiredStringSchemaEntry('Request ID is required'),
           projectId: requiredStringSchemaEntry('Project is required'),
           qty: requiredNumberSchemaEntry('Qty is required'),
-          rate: requiredNumberSchemaEntry('Rate is required'),
+          rate: optionalNumberSchemaEntry(),
           discountType: z.enum(['NONE', 'PERCENTAGE', 'AMOUNT']).optional(),
           discount: optionalNumberSchemaEntry(),
         })
