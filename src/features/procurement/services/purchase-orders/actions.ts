@@ -129,7 +129,7 @@ export const createOrder = async ({
         discountType,
         type,
       }) => {
-        const gross = Number(qty) * parseFloat(rate.toString());
+        const gross = Number(qty) * parseFloat(rate?.toString() || '0');
         const discountedAmount = calculateDiscount(
           discountType ?? 'NONE',
           discount ?? 0,
@@ -144,7 +144,7 @@ export const createOrder = async ({
           itemId: type === 'item' ? itemOrServiceId : null,
           serviceId: type === 'service' ? itemOrServiceId : null,
           qty: qty.toString(),
-          rate: rate.toString(),
+          rate: rate?.toString() || '0',
           discountType: discountType ?? 'NONE',
           discount: discount ? discount.toString() : '0',
           discountedAmount: discountedAmount.toString(),
