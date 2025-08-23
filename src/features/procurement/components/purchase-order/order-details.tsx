@@ -152,7 +152,7 @@ function OrderDetailRow({
     control: form.control,
     name: `details.${index}.rate`,
   });
-  const gross = watchedQty * watchedRate || 0;
+  const gross = (watchedQty || 0) * (watchedRate || 0);
   const discountType = useWatch({
     control: form.control,
     name: `details.${index}.discountType`,
