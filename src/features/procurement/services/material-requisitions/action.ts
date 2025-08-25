@@ -28,99 +28,110 @@ export async function createRequisition({
   submitType: 'SUBMIT' | 'SUBMIT_GENERATE';
   id?: string;
 }) {
-  const user = await getCurrentUser();
-  const documentNo = id
-    ? (await getRequisition(id))?.id
-    : await getRequisitionNo();
-  if (!documentNo)
+  let reference: string;
+
+  try {
+    const user = await getCurrentUser();
+    const documentNo = id
+      ? (await getRequisition(id))?.id
+      : await getRequisitionNo();
+    if (!documentNo)
+      return {
+        error: true,
+        message: 'Unable to generate document number',
+        data: null,
+      };
+
+    reference = await db.transaction(async tx => {
+      const { details, documentDate } = values;
+
+      const formattedDetails = details.map(detail => ({
+        headerId: documentNo,
+        requestId: detail.requestId,
+        projectId: detail.projectId,
+        itemId: detail.type === 'item' ? detail.itemOrServiceId : null,
+        serviceId: detail.type === 'service' ? detail.itemOrServiceId : null,
+        qty: detail.qty.toString(),
+        unitId: 1,
+        remarks: detail.remarks || null,
+      }));
+
+      const ref = await tx
+        .insert(mrqHeaders)
+        .values({
+          id: documentNo,
+          reference: createId(),
+          documentDate: new Date(documentDate).toISOString(),
+          createdBy: user.id,
+        })
+        .onConflictDoUpdate({
+          target: mrqHeaders.id,
+          set: {
+            documentDate: new Date(documentDate).toISOString(),
+            fileUrl: null,
+          },
+        })
+        .returning({ reference: mrqHeaders.reference });
+
+      if (id) {
+        const requestIds = await db.query.mrqDetails
+          .findMany({
+            columns: { requestId: true },
+            where: (model, { eq }) => eq(model.headerId, documentNo),
+          })
+          .then(res => res.map(req => req.requestId));
+
+        const existingIds = formattedDetails.filter(detail =>
+          requestIds.includes(detail.requestId)
+        );
+        const nonExistingIds = formattedDetails.filter(
+          detail => !requestIds.includes(detail.requestId)
+        );
+
+        const removeIds = requestIds.filter(
+          reqId =>
+            !formattedDetails.map(detail => detail.requestId).includes(reqId)
+        );
+
+        if (removeIds.length > 0) {
+          await tx
+            .delete(mrqDetails)
+            .where(inArray(mrqDetails.requestId, removeIds));
+        }
+
+        if (nonExistingIds.length > 0) {
+          await tx.insert(mrqDetails).values(nonExistingIds);
+        }
+
+        existingIds.forEach(async detail => {
+          await tx
+            .update(mrqDetails)
+            .set({
+              qty: detail.qty.toString(),
+              itemId: detail.itemId,
+              remarks: detail.remarks,
+              serviceId: detail.serviceId,
+              projectId: detail.projectId,
+            })
+            .where(eq(mrqDetails.requestId, detail.requestId));
+        });
+      } else {
+        await tx.insert(mrqDetails).values(formattedDetails);
+      }
+
+      return ref[0].reference;
+    });
+
+    revalidateMaterialRequisitions(reference);
+    revalidateTag(getMaterialRequisitionNoGlobalTag());
+  } catch (error) {
+    console.error('Error creating requisition:', error);
     return {
       error: true,
-      message: 'Unable to generate document number',
+      message: 'Failed to create requisition. Please try again.',
       data: null,
     };
-
-  const reference = await db.transaction(async tx => {
-    const { details, documentDate } = values;
-
-    const formattedDetails = details.map(detail => ({
-      headerId: documentNo,
-      requestId: detail.requestId,
-      projectId: detail.projectId,
-      itemId: detail.type === 'item' ? detail.itemOrServiceId : null,
-      serviceId: detail.type === 'service' ? detail.itemOrServiceId : null,
-      qty: detail.qty.toString(),
-      unitId: 1,
-      remarks: detail.remarks || null,
-    }));
-
-    const ref = await tx
-      .insert(mrqHeaders)
-      .values({
-        id: documentNo,
-        reference: createId(),
-        documentDate: new Date(documentDate).toISOString(),
-        createdBy: user.id,
-      })
-      .onConflictDoUpdate({
-        target: mrqHeaders.id,
-        set: {
-          documentDate: new Date(documentDate).toISOString(),
-          fileUrl: null,
-        },
-      })
-      .returning({ reference: mrqHeaders.reference });
-
-    if (id) {
-      const requestIds = await db.query.mrqDetails
-        .findMany({
-          columns: { requestId: true },
-          where: (model, { eq }) => eq(model.headerId, documentNo),
-        })
-        .then(res => res.map(req => req.requestId));
-
-      const existingIds = formattedDetails.filter(detail =>
-        requestIds.includes(detail.requestId)
-      );
-      const nonExistingIds = formattedDetails.filter(
-        detail => !requestIds.includes(detail.requestId)
-      );
-
-      const removeIds = requestIds.filter(
-        reqId =>
-          !formattedDetails.map(detail => detail.requestId).includes(reqId)
-      );
-
-      if (removeIds.length > 0) {
-        await tx
-          .delete(mrqDetails)
-          .where(inArray(mrqDetails.requestId, removeIds));
-      }
-
-      if (nonExistingIds.length > 0) {
-        await tx.insert(mrqDetails).values(nonExistingIds);
-      }
-
-      existingIds.forEach(async detail => {
-        await tx
-          .update(mrqDetails)
-          .set({
-            qty: detail.qty.toString(),
-            itemId: detail.itemId,
-            remarks: detail.remarks,
-            serviceId: detail.serviceId,
-            projectId: detail.projectId,
-          })
-          .where(eq(mrqDetails.requestId, detail.requestId));
-      });
-    } else {
-      await tx.insert(mrqDetails).values(formattedDetails);
-    }
-
-    return ref[0].reference;
-  });
-
-  revalidateMaterialRequisitions(reference);
-  revalidateTag(getMaterialRequisitionNoGlobalTag());
+  }
 
   if (submitType === 'SUBMIT_GENERATE') {
     redirect(`/procurement/purchase-order/new?requisition=${reference}`);
@@ -217,15 +228,24 @@ export const deleteRequisition = async (requisitionId: string) => {
     };
   }
 
-  await db.transaction(async tx => {
-    await tx.delete(mrqDetails).where(eq(mrqDetails.headerId, requisition.id));
-    await tx.delete(mrqHeaders).where(eq(mrqHeaders.reference, requisitionId));
-  });
+  try {
+    await db.transaction(async tx => {
+      await tx
+        .delete(mrqDetails)
+        .where(eq(mrqDetails.headerId, requisition.id));
+      await tx
+        .delete(mrqHeaders)
+        .where(eq(mrqHeaders.reference, requisitionId));
+    });
 
-  revalidateMaterialRequisitions(requisitionId);
-
-  return {
-    error: false,
-    message: 'Requisition deleted successfully',
-  };
+    revalidateMaterialRequisitions(requisitionId);
+    revalidateTag(getMaterialRequisitionNoGlobalTag());
+  } catch (error) {
+    console.error('Error deleting requisition:', error);
+    return {
+      error: true,
+      message: 'Failed to delete requisition',
+    };
+  }
+  return redirect('/procurement/material-requisition');
 };

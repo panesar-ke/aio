@@ -17,7 +17,7 @@ import {
 import { ActionButton } from '@/components/ui/action-button';
 import { deleteOrder } from '@/features/procurement/services/purchase-orders/actions';
 
-export function OrdersTable({ orders }: { orders: OrderTableRow[] }) {
+export function OrdersTable({ orders }: { orders: Array<OrderTableRow> }) {
   async function handleDelete(orderId: string) {
     const response = await deleteOrder(orderId);
     return { error: response.error, message: response.message };

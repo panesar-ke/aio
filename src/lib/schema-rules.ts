@@ -13,9 +13,17 @@ export const requiredStringSchemaEntry = (message?: string) =>
   z
     .string()
     .trim()
-    .min(1, { message: message || 'This field is required' }).toLowerCase();
+    .min(1, { message: message || 'This field is required' })
+    .toLowerCase();
+
+export const optionalStringSchemaEntry = () =>
+  z
+    .string()
+    .optional()
+    .transform(val => val?.trim().toLowerCase());    
 
 export const optionalStringSchemaEntry = () => z.string().optional().transform(val => val?.trim().toLowerCase());
+
 export const optionalNumberSchemaEntry = () => z.coerce.number().optional();
 export const requiredDateSchemaEntry = () =>
   z.coerce.date({

@@ -21,8 +21,8 @@ import {
   projects,
 } from '@/drizzle/schema';
 
-function getFilters(from: string, to: string, vendorId: string): SQL[] {
-  const filters: SQL[] = [];
+function getFilters(from: string, to: string, vendorId: string): Array<SQL> {
+  const filters: Array<SQL> = [];
   filters.push(gte(ordersHeader.documentDate, from));
   filters.push(lte(ordersHeader.documentDate, to));
 

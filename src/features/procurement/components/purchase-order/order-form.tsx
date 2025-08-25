@@ -280,7 +280,7 @@ function PendingRequests({
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const columns: ColumnDef<PendingOrder>[] = useMemo(
+  const columns: Array<ColumnDef<PendingOrder>> = useMemo(
     () => [
       {
         id: 'select',
