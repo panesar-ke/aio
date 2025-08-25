@@ -44,17 +44,9 @@ interface RequisitionFormProps {
   requisition?: Requisition;
 }
 
-const INITIAL_DETAILS = [
-  {
-    id: createId(),
-    projectId: '',
-    type: 'item' as MaterialRequisitionFormValues['details'][0]['type'],
-    itemOrServiceId: '',
-    qty: 0,
-    remarks: '',
-    requestId: new Date().getTime(),
-  },
-];
+const generateUniqueRequestId = () => {
+  return Date.now() * 1000 + Math.floor(Math.random() * 1000);
+};
 
 export function RequisitionForm({
   products,
@@ -75,21 +67,30 @@ export function RequisitionForm({
       documentDate: requisition?.documentDate
         ? new Date(requisition.documentDate)
         : new Date(),
-      details:
-        requisition?.mrqDetails.map(
-          ({ id, itemId, projectId, qty, remarks, requestId, serviceId }) => ({
-            id: id.toString(),
-            projectId: projectId,
-            type: itemId ? 'item' : 'service',
-            itemOrServiceId: itemId || serviceId || '',
-            qty: Number(qty) || 0,
-            remarks: remarks || '',
-            requestId: requestId || Date.now(),
-          })
-        ) || INITIAL_DETAILS,
+      details: requisition?.mrqDetails.map(
+        ({ id, itemId, projectId, qty, remarks, requestId, serviceId }) => ({
+          id: id.toString(),
+          projectId: projectId,
+          type: itemId ? 'item' : 'service',
+          itemOrServiceId: itemId || serviceId || '',
+          qty: Number(qty) || 0,
+          remarks: remarks || '',
+          requestId: requestId || Date.now(),
+        })
+      ) || [
+        {
+          id: createId(),
+          type: 'item',
+          projectId: '',
+          qty: 0,
+          remarks: '',
+          requestId: generateUniqueRequestId(),
+        },
+      ],
     },
   });
   const { clearErrors, errors, onError } = useError();
+
   const isPending = form.formState.isSubmitting;
   async function onSubmit(data: MaterialRequisitionFormValues) {
     clearErrors();
@@ -442,7 +443,7 @@ function RequisitionDetails({
               itemOrServiceId: '',
               qty: 0,
               remarks: '',
-              requestId: new Date().getTime(),
+              requestId: generateUniqueRequestId(),
             })
           }
           disabled={isPending}

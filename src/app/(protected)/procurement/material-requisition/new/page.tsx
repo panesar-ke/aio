@@ -32,6 +32,7 @@ export default async function NewMaterialRequisitionPage() {
         projects={projects}
         products={products}
         services={services}
+        key={requisitionNo}
       />
     </div>
   );
