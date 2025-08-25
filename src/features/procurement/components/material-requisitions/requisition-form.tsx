@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { createId } from '@paralleldrive/cuid2';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,7 +34,6 @@ import { createRequisition } from '@/features/procurement/services/material-requ
 import { useError } from '@/hooks/use-error';
 import { CustomAlert } from '@/components/custom/custom-alert';
 import { ButtonLoader } from '@/components/custom/loaders';
-import { useRef, useState } from 'react';
 import { useProcurementServices } from '../../hooks/use-procurement-services';
 
 interface RequisitionFormProps {
@@ -66,6 +66,7 @@ export function RequisitionForm({
   const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_GENERATE'>(
     'SUBMIT'
   );
+  const submitTypeRef = useRef<'SUBMIT' | 'SUBMIT_GENERATE'>('SUBMIT');
   const formRef = useRef<HTMLFormElement>(null);
   const form = useForm<MaterialRequisitionFormValues>({
     resolver: zodResolver(materialRequisitionFormSchema),
@@ -94,7 +95,7 @@ export function RequisitionForm({
     clearErrors();
     const res = await createRequisition({
       values: data,
-      submitType,
+      submitType: submitTypeRef.current,
       id: requisition?.reference,
     });
     if (res.error) {
@@ -159,6 +160,7 @@ export function RequisitionForm({
               disabled={isPending}
               className="min-w-32"
               onClick={() => {
+                submitTypeRef.current = 'SUBMIT';
                 setSubmitType('SUBMIT');
                 formRef.current?.requestSubmit();
               }}
@@ -176,6 +178,7 @@ export function RequisitionForm({
               type="button"
               variant="tertiary"
               onClick={() => {
+                submitTypeRef.current = 'SUBMIT_GENERATE';
                 setSubmitType('SUBMIT_GENERATE');
                 formRef.current?.requestSubmit();
               }}
