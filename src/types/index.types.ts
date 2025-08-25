@@ -3,7 +3,7 @@ import type { JWTPayload } from 'jose';
 export type ColorVariant = 'success' | 'warning' | 'error' | 'info';
 
 export interface SearchParams {
-  searchParams: Promise<{ search: string }>;
+  searchParams: Promise<{ search?: string }>;
 }
 
 export interface User {
