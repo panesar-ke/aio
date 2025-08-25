@@ -10,14 +10,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  ChartConfig,
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { getSpendingByProductCategory } from '@/features/procurement/services/dashboard/data';
+import { type getSpendingByProductCategory } from '@/features/procurement/services/dashboard/data';
 
 export const description = 'A pie chart with a legend';
 

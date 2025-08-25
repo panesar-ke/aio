@@ -39,7 +39,7 @@ export function OrderView({ order }: { order: Order }) {
       if (res.error) {
         toast(() => (
           <ToastContent
-            title="Something went wron g"
+            title="Something went wrong"
             message="There was a problem generating a print for this invoice"
             state="error"
           />

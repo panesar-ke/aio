@@ -14,12 +14,12 @@ export function NavbarActions() {
     <div className="ml-auto flex items-center gap-2 px-4">
       <HeaderNavItem
         toolTipContent="Change Password"
-        linkPath="/"
+        linkPath="/change-password"
         Icon={Lock}
       />
       <HeaderNavItem
         toolTipContent="Notifications"
-        linkPath="/"
+        linkPath="/notifications"
         Icon={BellDot}
       />
       <HeaderNavItem

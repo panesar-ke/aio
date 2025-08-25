@@ -1,4 +1,4 @@
-import { Option } from '@/types/index.types';
+import { type Option } from '@/types/index.types';
 import { queryOptions } from '@tanstack/react-query';
 
 const fetchProducts = async (): Promise<Array<Option>> => {

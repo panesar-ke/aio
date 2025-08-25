@@ -11,9 +11,13 @@ import {
 import db from '@/drizzle/db';
 import { mrqDetails, mrqHeaders } from '@/drizzle/schema';
 import { getCurrentUser } from '@/lib/session';
-import { revalidateMaterialRequisitions } from '@/features/procurement/utils/cache';
+import {
+  getMaterialRequisitionNoGlobalTag,
+  revalidateMaterialRequisitions,
+} from '@/features/procurement/utils/cache';
 import axios from '@/lib/axios';
 import { apiErrorHandler } from '@/lib/utils';
+import { revalidateTag } from 'next/cache';
 
 export async function createRequisition({
   values,
@@ -116,12 +120,13 @@ export async function createRequisition({
   });
 
   revalidateMaterialRequisitions(reference);
+  revalidateTag(getMaterialRequisitionNoGlobalTag());
 
   if (submitType === 'SUBMIT_GENERATE') {
     redirect(`/procurement/purchase-order/new?requisition=${reference}`);
+  } else {
+    redirect(`/procurement/material-requisition/${reference}/details`);
   }
-
-  redirect(`/procurement/material-requisition/${reference}/details`);
 }
 
 type ActionState = {
@@ -175,6 +180,7 @@ export async function generateRequisitionAction(
       .where(eq(mrqHeaders.reference, requisitionId));
 
     revalidateMaterialRequisitions(requisitionId);
+    revalidateTag(getMaterialRequisitionNoGlobalTag());
 
     return {
       success: true,

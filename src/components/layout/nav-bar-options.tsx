@@ -8,7 +8,7 @@ import {
   ShoppingBasketIcon,
   User2Icon,
 } from 'lucide-react';
-import { Option } from '@/types/index.types';
+import type { Option } from '@/types/index.types';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

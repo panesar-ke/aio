@@ -12,6 +12,7 @@ import {
   getProductsGlobalTag,
   getServicesGlobalTag,
   getProjectsGlobalTag,
+  getMaterialRequisitionNoGlobalTag,
 } from '@/features/procurement/utils/cache';
 
 export const getMaterialRequisitions = cache(async () => {
@@ -75,6 +76,7 @@ export const getSelectableProjects = async () => {
 };
 
 export const getRequisitionNo = async () => {
+  cacheTag(getMaterialRequisitionNoGlobalTag());
   const lastMrq = await db
     .select({
       documentNo: mrqHeaders.id,
