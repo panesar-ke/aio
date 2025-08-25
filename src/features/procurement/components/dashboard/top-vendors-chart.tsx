@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getTopVendorsDetails } from '@/features/procurement/services/dashboard/data';
+import { type getTopVendorsDetails } from '@/features/procurement/services/dashboard/data';
 import { numberFormat, titleCase } from '@/lib/helpers/formatters';
 
 interface TopVendorsChartProps {

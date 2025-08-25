@@ -8,7 +8,7 @@ import {
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
-import { User } from '@/types/index.types';
+import { type User } from '@/types/index.types';
 import { forms, userRights } from '@/drizzle/schema';
 
 export const getForms = async () => {
