@@ -30,7 +30,7 @@ export default async function StoresPage({ searchParams }: SearchParams) {
   );
 }
 
-export const SuspendedStoresTable = async ({ search }: { search?: string }) => {
+const SuspendedStoresTable = async ({ search }: { search?: string }) => {
   const stores = await getStores(search);
   return <StoresDatatable stores={stores} />;
 };
