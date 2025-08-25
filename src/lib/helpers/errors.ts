@@ -4,7 +4,7 @@ import type { Path, UseFormReturn } from 'react-hook-form';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setFormErrors<T extends Record<string, any>>(
   form: UseFormReturn<T>,
-  errors: Record<string, string[]>
+  errors: Record<string, Array<string>>
 ) {
   Object.entries(errors).forEach(([fieldName, messages]) => {
     if (messages && messages.length > 0) {

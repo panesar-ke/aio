@@ -70,7 +70,7 @@ export function OrderSummary({ form }: OrderSummaryProps) {
     [vatType, calculations.discountedAmount, vat],
   )
 
-  const summaryRows: SummaryRow[] = useMemo(
+  const summaryRows: Array<SummaryRow> = useMemo(
     () => [
       {
         label: 'Total Items',

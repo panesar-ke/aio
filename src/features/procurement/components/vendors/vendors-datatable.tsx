@@ -18,7 +18,7 @@ import {
 import { ActionButton } from '@/components/ui/action-button';
 import { deleteVendor } from '@/features/procurement/services/vendors/actions';
 
-export function VendorsDatatable({ vendors }: { vendors: VendorTableRow[] }) {
+export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }) {
   async function handleDelete(id: string) {
     const response = await deleteVendor(id);
     return { error: response.error, message: response.message };
