@@ -89,6 +89,19 @@ const orderRegisterColumns = (): Array<ColumnDef<OrderRegister>> => {
 const orderRegisterByItems = (): Array<ColumnDef<OrderRegisterWithValues>> => {
   return [
     {
+      accessorKey: 'id',
+      header: () => <div>LPO #</div>,
+    },
+    {
+      accessorKey: 'documentDate',
+      header: () => <div>Document Date</div>,
+      cell: ({
+        row: {
+          original: { billDate, documentDate },
+        },
+      }) => <div>{dateFormat(billDate || documentDate, 'reporting')}</div>,
+    },
+    {
       accessorKey: 'vendorName',
       header: () => <div>Vendor</div>,
     },
@@ -212,6 +225,8 @@ export function OrderRegisterByItemsDatatable({
       columns={orderRegisterByItems()}
       data={data}
       excelData={data.map(item => ({
+        Date: dateFormat(item.billDate || item.documentDate, 'reporting'),
+        'LPO #': item.id,
         Vendor: item.vendorName.toUpperCase(),
         'Invoice No': item.billNo
           ? item.billNo.startsWith('0')
