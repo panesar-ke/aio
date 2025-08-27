@@ -1553,6 +1553,7 @@ export const stockMovements = pgTable(
     createdOn: date('created_on').defaultNow(),
     remarks: text(),
     isDeleted: boolean('is_deleted').default(false),
+    storeId: uuid('store_id').references(() => stores.id),
   },
   table => [
     foreignKey({
