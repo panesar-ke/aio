@@ -1,4 +1,6 @@
+import { relations } from 'drizzle-orm';
 import { index, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { grnsHeader, materialIssuesHeader } from '@/drizzle/schema';
 
 export const stores = pgTable(
   'stores',
@@ -12,3 +14,8 @@ export const stores = pgTable(
     index('store_description_idx').on(table.description),
   ]
 );
+
+export const storesRelations = relations(stores, ({ many }) => ({
+  grns: many(grnsHeader),
+  materialIssues: many(materialIssuesHeader),
+}));

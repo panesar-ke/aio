@@ -74,6 +74,7 @@ import {
   userRoles,
   accounts,
 } from './schema';
+import { stores } from '../schema';
 
 export const appraisalHeaderRelations = relations(
   appraisalHeader,
@@ -290,6 +291,7 @@ export const grnsHeaderRelations = relations(grnsHeader, ({ one, many }) => ({
     fields: [grnsHeader.orderId],
     references: [ordersHeader.id],
   }),
+  store: one(stores, { fields: [grnsHeader.storeId], references: [stores.id] }),
   vendor: one(vendors, {
     fields: [grnsHeader.vendorId],
     references: [vendors.id],
@@ -469,6 +471,10 @@ export const materialIssuesHeaderRelations = relations(
     user: one(users, {
       fields: [materialIssuesHeader.issuedBy],
       references: [users.id],
+    }),
+    store: one(stores, {
+      fields: [materialIssuesHeader.storeId],
+      references: [stores.id],
     }),
   })
 );
