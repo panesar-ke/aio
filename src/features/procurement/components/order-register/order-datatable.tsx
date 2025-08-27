@@ -228,11 +228,7 @@ export function OrderRegisterByItemsDatatable({
         Date: dateFormat(item.billDate || item.documentDate, 'reporting'),
         'LPO #': item.id,
         Vendor: item.vendorName.toUpperCase(),
-        'Invoice No': item.billNo
-          ? item.billNo.startsWith('0')
-            ? `|${item.billNo}`
-            : item.billNo
-          : '',
+        'Invoice No': item.billNo ? `|${item.billNo}` : '',
         Item: item.itemName,
         Quantity: item.quantity,
         'Unit Price': item.unitPrice,
