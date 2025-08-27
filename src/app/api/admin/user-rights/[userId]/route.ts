@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import db from '@/drizzle/db';
 import { userRights } from '@/drizzle/schema';
+import { getCurrentUser } from '@/lib/session';
 
 type ResponseData = {
   error: string | null;
@@ -12,6 +13,11 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
+  const user = await getCurrentUser();
+
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { userId } = await params;
     if (!userId) {

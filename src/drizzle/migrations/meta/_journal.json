@@ -50,6 +50,20 @@
       "when": 1756115538578,
       "tag": "0006_empty_reptil",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1756293262036,
+      "tag": "0007_black_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1756295752703,
+      "tag": "0008_public_triathlon",
+      "breakpoints": true
     }
   ]
 }

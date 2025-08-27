@@ -1,12 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import type { StoreFormValues } from '@/features/store/utils/store.types';
 import { validateFields } from '@/lib/action-validator';
 import { storeFormSchema } from '@/features/store/utils/schema';
 import db from '@/drizzle/db';
-import { stores } from '@/drizzle/schema';
+import { stockMovements, stores } from '@/drizzle/schema';
 import { revalidateStoresTag } from '@/features/store/utils/cache';
 import { getStore } from '@/features/store/services/stores/data';
 
@@ -116,7 +116,17 @@ export const deleteStore = async (id: string): Promise<ActionResult> => {
       };
     }
 
-    // TODO: Implement business logic to check for referenced store in stock movements table
+    const [{ count: totalCount }] = await db
+      .select({ count: count(stockMovements.id) })
+      .from(stockMovements)
+      .where(eq(stockMovements.storeId, id));
+
+    if (totalCount > 0) {
+      return {
+        error: true,
+        message: 'Cannot delete store with existing stock movements.',
+      };
+    }
 
     await db.delete(stores).where(eq(stores.id, id));
     revalidateStoresTag(id);

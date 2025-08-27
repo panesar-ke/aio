@@ -1,5 +1,6 @@
 import { revalidateTag } from 'next/cache';
 import { getGlobalTag, getIdTag } from '@/lib/cache';
+import { getUnreceivedGrnsGlobal } from '@/features/store/utils/cache';
 
 export function getMaterialRequisitionNoGlobalTag() {
   return getGlobalTag('material-requisition-no');
@@ -91,6 +92,7 @@ export function revalidatePurchaseOrders(id?: string) {
   revalidateTag(getPurchaseOrderNoGlobalTag());
   revalidateTag(getPendingRequestsGlobalTag());
   revalidateTag(getVendorStatsGlobalTag());
+  revalidateTag(getUnreceivedGrnsGlobal());
 }
 
 export function revalidateVendors(id: string) {

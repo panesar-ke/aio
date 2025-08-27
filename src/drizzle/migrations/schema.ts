@@ -18,7 +18,7 @@ import {
   primaryKey,
   pgEnum,
 } from 'drizzle-orm/pg-core';
-
+import { stores } from '../schema';
 
 export const aalLevel = pgEnum('aal_level', ['aal3', 'aal2', 'aal1']);
 export const accountStateEnum = pgEnum('accountStateEnum', ['lead', 'account']);
@@ -587,6 +587,7 @@ export const grnsHeader = pgTable(
     isDeleted: boolean('is_deleted').default(false),
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
     orderId: bigint('order_id', { mode: 'number' }),
+    storeId: uuid('store_id').references(() => stores.id),
   },
   table => [
     foreignKey({
@@ -841,6 +842,7 @@ export const materialIssuesHeader = pgTable(
     issuedBy: uuid('issued_by').notNull(),
     createdOn: date('created_on').defaultNow().notNull(),
     isDeleted: boolean('is_deleted').default(false).notNull(),
+    storeId: uuid('store_id').references(() => stores.id),
   },
   table => [
     foreignKey({
@@ -1551,6 +1553,7 @@ export const stockMovements = pgTable(
     createdOn: date('created_on').defaultNow(),
     remarks: text(),
     isDeleted: boolean('is_deleted').default(false),
+    storeId: uuid('store_id').references(() => stores.id),
   },
   table => [
     foreignKey({
