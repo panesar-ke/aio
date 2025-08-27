@@ -86,7 +86,6 @@ export const updateProduct = async (id: string, values: unknown) => {
       .where(eq(products.id, id));
 
     revalidateProducts(id);
-    redirect('/procurement/products');
   } catch (error) {
     console.error('Error updating product:', error);
     return {
@@ -94,6 +93,7 @@ export const updateProduct = async (id: string, values: unknown) => {
       message: 'Failed to update product. Please try again.',
     };
   }
+  redirect('/procurement/products');
 };
 
 export const productIsReferenced = async (productId: string) => {
@@ -129,7 +129,6 @@ export const deleteProduct = async (productId: string) => {
 
     await db.delete(products).where(eq(products.id, productId));
     revalidateProducts(productId);
-    redirect('/procurement/products');
   } catch (error) {
     console.error('Error deleting product:', error);
     return {
@@ -137,6 +136,7 @@ export const deleteProduct = async (productId: string) => {
       message: 'Failed to delete product. Please try again.',
     };
   }
+  redirect('/procurement/products');
 };
 
 export const toggleProductState = async (productId: string) => {
