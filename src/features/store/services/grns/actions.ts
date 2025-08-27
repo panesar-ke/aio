@@ -22,6 +22,7 @@ import {
 } from '@/drizzle/schema';
 import { getCurrentUser } from '@/lib/session';
 import { getGrnNumber } from '@/features/store/services/grns/data';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 const validateGrn = async (values: unknown) => {
   const { data, error } = validateFields<GrnFormValues>(values, grnFormSchema);
@@ -44,6 +45,10 @@ export const createGrn = async (values: GrnFormValues) => {
     return { error: true, message: error };
   }
 
+  if (data.items.length === 0) {
+    return { error: true, message: 'At least one item is required' };
+  }
+
   const grnNo = await getGrnNumber();
 
   try {
@@ -61,13 +66,14 @@ export const createGrn = async (values: GrnFormValues) => {
     });
 
     if (!order) return { error: true, message: 'Order not found' };
+    const receiptDate = dateFormat(data.receiptDate);
 
     const reference = await db.transaction(async tx => {
       const [{ id }] = await tx
         .insert(grnsHeader)
         .values({
           id: grnNo,
-          receiptDate: data.receiptDate.toDateString(),
+          receiptDate,
           invoiceNo: data.invoiceNo,
           orderId: Number(data.orderId),
           vendorId: data.vendorId,
@@ -103,7 +109,7 @@ export const createGrn = async (values: GrnFormValues) => {
         );
 
       const grnItems = data.items.map(item => ({
-        transactionDate: data.receiptDate.toDateString(),
+        transactionDate: receiptDate,
         itemId: item.itemId,
         qty: item.orderedQty.toString(),
         transactionType: 'GRN' as StockMovementType,
