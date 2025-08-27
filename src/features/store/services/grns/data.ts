@@ -1,7 +1,7 @@
 'use cache';
 
 import { and, desc, eq, ilike, max, or, sql } from 'drizzle-orm';
-import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import {
   getGrnsGlobalTag,
   getGrnsIdTag,
@@ -76,7 +76,7 @@ export const getPendingReceiptOrders = async () => {
     );
 };
 
-export const getGrn = (id: string) => {
+export const getGrn = async (id: string) => {
   cacheTag(getGrnsIdTag(id));
   return db.query.grnsHeader.findFirst({
     with: {
