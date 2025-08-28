@@ -184,6 +184,7 @@ export const stockMovementTypeEnum = pgEnum('stockMovementTypeEnum', [
   'CONVERSION_IN',
   'CONVERSION_OUT',
   'OPENING_BAL',
+  'TRANSFER_IN',
 ]);
 export const supportTicketEnum = pgEnum('supportTicketEnum', [
   'open',
