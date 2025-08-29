@@ -6,12 +6,11 @@ import {
   getStore,
 } from '@/features/store/services/stores/data';
 import { getProduct } from '@/features/procurement/services/products/data';
+import { requiredDateSchemaEntry } from '@/lib/schema-rules';
 
 const querySchema = z.object({
   storeId: z.string().uuid('Invalid store ID format'),
-  asOfDate: z.string().refine(date => !isNaN(Date.parse(date)), {
-    message: 'Invalid date format',
-  }),
+  asOfDate: requiredDateSchemaEntry(),
 });
 
 export async function GET(
@@ -37,13 +36,6 @@ export async function GET(
 
     const { storeId, asOfDate } = validationResult.data;
 
-    if (!storeId || !asOfDate) {
-      return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
-      );
-    }
-
     const [product, store] = await Promise.all([
       getProduct(productId),
       getStore(storeId),
@@ -58,7 +50,7 @@ export async function GET(
     const currentBalance = await getProductBalance(
       productId,
       storeId,
-      new Date(asOfDate)
+      asOfDate
     );
 
     return NextResponse.json({ currentBalance });
