@@ -31,3 +31,54 @@ export const grnFormSchema = z.object({
     })
   ),
 });
+
+export const materialTransferFormSchema = z
+  .object({
+    transferDate: requiredDateSchemaEntry(),
+    fromStoreId: requiredStringSchemaEntry('From store is required'),
+    toStoreId: requiredStringSchemaEntry('To store is required'),
+    items: z.array(
+      z
+        .object({
+          id: requiredStringSchemaEntry('ID is required'),
+          itemId: requiredStringSchemaEntry('Item is required'),
+          transferredQty: requiredNumberSchemaEntry(
+            'Transferred Qty is required'
+          ),
+          stockBalance: optionalNumberSchemaEntry(),
+          remarks: optionalStringSchemaEntry(),
+        })
+        .superRefine(({ transferredQty, stockBalance }, ctx) => {
+          if (transferredQty > (stockBalance ?? 0)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Transferred Qty cannot be greater than Stock Balance',
+              path: ['transferredQty'],
+            });
+          }
+        })
+    ),
+  })
+  .superRefine(({ fromStoreId, toStoreId, items }, ctx) => {
+    if (fromStoreId === toStoreId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'From and To stores must be different',
+        path: ['toStoreId'],
+      });
+    }
+    if (items.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'At least one item is required',
+        path: ['items'],
+      });
+    }
+    const itemIds = items.map(item => item.itemId);
+    if (new Set(itemIds).size !== itemIds.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Items must have unique IDs',
+      });
+    }
+  });

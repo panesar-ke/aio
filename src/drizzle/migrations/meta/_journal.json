@@ -64,6 +64,13 @@
       "when": 1756295752703,
       "tag": "0008_public_triathlon",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1756389405908,
+      "tag": "0009_smooth_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

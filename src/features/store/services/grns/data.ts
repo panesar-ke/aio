@@ -47,6 +47,7 @@ export const getGrns = async (q?: string) => {
           : undefined
       )
     )
+    .limit(100)
     .orderBy(desc(grnsHeader.id));
 };
 
