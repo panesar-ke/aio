@@ -1,13 +1,15 @@
 'use cache';
 
 import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
-import { eq, or, sql } from 'drizzle-orm';
+import { and, eq, lte, or, sql } from 'drizzle-orm';
 import {
+  getProductStockBalanceTags,
   getStoresGlobalTag,
   getStoresIdTag,
 } from '@/features/store/utils/cache';
 import db from '@/drizzle/db';
-import { stores } from '@/drizzle/schema';
+import { stockMovements, stores } from '@/drizzle/schema';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 export const getStores = async (q?: string) => {
   cacheTag(getStoresGlobalTag());
@@ -28,4 +30,51 @@ export const getStore = async (storeId: string) => {
   return db.query.stores.findFirst({
     where: eq(stores.id, storeId),
   });
+};
+
+export const getProductBalance = async (
+  productId: string,
+  storeId: string,
+  asOf: Date
+) => {
+  cacheTag(
+    'stock-balance',
+    getProductStockBalanceTags(productId, storeId, asOf)
+  );
+
+  const movementIn = [
+    'GRN',
+    'TRANSFER_IN',
+    'CONVERSION_IN',
+    'OPENING_BAL',
+  ] as const;
+
+  const movementOut = ['ISSUE', 'TRANSFER', 'CONVERSION_OUT'] as const;
+
+  const formattedDate = dateFormat(asOf);
+
+  const result = await db
+    .select({
+      balance: sql<number>`
+        COALESCE(SUM(
+          CASE
+            WHEN ${stockMovements.transactionType} IN ${movementIn} THEN ${stockMovements.qty}
+            WHEN ${stockMovements.transactionType} IN ${movementOut} THEN -${stockMovements.qty}
+            ELSE 0
+          END
+        ), 0)
+      `,
+    })
+    .from(stockMovements)
+    .where(
+      and(
+        eq(stockMovements.itemId, productId),
+        eq(stockMovements.storeId, storeId),
+        lte(stockMovements.transactionDate, formattedDate),
+        eq(stockMovements.isDeleted, false)
+      )
+    )
+    .then(d => d[0]?.balance ?? 0);
+
+  return result;
 };
