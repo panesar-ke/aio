@@ -42,6 +42,18 @@ export const getTransfersIdTag = (id: string) => {
   return getIdTag('transfers', id);
 };
 
+export const getMaterialIssuesGlobalTag = () => {
+  return getGlobalTag('material issues');
+};
+
+export const getMaterialIssuesIdTag = (id: string) => {
+  return getIdTag('material issues', id);
+};
+
+export const getMaterialIssueNo = () => {
+  return getGlobalTag('material issue no');
+};
+
 export const revalidateStoresTag = (id: string) => {
   revalidateTag(getStoresGlobalTag());
   revalidateTag(getStoresIdTag(id));
@@ -59,4 +71,10 @@ export const revalidateTransfersTag = (id: string) => {
   revalidateTag(getTransfersGlobalTag());
   revalidateTag(getTransfersIdTag(id));
   revalidateTag('stock-balance');
+};
+
+export const revalidateMaterialsIssues = (id: string) => {
+  revalidateTag(getMaterialIssuesGlobalTag());
+  revalidateTag(getMaterialIssuesIdTag(id));
+  revalidateTag(getMaterialIssueNo());
 };
