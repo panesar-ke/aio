@@ -1,4 +1,5 @@
 import { getGlobalTag, getIdTag } from '@/lib/cache';
+import { dateFormat } from '@/lib/helpers/formatters';
 import { revalidateTag } from 'next/cache';
 
 export const getStoresGlobalTag = () => {
@@ -25,6 +26,22 @@ export const getUnreceivedGrnsGlobal = () => {
   return getGlobalTag('unreceived orders');
 };
 
+export const getProductStockBalanceTags = (
+  productId: string,
+  storeId: string,
+  date: Date
+) => {
+  return `product:'-${productId}-${storeId}-${dateFormat(date)}`;
+};
+
+export const getTransfersGlobalTag = () => {
+  return getGlobalTag('transfers');
+};
+
+export const getTransfersIdTag = (id: string) => {
+  return getIdTag('transfers', id);
+};
+
 export const revalidateStoresTag = (id: string) => {
   revalidateTag(getStoresGlobalTag());
   revalidateTag(getStoresIdTag(id));
@@ -35,4 +52,11 @@ export const revalidateGrnsTag = (id: string) => {
   revalidateTag(getGrnsIdTag(id));
   revalidateTag(getGrnsNoTag());
   revalidateTag(getUnreceivedGrnsGlobal());
+  revalidateTag('stock-balance');
+};
+
+export const revalidateTransfersTag = (id: string) => {
+  revalidateTag(getTransfersGlobalTag());
+  revalidateTag(getTransfersIdTag(id));
+  revalidateTag('stock-balance');
 };
