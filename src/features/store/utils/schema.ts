@@ -82,3 +82,21 @@ export const materialTransferFormSchema = z
       });
     }
   });
+
+export const materialIssueFormSchema = z.object({
+  issueNo: requiredNumberSchemaEntry('Issue No is required'),
+  issueDate: requiredDateSchemaEntry(),
+  staffIssued: requiredStringSchemaEntry('Staff is required.'),
+  fromStoreId: requiredStringSchemaEntry('From store is required.'),
+  notes: optionalStringSchemaEntry(),
+  jobcardNo: optionalStringSchemaEntry(),
+  items: z.array(
+    z.object({
+      id: requiredStringSchemaEntry('ID is required'),
+      itemId: requiredStringSchemaEntry('Item is required'),
+      // stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
+      issuedQty: requiredNumberSchemaEntry('Issued Qty is required'),
+      remarks: optionalStringSchemaEntry(),
+    })
+  ),
+});
