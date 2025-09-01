@@ -96,6 +96,7 @@ export const createOrder = async ({
           billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
           billNo: invoiceNo,
           vatType,
+          fileUrl: null,
           vatId: vatType !== 'NONE' ? 1 : null,
         },
       })
