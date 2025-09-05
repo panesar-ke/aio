@@ -23,8 +23,8 @@ import {
 
 function getFilters(from: string, to: string, vendorId: string): Array<SQL> {
   const filters: Array<SQL> = [];
-  filters.push(gte(ordersHeader.documentDate, from));
-  filters.push(lte(ordersHeader.documentDate, to));
+  filters.push(gte(ordersHeader.billDate, from));
+  filters.push(lte(ordersHeader.billDate, to));
 
   if (vendorId !== 'all') {
     filters.push(eq(ordersHeader.vendorId, vendorId));
@@ -65,7 +65,7 @@ const orderRegisterSummary = async (
   return await db
     .select({
       id: ordersHeader.id,
-      documentDate: ordersHeader.documentDate,
+      documentDate: ordersHeader.billDate,
       billDate: ordersHeader.billDate,
       vendorName: sql<string>`UPPER(${vendors.vendorName})`,
       billNo: ordersHeader.billNo,
@@ -133,15 +133,15 @@ export const orderByProject = async (
     .from(ordersHeader)
     .where(
       and(
-        gte(ordersHeader.documentDate, from),
-        lte(ordersHeader.documentDate, to),
+        gte(ordersHeader.billDate, from),
+        lte(ordersHeader.billDate, to),
         eq(ordersDetails.projectId, projectId)
       )
     )
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
     .leftJoin(products, eq(ordersDetails.itemId, products.id))
     .leftJoin(services, eq(ordersDetails.serviceId, services.id))
-    .orderBy(asc(ordersHeader.billDate), asc(ordersHeader.documentDate));
+    .orderBy(asc(ordersHeader.billDate), asc(ordersHeader.billDate));
 };
 
 export const orderByProduct = async (
@@ -165,8 +165,8 @@ export const orderByProduct = async (
     .from(ordersHeader)
     .where(
       and(
-        gte(ordersHeader.documentDate, from),
-        lte(ordersHeader.documentDate, to),
+        gte(ordersHeader.billDate, from),
+        lte(ordersHeader.billDate, to),
         or(
           eq(ordersDetails.itemId, productId),
           eq(ordersDetails.serviceId, productId)
@@ -225,10 +225,7 @@ export const getTopVendors = async (values: unknown) => {
     })
     .from(ordersHeader)
     .where(
-      and(
-        gte(ordersHeader.documentDate, from),
-        lte(ordersHeader.documentDate, to)
-      )
+      and(gte(ordersHeader.billDate, from), lte(ordersHeader.billDate, to))
     )
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
     .innerJoin(vendors, eq(ordersHeader.vendorId, vendors.id))
