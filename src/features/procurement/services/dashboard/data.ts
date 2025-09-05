@@ -73,10 +73,10 @@ export const getRevenueStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             last30DaysStart.toISOString().split('T')[0]
           ),
-          lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -90,11 +90,11 @@ export const getRevenueStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysStart.toISOString().split('T')[0]
           ),
           lte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysEnd.toISOString().split('T')[0]
           ),
           eq(ordersHeader.isDeleted, false)
@@ -141,10 +141,10 @@ const getOrderStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             last30DaysStart.toISOString().split('T')[0]
           ),
-          lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -157,11 +157,11 @@ const getOrderStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysStart.toISOString().split('T')[0]
           ),
           lte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysEnd.toISOString().split('T')[0]
           ),
           eq(ordersHeader.isDeleted, false)
@@ -209,10 +209,10 @@ const getDiscountedAmountStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             last30DaysStart.toISOString().split('T')[0]
           ),
-          lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -226,11 +226,11 @@ const getDiscountedAmountStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysStart.toISOString().split('T')[0]
           ),
           lte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysEnd.toISOString().split('T')[0]
           ),
           eq(ordersHeader.isDeleted, false)
@@ -279,10 +279,10 @@ const getAverageOrderStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             last30DaysStart.toISOString().split('T')[0]
           ),
-          lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -297,11 +297,11 @@ const getAverageOrderStats = async () => {
       .where(
         and(
           gte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysStart.toISOString().split('T')[0]
           ),
           lte(
-            ordersHeader.documentDate,
+            ordersHeader.billDate,
             previous30DaysEnd.toISOString().split('T')[0]
           ),
           eq(ordersHeader.isDeleted, false)
@@ -409,11 +409,8 @@ export const getTopVendorsDetails = async () => {
     .innerJoin(vendors, eq(ordersHeader.vendorId, vendors.id))
     .where(
       and(
-        gte(
-          ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0]
-        ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+        gte(ordersHeader.billDate, last30DaysStart.toISOString().split('T')[0]),
+        lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
         eq(ordersHeader.isDeleted, false)
       )
     )
@@ -436,11 +433,8 @@ export const getSpendingByProductCategory = async () => {
     .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(
       and(
-        gte(
-          ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0]
-        ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+        gte(ordersHeader.billDate, last30DaysStart.toISOString().split('T')[0]),
+        lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
         eq(ordersHeader.isDeleted, false)
       )
     )
@@ -457,7 +451,7 @@ export const getPurchasesByDate = async () => {
 
     const purchasesByDate = await db
       .select({
-        date: sql<string>`DATE(${ordersHeader.documentDate})`,
+        date: sql<string>`DATE(${ordersHeader.billDate})`,
         itemTotal: sql<number>`SUM(CASE WHEN ${ordersDetails.itemId} IS NOT NULL THEN ${ordersDetails.amountInclusive} ELSE 0 END)`,
         serviceTotal: sql<number>`SUM(CASE WHEN ${ordersDetails.itemId} IS NULL THEN ${ordersDetails.amountInclusive} ELSE 0 END)`,
       })
@@ -465,19 +459,13 @@ export const getPurchasesByDate = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.documentDate,
-            last30Days.toISOString().split('T')[0]
-          ),
-          lte(
-            ordersHeader.documentDate,
-            new Date().toISOString().split('T')[0]
-          ),
+          gte(ordersHeader.billDate, last30Days.toISOString().split('T')[0]),
+          lte(ordersHeader.billDate, new Date().toISOString().split('T')[0]),
           eq(ordersHeader.isDeleted, false)
         )
       )
-      .groupBy(sql`DATE(${ordersHeader.documentDate})`)
-      .orderBy(sql`DATE(${ordersHeader.documentDate}) ASC`);
+      .groupBy(sql`DATE(${ordersHeader.billDate})`)
+      .orderBy(sql`DATE(${ordersHeader.billDate}) ASC`);
 
     const result = purchasesByDate.map(row => ({
       date: row.date,
