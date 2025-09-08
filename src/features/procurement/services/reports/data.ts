@@ -84,7 +84,7 @@ const orderRegisterSummary = async (
       vendors.vendorName,
       ordersHeader.billNo
     )
-    .orderBy(asc(ordersHeader.billDate));
+    .orderBy(asc(ordersHeader.id), asc(ordersHeader.billDate));
 };
 
 export const orderRegisterByItems = async (
@@ -111,7 +111,11 @@ export const orderRegisterByItems = async (
     .innerJoin(vendors, eq(ordersHeader.vendorId, vendors.id))
     .leftJoin(products, eq(ordersDetails.itemId, products.id))
     .leftJoin(services, eq(ordersDetails.serviceId, services.id))
-    .orderBy(asc(ordersHeader.billDate), asc(ordersHeader.documentDate));
+    .orderBy(
+      asc(ordersHeader.id),
+      asc(ordersHeader.billDate),
+      asc(ordersHeader.documentDate)
+    );
 };
 
 export const orderByProject = async (
@@ -141,7 +145,11 @@ export const orderByProject = async (
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
     .leftJoin(products, eq(ordersDetails.itemId, products.id))
     .leftJoin(services, eq(ordersDetails.serviceId, services.id))
-    .orderBy(asc(ordersHeader.billDate), asc(ordersHeader.billDate));
+    .orderBy(
+      asc(ordersHeader.id),
+      asc(ordersHeader.billDate),
+      asc(ordersHeader.billDate)
+    );
 };
 
 export const orderByProduct = async (
@@ -177,7 +185,11 @@ export const orderByProduct = async (
     .innerJoin(projects, eq(ordersDetails.projectId, projects.id))
     .leftJoin(products, eq(ordersDetails.itemId, products.id))
     .leftJoin(services, eq(ordersDetails.serviceId, services.id))
-    .orderBy(asc(ordersHeader.billDate), asc(ordersHeader.documentDate));
+    .orderBy(
+      asc(ordersHeader.id),
+      asc(ordersHeader.billDate),
+      asc(ordersHeader.documentDate)
+    );
 };
 
 export const orderByCriteria = async (values: unknown) => {
