@@ -28,10 +28,7 @@ export const materialRequisitionFormSchema = z.object({
 export const orderSchema = z
   .object({
     documentNo: requiredNumberSchemaEntry('Document no is required.'),
-    documentDate: requiredDateSchemaEntry().max(
-      addDays(new Date(), 1),
-      'Date cannot be later than today.'
-    ),
+    documentDate: requiredDateSchemaEntry(),
     vendor: requiredStringSchemaEntry('Vendor is required'),
     invoiceNo: optionalStringSchemaEntry(),
     vatType: z.enum(['NONE', 'INCLUSIVE', 'EXCLUSIVE'], {
