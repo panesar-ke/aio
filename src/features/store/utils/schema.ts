@@ -24,8 +24,14 @@ export const grnFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       productName: requiredStringSchemaEntry('Item is required'),
-      orderedQty: z.string(),
-      qty: z.string(),
+      orderedQty: z.coerce.number({
+        required_error: 'Field is required',
+        invalid_type_error: 'Field must be a number',
+      }),
+      qty: z.coerce.number({
+        required_error: 'Field is required',
+        invalid_type_error: 'Field must be a number',
+      }),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
     })
@@ -95,7 +101,10 @@ export const materialIssueFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       // stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
-      issuedQty: z.string(),
+      issuedQty: z.coerce.number({
+        required_error: 'Field is required',
+        invalid_type_error: 'Field must be a number',
+      }),
       remarks: optionalStringSchemaEntry(),
     })
   ),
