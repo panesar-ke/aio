@@ -24,8 +24,8 @@ export const grnFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       productName: requiredStringSchemaEntry('Item is required'),
-      orderedQty: requiredNumberSchemaEntry('ordered Qty is required'),
-      qty: requiredNumberSchemaEntry('Qty must be a positive number'),
+      orderedQty: z.string(),
+      qty: z.string(),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
     })
@@ -95,7 +95,7 @@ export const materialIssueFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       // stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
-      issuedQty: requiredNumberSchemaEntry('Issued Qty is required'),
+      issuedQty: z.string(),
       remarks: optionalStringSchemaEntry(),
     })
   ),
