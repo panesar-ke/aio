@@ -325,7 +325,6 @@ function IssueDetails({
                         <FormItem className="w-full">
                           <FormControl>
                             <Input
-                              type="number"
                               placeholder="Qty"
                               {...field}
                               value={field.value || ''}
