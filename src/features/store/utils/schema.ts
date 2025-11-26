@@ -100,7 +100,7 @@ export const materialIssueFormSchema = z.object({
     z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
-      // stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
+      stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
       issuedQty: z.coerce.number({
         required_error: 'Field is required',
         invalid_type_error: 'Field must be a number',

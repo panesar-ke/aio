@@ -97,7 +97,7 @@ export const createIssue = async (values: unknown) => {
             new Date(issueDate)
           );
 
-          if (currentStockBalance < issuedQty) {
+          if (currentStockBalance < +issuedQty) {
             throw new Error(
               `Insufficient stock for item ${itemId}. Available: ${currentStockBalance}, Requested: ${issuedQty}`
             );

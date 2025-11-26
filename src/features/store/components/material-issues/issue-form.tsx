@@ -3,7 +3,7 @@
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-// import axios, { isAxiosError } from 'axios';
+import axios, { isAxiosError } from 'axios';
 import { createId } from '@paralleldrive/cuid2';
 import { Trash2Icon } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
@@ -45,7 +45,11 @@ export function IssueMaterialForm({ products, stores, issueNo, issue }: Props) {
       jobcardNo: issue?.jobcardNo || '',
       staffIssued: issue?.staffName?.toUpperCase() || '',
       notes: issue?.text?.toUpperCase() || '',
-      items: issue?.items || [],
+      items:
+        issue?.items.map(item => ({
+          ...item,
+          issuedQty: item.issuedQty.toString(),
+        })) || [],
       issueDate: issue ? new Date(issue.issueDate) : new Date(),
       fromStoreId: issue?.storeId || '',
     },
@@ -195,26 +199,25 @@ function IssueDetails({
     name: 'items',
   });
 
-  //   async function handleProductCurrentBalance(value: string, i: number) {
-  //     try {
-  //       const response = await axios.get(
-  //         `/api/products/${value}/current-balance?storeId=${
-  //           fromStoreId || ''
-  //         }&asOfDate=${issueDate || new Date()}`
-  //       );
-  //       const currentBalance = response.data.currentBalance;
-  //       console.log('Current Balance:', currentBalance);
-  //       form.setValue(`items.${i}.stockBalance`, currentBalance);
-  //     } catch (error) {
-  //       if (isAxiosError(error)) {
-  //         const message = error.response?.data?.error || 'Unknown error';
-  //         toast.error(message);
-  //       } else {
-  //         console.error(error);
-  //         toast.error('Unknown error');
-  //       }
-  //     }
-  //   }
+  async function handleProductCurrentBalance(value: string, i: number) {
+    try {
+      const response = await axios.get(
+        `/api/products/${value}/current-balance?storeId=${
+          fromStoreId || ''
+        }&asOfDate=${issueDate || new Date()}`
+      );
+      const currentBalance = response.data.currentBalance;
+      form.setValue(`items.${i}.stockBalance`, currentBalance);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        const message = error.response?.data?.error || 'Unknown error';
+        toast.error(message);
+      } else {
+        console.error(error);
+        toast.error('Unknown error');
+      }
+    }
+  }
 
   return (
     <div className="space-y-2">
@@ -231,12 +234,12 @@ function IssueDetails({
               >
                 Product
               </th>
-              {/* <th
+              <th
                 className="text-left py-2 px-2 font-medium"
                 style={{ width: '128px' }}
               >
                 Current Stock
-              </th> */}
+              </th>
               <th
                 className="text-left py-2 px-2 font-medium"
                 style={{ width: '128px' }}
@@ -281,7 +284,7 @@ function IssueDetails({
                                 return;
                               }
                               field.onChange(value);
-                              //   handleProductCurrentBalance(value, index);
+                              handleProductCurrentBalance(value, index);
                             }}
                             value={field.value}
                             emptyText="Product not found"
@@ -295,7 +298,7 @@ function IssueDetails({
                     }}
                   />
                 </td>
-                {/* <td className="py-2 px-2" style={{ width: '128px' }}>
+                <td className="py-2 px-2" style={{ width: '128px' }}>
                   <FormField
                     control={form.control}
                     name={`items.${index}.stockBalance`}
@@ -315,7 +318,7 @@ function IssueDetails({
                       );
                     }}
                   />
-                </td> */}
+                </td>
                 <td className="py-2 px-2" style={{ width: '128px' }}>
                   <FormField
                     control={form.control}
@@ -394,7 +397,8 @@ function IssueDetails({
             append({
               id: createId(),
               itemId: '',
-              issuedQty: 0,
+              issuedQty: '0',
+              stockBalance: 0,
               remarks: '',
             });
           }}
