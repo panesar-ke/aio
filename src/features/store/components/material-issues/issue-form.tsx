@@ -48,7 +48,7 @@ export function IssueMaterialForm({ products, stores, issueNo, issue }: Props) {
       items:
         issue?.items.map(item => ({
           ...item,
-          issuedQty: item.issuedQty.toString(),
+          issuedQty: item.issuedQty,
         })) || [],
       issueDate: issue ? new Date(issue.issueDate) : new Date(),
       fromStoreId: issue?.storeId || '',
@@ -397,7 +397,7 @@ function IssueDetails({
             append({
               id: createId(),
               itemId: '',
-              issuedQty: '0',
+              issuedQty: 0,
               stockBalance: 0,
               remarks: '',
             });
