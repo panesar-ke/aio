@@ -1,6 +1,6 @@
 'use cache';
 import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, eq, ilike, max, or, sql } from 'drizzle-orm';
+import { and, eq, ilike, max, or, sql,desc } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import {
   getMaterialIssueNo,
@@ -45,11 +45,12 @@ export const getMaterialIssues = async (q?: string) => {
       issueDate: materialIssuesHeader.issueDate,
       staffName: materialIssuesHeader.staffName,
       jobcardNo: materialIssuesHeader.jobcardNo,
-      store: stores.storeName,
+      store: sql<string>`coalesce(UPPER(${stores.storeName}), '')`,
     })
     .from(materialIssuesHeader)
-    .innerJoin(stores, eq(materialIssuesHeader.storeId, stores.id))
+    .leftJoin(stores, eq(materialIssuesHeader.storeId, stores.id))
     .where(and(...filters))
+    .orderBy(desc(materialIssuesHeader.issueNo))
     .limit(100);
 };
 
