@@ -100,8 +100,8 @@ export function GrnForm({ pendingOrders, grnNo, stores }: Props) {
           id: i.id ?? '',
           productName: i.product ?? '',
           itemId: i.itemId ?? '',
-          orderedQty: parseInt(i.qty, 10),
-          qty: parseInt(i.qty, 10),
+          orderedQty: parseInt(i.qty, 10).toString(),
+          qty: parseInt(i.qty, 10).toString(),
           rate: parseFloat(i.rate),
           remarks: '',
         }))
