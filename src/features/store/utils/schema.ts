@@ -109,3 +109,20 @@ export const materialIssueFormSchema = z.object({
     })
   ),
 });
+
+export const conversionSchema = z.object({
+  conversionDate: z.coerce.date({
+    required_error: 'Conversion date is required.',
+  }),
+  finalProduct: z.string().min(1, 'Select item converting to.'),
+  convertedQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
+  convertingItems: z.array(
+    z.object({
+      id: z.string().min(1, 'ID is required.'),
+      itemId: z.string().min(1, 'Item is required.'),
+      stockBalance: z.coerce.number().optional(),
+      convertingQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
+      remarks: z.string().optional(),
+    })
+  ),
+});

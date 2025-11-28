@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { getStores } from '@/features/store/services/stores/data';
 import type {
+  conversionSchema,
   grnFormSchema,
   materialIssueFormSchema,
   materialTransferFormSchema,
@@ -26,6 +27,8 @@ export type MaterialTransferFormValues = z.infer<
 >;
 
 export type MaterialIssueFormValues = z.infer<typeof materialIssueFormSchema>;
+
+export type ConversionFormValues = z.infer<typeof conversionSchema>;
 
 export type StockMovementType =
   | 'GRN'
