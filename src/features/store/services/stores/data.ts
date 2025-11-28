@@ -10,6 +10,7 @@ import {
 import db from '@/drizzle/db';
 import { stockMovements, stores } from '@/drizzle/schema';
 import { dateFormat } from '@/lib/helpers/formatters';
+import { notFound } from 'next/navigation';
 
 export const getStores = async (q?: string) => {
   cacheTag(getStoresGlobalTag());
@@ -78,3 +79,15 @@ export const getProductBalance = async (
 
   return result;
 };
+
+export async function getMainStore() {
+  cacheTag(getStoresGlobalTag());
+  const mainStore = await db.query.stores.findFirst({
+    columns: { id: true, storeName: true },
+    where: (stores, { eq }) => eq(stores.storeName, 'main store'),
+  });
+  if (!mainStore) {
+    notFound();
+  }
+  return { value: mainStore.id, label: mainStore.storeName.toUpperCase() };
+}
