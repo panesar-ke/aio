@@ -46,7 +46,10 @@ export const orderSchema = z
           itemOrServiceId: requiredStringSchemaEntry('Field is required'),
           requestId: requiredStringSchemaEntry('Request ID is required'),
           projectId: requiredStringSchemaEntry('Project is required'),
-          qty: requiredNumberSchemaEntry('Qty is required'),
+          qty: z.coerce.number({
+            required_error: 'Qty is required',
+            invalid_type_error: 'Qty is required',
+          }),
           rate: optionalNumberSchemaEntry(),
           discountType: z.enum(['NONE', 'PERCENTAGE', 'AMOUNT']).optional(),
           discount: optionalNumberSchemaEntry(),
