@@ -118,26 +118,23 @@ export function JobTrackerForm({ data }: { data?: JobTrackerFormValues }) {
         <FormField
           control={form.control}
           name="startDate"
-          render={({ field }) => {
-            console.log(field.value);
-            return (
-              <FormItem>
-                <FormLabel>
-                  Start Date & Time <sup className="text-red-500">*</sup>
-                </FormLabel>
-                <FormControl>
-                  <DateTimePicker
-                    value={field.value}
-                    onChange={val => {
-                      console.log(val);
-                      field.onChange(val);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Start Date & Time <sup className="text-red-500">*</sup>
+              </FormLabel>
+              <FormControl>
+                <DateTimePicker
+                  value={field.value}
+                  onChange={val => {
+                    console.log(val);
+                    field.onChange(val);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <FormField
           control={form.control}
