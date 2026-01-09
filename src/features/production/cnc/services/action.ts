@@ -1,7 +1,7 @@
 'use server';
 
 import { validateFields } from '@/lib/action-validator';
-import {
+import type {
   SchemaValidationFailure,
   SchemaValidationSuccess,
 } from '@/types/index.types';
@@ -47,6 +47,7 @@ export const upsertJobTrackerEntry = async (values: JobTrackerFormValues) => {
     endDate,
     timeTaken,
     id,
+    status,
   } = data;
   const isEdit = !!id;
 
@@ -66,6 +67,7 @@ export const upsertJobTrackerEntry = async (values: JobTrackerFormValues) => {
         startDate,
         endDate,
         timeSpent: timeTaken ? timeTaken.toString() : '0',
+        status: endDate ? 'completed' : status,
         createdBy: user.id,
       })
       .onConflictDoUpdate({
@@ -78,6 +80,7 @@ export const upsertJobTrackerEntry = async (values: JobTrackerFormValues) => {
           startDate,
           endDate,
           timeSpent: timeTaken ? timeTaken.toString() : '0',
+          status: endDate ? 'completed' : status,
         },
       })
       .returning({ id: cncJobTracker.id });
