@@ -41,10 +41,7 @@ export default function Search({
 
   return (
     <div
-      className={cn(
-        'relative flex flex-1 flex-shrink-0 bg-card',
-        parentClassName
-      )}
+      className={cn('relative flex flex-1 shrink-0 bg-card', parentClassName)}
     >
       <label htmlFor="search" className="sr-only">
         Search
