@@ -12,7 +12,13 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Job Tracker - CNC',
 };
-export default function JobTrackerCNC() {
+export default async function JobTrackerCNC({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | Array<string> | undefined>>;
+}) {
+  const searchParamsValue = await searchParams;
+  const q = searchParamsValue.search as string | undefined;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -30,19 +36,19 @@ export default function JobTrackerCNC() {
           </div>
         }
       />
-      <Search placeholder="Search CNC jobs..." />
+      <Search placeholder="Search by job card no, description, or type" />
       <ErrorBoundaryWithSuspense
         errorMessage="An error occurred while fetching CNC jobs."
         loaderType="tableOnly"
       >
-        <SuspendedJobTrackerTable />
+        <SuspendedJobTrackerTable q={q} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function SuspendedJobTrackerTable() {
-  const data = await getJobTrackerEntries();
+async function SuspendedJobTrackerTable({ q }: { q?: string }) {
+  const data = await getJobTrackerEntries(q);
   return (
     <JobTrackerTable
       data={data.map(item => ({
