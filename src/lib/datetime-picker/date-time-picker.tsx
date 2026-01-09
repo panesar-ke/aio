@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { add, format, getHours, setHours, setMinutes } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
