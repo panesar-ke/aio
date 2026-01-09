@@ -64,7 +64,7 @@ export const getPendingReceiptOrders = async () => {
             and(eq(model.received, false), isNotNull(model.itemId)),
         },
       },
-      where: (model, { and, eq, isNotNull, ne }) =>
+      where: (model, { and, eq, ne }) =>
         and(
           eq(model.grnReceipt, false),
           eq(model.isDeleted, false),

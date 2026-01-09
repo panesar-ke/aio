@@ -3,8 +3,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import {
-  Period,
-  TimePickerType,
+  type Period,
+  type TimePickerType,
   getArrowByType,
   getDateByType,
   setDateByType,
