@@ -41,3 +41,27 @@ export const jobTrackerSchema = z
       });
     }
   });
+
+export const reportFilterSchema = z
+  .object({
+    dateRange: z.object({
+      from: z.coerce.date({
+        required_error: 'Please select a date and time',
+        invalid_type_error: 'Please select a date and time',
+      }),
+      to: z.coerce.date({
+        required_error: 'Please select a date and time',
+        invalid_type_error: 'Please select a date and time',
+      }),
+    }),
+    status: z.enum(['on hold', 'in progress', 'completed']),
+  })
+  .superRefine(({ dateRange: { from, to } }, ctx) => {
+    if (from && to && from.setHours(0, 0, 0, 0) > to.setHours(0, 0, 0, 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date must be after start date',
+        path: ['to'],
+      });
+    }
+  });
