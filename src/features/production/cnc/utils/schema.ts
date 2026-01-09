@@ -54,7 +54,7 @@ export const reportFilterSchema = z
         invalid_type_error: 'Please select a date and time',
       }),
     }),
-    status: z.enum(['on hold', 'in progress', 'completed']),
+    status: z.enum(['all', 'on hold', 'in progress', 'completed']),
   })
   .superRefine(({ dateRange: { from, to } }, ctx) => {
     if (from && to && from.setHours(0, 0, 0, 0) > to.setHours(0, 0, 0, 0)) {

@@ -59,6 +59,7 @@ export function ReportFilters() {
               <FormLabel>Status</FormLabel>
               <MiniSelect
                 options={[
+                  { label: 'All', value: 'all' },
                   { label: 'Completed', value: 'completed' },
                   { label: 'In Progress', value: 'in progress' },
                   { label: 'On Hold', value: 'on hold' },
