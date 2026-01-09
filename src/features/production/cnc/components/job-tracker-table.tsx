@@ -1,6 +1,6 @@
 'use client';
 
-import { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
 import { DataTable } from '@/components/custom/datatable';
 import { format } from 'date-fns';
@@ -16,7 +16,11 @@ import { useModal } from '@/features/integrations/modal-provider';
 import CustomModal from '@/components/custom/custom-modal';
 import { JobTrackerForm } from './job-tracker-form';
 
-export function JobTrackerTable({ data }: { data: JobTrackerFormValues[] }) {
+export function JobTrackerTable({
+  data,
+}: {
+  data: Array<JobTrackerFormValues>;
+}) {
   const { setOpen } = useModal();
   const handleDelete = async (id: string) => {
     const response = await deleteJobTrackerEntry(id);
