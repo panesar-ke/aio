@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { JobTrackerTable } from '@/features/production/cnc/components/job-tracker-table';
 import { NewJobTrackerButton } from '@/features/production/cnc/components/new-job-tracker';
 import { getJobTrackerEntries } from '@/features/production/cnc/services/data';
-import { FileIcon, PlusIcon } from 'lucide-react';
+import { FileIcon } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Job Tracker - CNC',
@@ -20,9 +21,11 @@ export default function JobTrackerCNC() {
         content={
           <div className="flex items-center gap-x-2">
             <NewJobTrackerButton />
-            <Button variant="tertiary" className="ml-auto">
-              <FileIcon />
-              Generate Report
+            <Button variant="tertiary" asChild>
+              <Link href="/production/job-tracker-cnc/reports">
+                <FileIcon />
+                Generate Report
+              </Link>
             </Button>
           </div>
         }
