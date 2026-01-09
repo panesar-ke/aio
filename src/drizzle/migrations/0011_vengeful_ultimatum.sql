@@ -1,0 +1,1 @@
+ALTER TABLE "cnc_job_tracker" ADD COLUMN "date_received" date NOT NULL;
