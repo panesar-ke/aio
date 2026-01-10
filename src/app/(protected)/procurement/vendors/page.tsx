@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import {
   TrendingUp,
   TrendingDown,
@@ -17,12 +15,12 @@ import {
   getVendors,
   getVendorStats,
 } from '@/features/procurement/services/vendors/data';
-import { ErrorNotification } from '@/components/custom/error-components';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { compactNumberFormatter } from '@/lib/helpers/formatters';
-import { TableSkeleton } from '@/components/custom/table-skeleton';
 import { VendorsDatatable } from '@/features/procurement/components/vendors/vendors-datatable';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { DatatableSkeleton } from '@/components/custom/loaders';
 
 export const metadata: Metadata = {
   title: 'Vendors',
@@ -38,30 +36,21 @@ export default async function VendorsPage({ searchParams }: SearchParams) {
         path="/procurement/vendors/new"
         description="Manage your vendors here. You can add, edit, or delete vendor information."
       />
-      <ErrorBoundary
-        fallback={<ErrorNotification message="Error loading vendor data" />}
+      <ErrorBoundaryWithSuspense
+        errorMessage="An error occurred while loading vendor data"
+        loader={<VendorStatsLoading />}
       >
-        <Suspense fallback={<VendorStatsLoading />}>
-          <VendorStats />
-        </Suspense>
-      </ErrorBoundary>
+        <VendorStats />
+      </ErrorBoundaryWithSuspense>
 
       <Search placeholder="Search vendor...." />
 
-      <ErrorBoundary
-        fallback={<ErrorNotification message="Error loading vendors" />}
+      <ErrorBoundaryWithSuspense
+        errorMessage="An error occurred while loading vendors"
+        loader={<DatatableSkeleton />}
       >
-        <Suspense
-          fallback={
-            <TableSkeleton
-              rowCount={10}
-              columnWidths={['w-56', 'w-32', 'w-32', 'w-32', 'w-32', 'w-1']}
-            />
-          }
-        >
-          <SuspensedVendors search={search} />
-        </Suspense>
-      </ErrorBoundary>
+        <SuspensedVendors search={search} />
+      </ErrorBoundaryWithSuspense>
     </div>
   );
 }
