@@ -53,6 +53,15 @@ export function FormLoader() {
   );
 }
 
+export function DatatableSkeleton() {
+  return (
+    <TableSkeleton
+      rowCount={10}
+      columnWidths={['w-36', 'w-24', 'w-56', 'w-44', 'w-24', 'w-1']}
+    />
+  );
+}
+
 export function ReportLoader({
   type = 'full',
 }: {
