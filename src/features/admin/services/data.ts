@@ -1,6 +1,6 @@
 'use cache';
 import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
@@ -20,7 +20,7 @@ export const getForms = async () => {
   });
 };
 
-export const getUsers = async () => {
+export const getUsers = async (q?: string) => {
   cacheTag(getUsersGlobalTag());
   return await db.query.users.findMany({
     columns: {
@@ -30,7 +30,16 @@ export const getUsers = async () => {
       promptPasswordChange: false,
       resetToken: false,
     },
-    orderBy: (users, { asc }) => [asc(users.name)],
+    where: q
+      ? (users, { ilike, or }) =>
+          or(
+            ilike(users.name, `%${q}%`),
+            ilike(users.email, `%${q}%`),
+            ilike(users.contact, `%${q}%`),
+            ilike(sql`CAST(${users.userType} AS TEXT)`, `%${q}%`)
+          )
+      : undefined,
+    orderBy: (users, { asc }) => [asc(sql`lower(${users.name})`)],
   });
 };
 
