@@ -4,16 +4,39 @@ import { EditAction } from '@/components/custom/custom-button';
 import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
 import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
 import { DataTable } from '@/components/custom/datatable';
+import { ToastContent } from '@/components/custom/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { getUsers } from '@/features/admin/services/data';
+import { cn } from '@/lib/utils';
 import type { ColumnDef } from '@tanstack/react-table';
 import { BanIcon, CheckIcon, Undo2Icon, UserLockIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useTransition } from 'react';
+import toast from 'react-hot-toast';
+import { toggleUserActiveState } from '@/features/admin/services/action';
 
 type User = Awaited<ReturnType<typeof getUsers>>[number];
 export function UsersDatatable({ users }: { users: Array<User> }) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleToogleActiveState(userId: string, currentState: boolean) {
+    startTransition(async () => {
+      console.log('Toggling user:', userId, 'Current state:', currentState);
+      const response = await toggleUserActiveState(userId, currentState);
+      if (response.error) {
+        toast.error(() => (
+          <ToastContent
+            title="Error updating user state"
+            message={response.message}
+          />
+        ));
+        return;
+      }
+    });
+  }
+
   const columns: Array<ColumnDef<User>> = [
     {
       accessorKey: 'name',
@@ -66,22 +89,42 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
     },
     {
       id: 'actions',
-      cell: ({ row }) => (
+      cell: ({
+        row: {
+          original: { id, active },
+        },
+      }) => (
         <DropdownMenu>
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/admin/users/${row.original.id}/edit`}>
+              <Link href={`/admin/users/${id}/edit`}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Undo2Icon className="size-3 text-muted-foreground" />
-              <span className="text-xs">Reset Password</span>
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/users/${id}/reset-password`}>
+                <Undo2Icon className="size-3 text-muted-foreground" />
+                <span className="text-xs">Reset Password</span>
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <UserLockIcon className="size-3 text-destructive" />
-              <span className="text-xs text-destructive">Deactivate User</span>
+            <DropdownMenuItem
+              disabled={isPending}
+              onClick={() => handleToogleActiveState(id, active)}
+            >
+              {active ? (
+                <UserLockIcon className="size-3 text-error-foreground" />
+              ) : (
+                <CheckIcon className="size-3 text-success-foreground" />
+              )}
+              <span
+                className={cn(
+                  'text-xs ',
+                  active ? 'text-error-foreground' : 'text-success-foreground'
+                )}
+              >
+                {active ? 'Deactivate User' : 'Activate User'}
+              </span>
             </DropdownMenuItem>
           </CustomDropdownContent>
         </DropdownMenu>
@@ -104,7 +147,7 @@ export function UserAvatar({
         <AvatarImage src={image} alt={userName} />
         <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
-      <p className="font-medium capitalize">{userName}</p>
+      <p className="font-medium capitalize">{userName.toLowerCase()}</p>
     </div>
   );
 }
