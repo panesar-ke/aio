@@ -17,7 +17,7 @@ export default async function Users({ searchParams }: SearchParams) {
     <div className="space-y-6">
       <PageHeader
         title="Users"
-        description="Create and manage users application users..."
+        description="Create and manage application users..."
         path="/admin/users/new"
       />
       <Search placeholder="Search users...." />
