@@ -43,3 +43,23 @@ export const cloneUserRightsFormSchema = z
       });
     }
   });
+
+  export const resetPasswordFormSchema = z
+	.object({
+		userId: z.string().min(1, { message: "User is required" }),
+		resetMethod: z.enum(["automatic", "manual"], {
+			message: "Reset method is required",
+		}),
+		password: z.string().nullish(),
+	})
+	.superRefine((data, ctx) => {
+		if (data.resetMethod === "manual") {
+			if (!data.password || data.password.length < 8) {
+				ctx.addIssue({
+					code: "custom",
+					message: "Password must be at least 8 characters long",
+					path: ["password"],
+				});
+			}
+		}
+	});
