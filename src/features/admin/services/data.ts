@@ -5,11 +5,13 @@ import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
   getUsersGlobalTag,
+  getUserTag,
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
 import { type User } from '@/types/index.types';
 import { forms, userRights } from '@/drizzle/schema';
+import { notFound } from 'next/navigation';
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -41,6 +43,23 @@ export const getUsers = async (q?: string) => {
       : undefined,
     orderBy: (users, { asc }) => [asc(sql`lower(${users.name})`)],
   });
+};
+
+export const getUser = async (userId: string) => {
+  cacheTag(getUserTag(userId));
+  const user = await db.query.users.findFirst({
+    columns: {
+      password: false,
+      contactVerified: false,
+      defaultMenu: false,
+      promptPasswordChange: false,
+      resetToken: false,
+    },
+    where: (users, { eq }) => eq(users.id, userId),
+  });
+
+  if (!user) return notFound();
+  return user;
 };
 
 export const getUserForms = async (
