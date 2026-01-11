@@ -2,9 +2,9 @@
 
 import { revalidateTag } from 'next/cache';
 import { eq, and, ne } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
 import type {
   CloneUserRightsFormValues,
+  ResetPasswordFormValues,
   User,
   UserRightsFormValue,
 } from '@/features/admin/utils/admin.types';
@@ -22,14 +22,14 @@ import {
   userSchema,
 } from '@/features/admin/utils/schema';
 import { getCurrentUser } from '@/lib/session';
-import { env } from '@/env/server';
 import { inngest } from '@/inngest/client';
 import {
   internationalizePhoneNumber,
   titleCase,
 } from '@/lib/helpers/formatters';
 import { redirect } from 'next/navigation';
-import { generatePassword } from '@/features/admin/utils/helpers';
+import { generatePassword, hashPassword } from '@/features/admin/utils/helpers';
+import { getUser } from '@/features/admin/services/data';
 
 export async function updateUserRights(values: unknown) {
   const { data, error } = validateFields<UserRightsFormValue>(
@@ -147,10 +147,9 @@ export const upsertUser = async (values: unknown) => {
   }
 
   const { id, name, contact, email, userType, active } = data;
-  console.log(id);
 
   const password = generatePassword(8);
-  const hashedPassword = await bcrypt.hash(password, Number(env.BCRYPT_ROUNDS));
+  const hashedPassword = await hashPassword(password);
 
   try {
     const contactExists = await db.query.users.findFirst({
@@ -209,4 +208,59 @@ export const upsertUser = async (values: unknown) => {
     };
   }
   return redirect('/admin/users');
+};
+
+export const toggleUserActiveState = async (
+  userId: string,
+  currentState: boolean
+) => {
+  const user = await getCurrentUser();
+  console.log('Toggling user:', userId, 'Current state:', currentState);
+  if (user.userType === 'STANDARD USER') {
+    return {
+      error: true,
+      message: 'You do not have permission to perform this action',
+    };
+  }
+
+  try {
+    await getUser(userId);
+
+    await db
+      .update(users)
+      .set({ active: !currentState })
+      .where(eq(users.id, userId));
+    revalidateUserTags(userId);
+  } catch (error) {
+    console.error('Error toggling user active state:', error);
+    return {
+      error: true,
+      message: 'Failed to update user status',
+    };
+  }
+  return {
+    error: false,
+    message: 'User status updated successfully',
+  };
+};
+
+export const resetPassword = async (data: ResetPasswordFormValues) => {
+  const { userId, resetMethod, password } = data;
+
+  await getUser(userId);
+
+  let newPassword: string;
+  if (resetMethod === 'automatic') {
+    newPassword = generatePassword(8);
+  } else {
+    newPassword = password as string;
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+  return newPassword;
 };
