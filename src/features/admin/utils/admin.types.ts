@@ -2,6 +2,7 @@ import type z from 'zod';
 import type {
   cloneUserRightsFormSchema,
   userRightsFormSchema,
+  userSchema,
 } from '@/features/admin/utils/schema';
 
 export type UserRightsFormValue = z.infer<typeof userRightsFormSchema>;
@@ -10,3 +11,4 @@ export type CloneUserRightsFormValues = z.infer<
 >;
 
 export type AdminCacheTag = 'forms' | 'users';
+export type User = z.infer<typeof userSchema>;

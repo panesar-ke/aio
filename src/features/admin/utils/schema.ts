@@ -4,6 +4,21 @@ import {
   requiredStringSchemaEntry,
 } from '@/lib/schema-rules';
 
+export const userSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, 'User name is required'),
+  contact: z
+    .string()
+    .min(1, 'Contact is required')
+    .max(10, 'Contact cannot exceed 10 characters'),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  userType: z.enum(['ADMIN', 'STANDARD USER', 'SUPER ADMIN'], {
+    required_error: 'User type is required',
+    invalid_type_error: 'Invalid user type',
+  }),
+  active: z.boolean(),
+});
+
 export const userRightsFormSchema = z.object({
   userId: requiredStringSchemaEntry('User is required'),
   rights: z.array(
