@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { logoutAction } from '@/features/auth/actions/auth';
+import type { Route } from 'next';
 
 export function NavbarActions() {
   return (
@@ -54,7 +55,7 @@ function HeaderNavItem({
       <TooltipTrigger>
         {!asButton ? (
           <Link
-            href={linkPath as string}
+            href={linkPath as Route}
             className="size-8 rounded-full border grid place-content-center"
           >
             <Icon className="size-4 text-muted-foreground" />
