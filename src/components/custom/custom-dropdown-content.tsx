@@ -10,10 +10,7 @@ export function CustomDropdownContent({
 }) {
   return (
     <DropdownMenuContent
-      className={cn(
-        '[&>*]:cursor-pointer [&>*]:text-xs [&>*]:font-medium',
-        className
-      )}
+      className={cn('*:cursor-pointer *:text-xs *:font-medium', className)}
     >
       {children}
     </DropdownMenuContent>
