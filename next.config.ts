@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     useCache: true,
     reactCompiler: true,
   },
+  typedRoutes: true,
 };
 
 export default nextConfig;

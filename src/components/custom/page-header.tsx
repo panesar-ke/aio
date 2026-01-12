@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { Route } from 'next';
 
 interface PageHeaderProps {
   title: string;
   buttonText?: string;
-  path?: string;
+  path?: Route;
   description?: string;
   content?: React.ReactNode;
   Icon?: LucideIcon;

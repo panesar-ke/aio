@@ -1,15 +1,17 @@
 'use cache';
 import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
   getUsersGlobalTag,
+  getUserTag,
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
 import { type User } from '@/types/index.types';
 import { forms, userRights } from '@/drizzle/schema';
+import { notFound } from 'next/navigation';
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -20,7 +22,7 @@ export const getForms = async () => {
   });
 };
 
-export const getUsers = async () => {
+export const getUsers = async (q?: string) => {
   cacheTag(getUsersGlobalTag());
   return await db.query.users.findMany({
     columns: {
@@ -30,8 +32,34 @@ export const getUsers = async () => {
       promptPasswordChange: false,
       resetToken: false,
     },
-    orderBy: (users, { asc }) => [asc(users.name)],
+    where: q
+      ? (users, { ilike, or }) =>
+          or(
+            ilike(users.name, `%${q}%`),
+            ilike(users.email, `%${q}%`),
+            ilike(users.contact, `%${q}%`),
+            ilike(sql`CAST(${users.userType} AS TEXT)`, `%${q}%`)
+          )
+      : undefined,
+    orderBy: (users, { asc }) => [asc(sql`lower(${users.name})`)],
   });
+};
+
+export const getUser = async (userId: string) => {
+  cacheTag(getUserTag(userId));
+  const user = await db.query.users.findFirst({
+    columns: {
+      password: false,
+      contactVerified: false,
+      defaultMenu: false,
+      promptPasswordChange: false,
+      resetToken: false,
+    },
+    where: (users, { eq }) => eq(users.id, userId),
+  });
+
+  if (!user) return notFound();
+  return user;
 };
 
 export const getUserForms = async (

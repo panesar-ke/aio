@@ -7,6 +7,13 @@ type Events = {
       userId: string;
     };
   };
+  'user/send.new.password': {
+    data: {
+      contact: string;
+      password: string;
+      name: string;
+    };
+  };
 };
 
 export const inngest = new Inngest({

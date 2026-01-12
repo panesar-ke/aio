@@ -26,13 +26,18 @@ const aj = arcjet({
 });
 
 export default async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+
+  if (path.startsWith('/api/inngest')) {
+    return NextResponse.next();
+  }
+
   const decision = await aj.protect(req);
 
   if (decision.isDenied()) {
     return new Response(null, { status: 403 });
   }
 
-  const path = req.nextUrl.pathname;
   const isPublicRoute = publicRoutes.includes(path);
 
   const sessionCookie = req.cookies.get('session');

@@ -76,3 +76,18 @@ export function reportCaseFormatter(value: string) {
   const result = value.replace(/([A-Z])/g, ' $1');
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
+
+export function internationalizePhoneNumber(
+  phoneNumber: string,
+  withPlus = false
+) {
+  if (phoneNumber.startsWith('+')) {
+    return phoneNumber;
+  }
+  if (phoneNumber.startsWith('0')) {
+    return withPlus
+      ? `+254${phoneNumber.slice(1)}`
+      : `254${phoneNumber.slice(1)}`;
+  }
+  return phoneNumber;
+}

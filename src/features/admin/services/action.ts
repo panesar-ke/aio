@@ -1,20 +1,35 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import type {
   CloneUserRightsFormValues,
+  ResetPasswordFormValues,
+  User,
   UserRightsFormValue,
 } from '@/features/admin/utils/admin.types';
 import type { ApiFailureWithoutData } from '@/types/index.types';
-import { userRights } from '@/drizzle/schema';
+import { userRights, users } from '@/drizzle/schema';
 import db from '@/drizzle/db';
-import { getUserFormsGlobalTag } from '@/features/admin/utils/cache';
+import {
+  getUserFormsGlobalTag,
+  revalidateUserTags,
+} from '@/features/admin/utils/cache';
 import { validateFields } from '@/lib/action-validator';
 import {
   cloneUserRightsFormSchema,
   userRightsFormSchema,
+  userSchema,
 } from '@/features/admin/utils/schema';
+import { getCurrentUser } from '@/lib/session';
+import { inngest } from '@/inngest/client';
+import {
+  internationalizePhoneNumber,
+  titleCase,
+} from '@/lib/helpers/formatters';
+import { redirect } from 'next/navigation';
+import { generatePassword, hashPassword } from '@/features/admin/utils/helpers';
+import { getUser } from '@/features/admin/services/data';
 
 export async function updateUserRights(values: unknown) {
   const { data, error } = validateFields<UserRightsFormValue>(
@@ -110,4 +125,142 @@ export const cloneUserRights = async (values: unknown) => {
       message: 'Failed to clone user rights',
     };
   }
+};
+
+export const upsertUser = async (values: unknown) => {
+  const user = await getCurrentUser();
+
+  if (user.userType === 'STANDARD USER') {
+    return {
+      error: true,
+      message: 'You do not have permission to perform this action',
+    };
+  }
+
+  const { data, error } = validateFields<User>(values, userSchema);
+
+  if (error !== null) {
+    return {
+      error: true,
+      message: 'Validation failed! Confirm your input.',
+    };
+  }
+
+  const { id, name, contact, email, userType, active } = data;
+
+  const password = generatePassword(8);
+  const hashedPassword = await hashPassword(password);
+
+  try {
+    const contactExists = await db.query.users.findFirst({
+      columns: { id: true },
+      where: and(eq(users.contact, contact), id ? ne(users.id, id) : undefined),
+    });
+
+    if (contactExists) {
+      return {
+        error: true,
+        message: 'Contact already exists',
+      };
+    }
+
+    const [{ id: userId }] = await db
+      .insert(users)
+      .values({
+        id: id ?? undefined,
+        name,
+        password: hashedPassword,
+        contact,
+        email,
+        userType,
+        active: true,
+        promptPasswordChange: true,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          name,
+          contact,
+          email,
+          userType,
+          active,
+        },
+      })
+      .returning({ id: users.id });
+
+    if (!id) {
+      await inngest.send({
+        name: 'user/send.new.password',
+        data: {
+          contact: internationalizePhoneNumber(contact, true),
+          password,
+          name: titleCase(name.split(' ')[0]),
+        },
+      });
+    }
+
+    revalidateUserTags(userId);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return {
+      error: true,
+      message: `Failed to ${id ? 'update' : 'create'} user!`,
+    };
+  }
+  return redirect('/admin/users');
+};
+
+export const toggleUserActiveState = async (
+  userId: string,
+  currentState: boolean
+) => {
+  const user = await getCurrentUser();
+  console.log('Toggling user:', userId, 'Current state:', currentState);
+  if (user.userType === 'STANDARD USER') {
+    return {
+      error: true,
+      message: 'You do not have permission to perform this action',
+    };
+  }
+
+  try {
+    await getUser(userId);
+
+    await db
+      .update(users)
+      .set({ active: !currentState })
+      .where(eq(users.id, userId));
+    revalidateUserTags(userId);
+  } catch (error) {
+    console.error('Error toggling user active state:', error);
+    return {
+      error: true,
+      message: 'Failed to update user status',
+    };
+  }
+  return {
+    error: false,
+    message: 'User status updated successfully',
+  };
+};
+
+export const resetPassword = async (data: ResetPasswordFormValues) => {
+  const { userId, resetMethod, password } = data;
+
+  await getUser(userId);
+
+  let newPassword: string;
+  if (resetMethod === 'automatic') {
+    newPassword = generatePassword(8);
+  } else {
+    newPassword = password as string;
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+  return newPassword;
 };
