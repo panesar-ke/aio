@@ -6,6 +6,7 @@ import db from '@/drizzle/db';
 import { loginSchema } from '@/features/auth/actions/schema';
 import { redirect } from 'next/navigation';
 import { createSession, deleteSession } from '@/lib/session';
+import type { Route } from 'next';
 
 export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
   const { success, data, error } = loginSchema.safeParse(unsafeData);
@@ -39,7 +40,7 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
 
   await createSession(user.id);
 
-  return redirect(user.defaultMenu || '/dashboard');
+  return redirect((user.defaultMenu as Route) || ('/dashboard' as Route));
 }
 
 export async function logoutAction() {

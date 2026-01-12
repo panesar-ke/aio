@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SearchIcon } from 'lucide-react';
 import { useDebounceCallback } from 'usehooks-ts';
 import { cn } from '@/lib/utils';
+import type { Route } from 'next';
 
 interface SearchProps {
   placeholder: string;
@@ -36,7 +37,7 @@ export default function Search({
       });
     }
 
-    replace(`${pathname}?${params.toString()}`);
+    replace(`${pathname}?${params.toString()}` as Route);
   }, 300);
 
   return (
