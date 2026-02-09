@@ -2,7 +2,12 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import arcjet, { detectBot, shield, slidingWindow } from '@arcjet/next';
 
-const publicRoutes = ['/login', '/forgot-password', '/api/inngest'];
+const publicRoutes = [
+  '/login',
+  '/forgot-password',
+  '/api/inngest',
+  '/api/website-enquries/log',
+];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
@@ -28,7 +33,10 @@ const aj = arcjet({
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  if (path.startsWith('/api/inngest')) {
+  if (
+    path.startsWith('/api/inngest') ||
+    path.startsWith('/api/website-enquries')
+  ) {
     return NextResponse.next();
   }
 
