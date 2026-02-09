@@ -92,6 +92,13 @@
       "when": 1767873579584,
       "tag": "0012_lively_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1770562595295,
+      "tag": "0013_fluffy_swordsman",
+      "breakpoints": true
     }
   ]
 }
