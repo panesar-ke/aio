@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/collapsible';
 import type { Form } from '@/types/index.types';
 import { generateRandomString } from '@/lib/utils';
+import type { Route } from 'next';
 
 interface FormattedArray {
   title: string;
@@ -103,7 +104,10 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
                         asChild
                         className="text-xs font-medium text-muted-foreground"
                       >
-                        <Link href={`/${subItem.url}`} className="capitalize">
+                        <Link
+                          href={`/${subItem.url}` as Route}
+                          className="capitalize"
+                        >
                           {subItem.title}
                         </Link>
                       </SidebarMenuSubButton>

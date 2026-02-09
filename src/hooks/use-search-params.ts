@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
@@ -34,7 +35,7 @@ export function useSearchParams(): UseSearchParamsReturn {
         }
       });
 
-      replace(`${pathname}?${urlParams.toString()}`);
+      replace(`${pathname}?${urlParams.toString()}` as Route);
     },
     [replace, pathname, formatValue]
   );
@@ -49,7 +50,7 @@ export function useSearchParams(): UseSearchParamsReturn {
         currentParams.delete(key);
       }
 
-      replace(`${pathname}?${currentParams.toString()}`);
+      replace(`${pathname}?${currentParams.toString()}` as Route);
     },
     [replace, pathname, formatValue]
   );
@@ -58,13 +59,13 @@ export function useSearchParams(): UseSearchParamsReturn {
     (key: string) => {
       const currentParams = new URLSearchParams(window.location.search);
       currentParams.delete(key);
-      replace(`${pathname}?${currentParams.toString()}`);
+      replace(`${pathname}?${currentParams.toString()}` as Route);
     },
     [replace, pathname]
   );
 
   const clearSearchParams = useCallback(() => {
-    replace(pathname);
+    replace(pathname as Route);
   }, [replace, pathname]);
 
   return {
