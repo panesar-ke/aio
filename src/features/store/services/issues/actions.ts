@@ -65,6 +65,7 @@ const validateBusinessLogic = async (data: MaterialIssueFormValues) => {
         eq(products.stockItem, true)
       )
     );
+  console.log({itemIds, existingItemsCount: existingItems.length})
 
   if (existingItems.length !== itemIds.length) {
     throw new Error(
