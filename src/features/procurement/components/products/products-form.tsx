@@ -51,9 +51,9 @@ export function ProductsForm({
       categoryId: product?.categoryId?.toString() || '',
       uomId: product?.uomId?.toString() || '',
       buyingPrice: product?.buyingPrice?.toString() || '0',
-      stockItem: product?.stockItem || true,
-      subItem: product?.isPeace || false,
-      active: product?.active || true,
+      stockItem: product?.stockItem ?? true,
+      subItem: product?.isPeace ?? false,
+      active: product?.active ?? true,
     },
     resolver: zodResolver(productsSchema),
   });
