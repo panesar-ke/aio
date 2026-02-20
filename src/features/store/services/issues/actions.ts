@@ -55,6 +55,37 @@ const validateBusinessLogic = async (data: MaterialIssueFormValues) => {
   }
 
   const itemIds = data.items.map(item => item.itemId);
+
+  // Check each condition separately
+const allItems = await db
+  .select()
+  .from(products)
+  .where(inArray(products.id, itemIds));
+console.log('Items found by ID only:', allItems.length);
+
+const activeItems = await db
+  .select()
+  .from(products)
+  .where(
+    and(
+      inArray(products.id, itemIds),
+      eq(products.active, true)
+    )
+  );
+console.log('Active items:', activeItems.length);
+
+const stockItems = await db
+  .select()
+  .from(products)
+  .where(
+    and(
+      inArray(products.id, itemIds),
+      eq(products.stockItem, true)
+    )
+  );
+console.log('Stock items:', stockItems.length);
+
+  
   const existingItems = await db
     .select()
     .from(products)
