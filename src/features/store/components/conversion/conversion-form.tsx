@@ -169,7 +169,7 @@ function ConvertingItems({
       const response = await axios.get(
         `/api/products/${value}/current-balance?storeId=${
           mainStore.value || ''
-        }&asOfDate=${conversionDate || new Date()}`
+        }&asOfDate=${conversionDate || new Date()}`,
       );
       const currentBalance = response.data.currentBalance;
       form.setValue(`convertingItems.${i}.stockBalance`, currentBalance);
@@ -242,7 +242,7 @@ function ConvertingItems({
                               }
 
                               const productAlreadyAdded = items.some(
-                                item => item.itemId === value
+                                item => item.itemId === value,
                               );
                               if (productAlreadyAdded) {
                                 toast.error('Product already added');
@@ -274,7 +274,7 @@ function ConvertingItems({
                             <Input
                               type="number"
                               {...field}
-                              value={field.value || ''}
+                              value={field.value}
                               className="w-full"
                               disabled
                             />
@@ -295,7 +295,7 @@ function ConvertingItems({
                             <Input
                               placeholder="Qty"
                               {...field}
-                              value={field.value || ''}
+                              value={field.value}
                               autoFocus={false}
                               className="w-full"
                               disabled={isPending}
@@ -355,7 +355,7 @@ function ConvertingItems({
           onClick={() => {
             if (!mainStore.value || !conversionDate) {
               return toast.error(
-                'Please select From Store and Transfer Date first'
+                'Please select From Store and Transfer Date first',
               );
             }
             append({
