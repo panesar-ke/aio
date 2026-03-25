@@ -91,7 +91,7 @@ export async function getMainStore() {
   cacheTag(getStoresGlobalTag());
   const mainStore = await db.query.stores.findFirst({
     columns: { id: true, storeName: true },
-    where: (stores, { eq }) => eq(stores.storeName, 'main store'),
+    where: (stores, { eq }) => eq(stores.isMain, true),
   });
   if (!mainStore) {
     notFound();
