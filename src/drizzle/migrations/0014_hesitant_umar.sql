@@ -1,0 +1,1 @@
+ALTER TABLE "stores" ADD COLUMN "is_main" boolean DEFAULT false NOT NULL;

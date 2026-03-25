@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
   varchar,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { grnsHeader, materialIssuesHeader, products } from '@/drizzle/schema';
 
@@ -16,11 +17,12 @@ export const stores = pgTable(
     id: uuid('id').notNull().primaryKey().defaultRandom(),
     storeName: varchar('store_name', { length: 255 }).unique().notNull(),
     description: text('description').notNull(),
+    isMain: boolean('is_main').notNull().default(false),
   },
   table => [
     index('store_idx').on(table.storeName),
     index('store_description_idx').on(table.description),
-  ]
+  ],
 );
 
 export const storesRelations = relations(stores, ({ many }) => ({
@@ -52,7 +54,7 @@ export const materialTransferRelations = relations(
       references: [stores.id],
     }),
     materials: many(materialsTransferDetails),
-  })
+  }),
 );
 
 export const materialsTransferDetails = pgTable('materials_transfer_details', {
@@ -82,5 +84,5 @@ export const materialsTransferDetailsRelations = relations(
       fields: [materialsTransferDetails.itemId],
       references: [products.id],
     }),
-  })
+  }),
 );
