@@ -21,7 +21,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/reui-btn';
-import { cn, generateRandomId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type DateRangePickerProps = {
   initialDateRange?: DateRange;
@@ -153,7 +153,7 @@ export function DatePicker({
               <div className="flex flex-col px-2 gap-0.5">
                 {presets.map((preset, index) => (
                   <Button
-                    key={generateRandomId(`preset-${index}`)}
+                    key={`preset-${index}`}
                     type="button"
                     variant="ghost"
                     className={cn(

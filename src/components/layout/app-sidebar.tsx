@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import Logo from '@/components/layout/logo';
-import { generateRandomString } from '@/lib/utils';
 import { Navigation } from '@/components/layout/navigation';
 import { getUserForms } from '@/features/admin/services/data';
 import { getCurrentUser } from '@/lib/session';
@@ -40,8 +39,8 @@ export function SidebarSkeleton() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {Array.from({ length: 5 }).map(() => (
-            <SidebarMenuItem key={generateRandomString(5)}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <SidebarMenuItem key={`sidebar-skeleton-${index}`}>
               <SidebarMenuButton>
                 <Skeleton className="size-4" />
                 <Skeleton className="w-56 h-4" />

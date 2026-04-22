@@ -62,10 +62,10 @@ export function getVendorStatsGlobalTag() {
 
 export function revalidateMaterialRequisitions(id?: string) {
   if (id) {
-    revalidateTag(getMaterialRequisitionIdTag(id));
+    revalidateTag(getMaterialRequisitionIdTag(id), 'max');
   }
-  revalidateTag(getMaterialRequisitionGlobalTag());
-  revalidateTag(getMaterialRequisitionNoGlobalTag());
+  revalidateTag(getMaterialRequisitionGlobalTag(), 'max');
+  revalidateTag(getMaterialRequisitionNoGlobalTag(), 'max');
 }
 
 export function getPurchaseOrderNoGlobalTag() {
@@ -86,38 +86,38 @@ export function getPurchaseOrderIdTag(id: string) {
 
 export function revalidatePurchaseOrders(id?: string) {
   if (id) {
-    revalidateTag(getPurchaseOrderIdTag(id));
+    revalidateTag(getPurchaseOrderIdTag(id), 'max');
   }
-  revalidateTag(getPurchaseOrdersGlobalTag());
-  revalidateTag(getPurchaseOrderNoGlobalTag());
-  revalidateTag(getPendingRequestsGlobalTag());
-  revalidateTag(getVendorStatsGlobalTag());
-  revalidateTag(getUnreceivedGrnsGlobal());
+  revalidateTag(getPurchaseOrdersGlobalTag(), 'max');
+  revalidateTag(getPurchaseOrderNoGlobalTag(), 'max');
+  revalidateTag(getPendingRequestsGlobalTag(), 'max');
+  revalidateTag(getVendorStatsGlobalTag(), 'max');
+  revalidateTag(getUnreceivedGrnsGlobal(), 'max');
 }
 
 export function revalidateVendors(id: string) {
-  revalidateTag(getVendorsGlobalTag());
-  revalidateTag(getVendorIdTag(id));
-  revalidateTag(getVendorStatsGlobalTag());
+  revalidateTag(getVendorsGlobalTag(), 'max');
+  revalidateTag(getVendorIdTag(id), 'max');
+  revalidateTag(getVendorStatsGlobalTag(), 'max');
 }
 
 export const revalidateProducts = (id: string) => {
-  revalidateTag(getProductIdTag(id));
-  revalidateTag(getProductsGlobalTag());
+  revalidateTag(getProductIdTag(id), 'max');
+  revalidateTag(getProductsGlobalTag(), 'max');
 };
 
 export const revalidateServices = (id: string) => {
-  revalidateTag(getServiceIdTag(id));
-  revalidateTag(getServicesGlobalTag());
+  revalidateTag(getServiceIdTag(id), 'max');
+  revalidateTag(getServicesGlobalTag(), 'max');
 };
 
 export const revalidateAutoOrder = () => {
-  revalidateTag(getAutoOrdersGlobalTag());
+  revalidateTag(getAutoOrdersGlobalTag(), 'max');
 };
 
 export function revalidateProjects(id?: string) {
   if (id) {
-    revalidateTag(getProjectIdTag(id));
+    revalidateTag(getProjectIdTag(id), 'max');
   }
-  revalidateTag(getProjectsGlobalTag());
+  revalidateTag(getProjectsGlobalTag(), 'max');
 }

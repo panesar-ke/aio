@@ -177,9 +177,9 @@ function VendorStat({
 export function VendorStatsLoading() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map(() => (
+      {Array.from({ length: 4 }).map((_, index) => (
         <div
-          key={crypto.randomUUID()}
+          key={`vendor-stats-loading-${index}`}
           className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
         >
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">

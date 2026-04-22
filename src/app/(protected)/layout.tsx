@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { connection } from 'next/server';
 
 import { AppSidebar, SidebarSkeleton } from '@/components/layout/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -10,6 +11,8 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
+
   return (
     <SidebarProvider>
       <ErrorBoundary

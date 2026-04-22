@@ -27,7 +27,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import type { Form } from '@/types/index.types';
-import { generateRandomString } from '@/lib/utils';
 import type { Route } from 'next';
 
 interface FormattedArray {
@@ -79,7 +78,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
     icon: isIconKey(module) ? icons[module] : ShieldCheck,
     items: items.map(item => ({
       ...item,
-      id: `${item.id}${generateRandomString(5)}`,
+      id: `${module}-${item.id}`,
     })),
   }));
   return (

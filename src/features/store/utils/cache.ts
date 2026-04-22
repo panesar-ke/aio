@@ -55,26 +55,26 @@ export const getMaterialIssueNo = () => {
 };
 
 export const revalidateStoresTag = (id: string) => {
-  revalidateTag(getStoresGlobalTag());
-  revalidateTag(getStoresIdTag(id));
+  revalidateTag(getStoresGlobalTag(), 'max');
+  revalidateTag(getStoresIdTag(id), 'max');
 };
 
 export const revalidateGrnsTag = (id: string) => {
-  revalidateTag(getGrnsGlobalTag());
-  revalidateTag(getGrnsIdTag(id));
-  revalidateTag(getGrnsNoTag());
-  revalidateTag(getUnreceivedGrnsGlobal());
-  revalidateTag('stock-balance');
+  revalidateTag(getGrnsGlobalTag(), 'max');
+  revalidateTag(getGrnsIdTag(id), 'max');
+  revalidateTag(getGrnsNoTag(), 'max');
+  revalidateTag(getUnreceivedGrnsGlobal(), 'max');
+  revalidateTag('stock-balance', 'max');
 };
 
 export const revalidateTransfersTag = (id: string) => {
-  revalidateTag(getTransfersGlobalTag());
-  revalidateTag(getTransfersIdTag(id));
-  revalidateTag('stock-balance');
+  revalidateTag(getTransfersGlobalTag(), 'max');
+  revalidateTag(getTransfersIdTag(id), 'max');
+  revalidateTag('stock-balance', 'max');
 };
 
 export const revalidateMaterialsIssues = (id: string) => {
-  revalidateTag(getMaterialIssuesGlobalTag());
-  revalidateTag(getMaterialIssuesIdTag(id));
-  revalidateTag(getMaterialIssueNo());
+  revalidateTag(getMaterialIssuesGlobalTag(), 'max');
+  revalidateTag(getMaterialIssuesIdTag(id), 'max');
+  revalidateTag(getMaterialIssueNo(), 'max');
 };

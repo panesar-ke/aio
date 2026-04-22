@@ -1,4 +1,5 @@
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { connection } from 'next/server';
 import PageHeader from '@/components/custom/page-header';
 import {
   getDashboardStats,
@@ -24,6 +25,8 @@ export const metadata = {
 };
 
 export default async function ProcurementDashboardPage() {
+  await connection();
+
   return (
     <div className="space-y-6">
       <PageHeader

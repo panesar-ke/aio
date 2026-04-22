@@ -1,6 +1,5 @@
 import PageHeader from '@/components/custom/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateRandomId } from '@/lib/utils';
 
 export default function Loading() {
   return (
@@ -12,10 +11,7 @@ export default function Loading() {
       />
       <div className="space-y-4 p-4">
         {Array.from({ length: 2 }).map((_, index) => (
-          <div
-            key={generateRandomId(`skeleton-${index}`)}
-            className="flex gap-2"
-          >
+          <div key={`reset-password-skeleton-${index}`} className="flex gap-2">
             <Skeleton className="size-4 rounded-full" />
             <Skeleton className="h-4 w-lg" />
           </div>

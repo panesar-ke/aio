@@ -2,7 +2,6 @@ import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TableSkeleton } from '@/components/custom/table-skeleton';
 import Image from 'next/image';
-import { generateRandomId } from '@/lib/utils';
 
 export function FullPageLoader() {
   return (
@@ -93,9 +92,9 @@ export function ReportLoader({
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="grid md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map(() => (
+          {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton
-              key={generateRandomId('loading-skeleton')}
+              key={`loading-skeleton-${index}`}
               className="h-10 w-full"
             />
           ))}

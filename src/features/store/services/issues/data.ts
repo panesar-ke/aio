@@ -1,5 +1,5 @@
 'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import { and, eq, ilike, max, or, sql,desc } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import {

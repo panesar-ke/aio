@@ -10,6 +10,6 @@ export const getJobTrackingIdTag = (id: string) => {
 };
 
 export const revalidateJobTrackingTag = (id: string) => {
-  revalidateTag(getJobTrackingGlobalTag());
-  revalidateTag(getJobTrackingIdTag(id));
+  revalidateTag(getJobTrackingGlobalTag(), 'max');
+  revalidateTag(getJobTrackingIdTag(id), 'max');
 };

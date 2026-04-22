@@ -60,7 +60,7 @@ export async function updateUserRights(values: unknown) {
       }
     });
 
-    revalidateTag(getUserFormsGlobalTag(userId));
+    revalidateTag(getUserFormsGlobalTag(userId), 'max');
 
     return {
       error: false,
@@ -112,7 +112,7 @@ export const cloneUserRights = async (values: unknown) => {
       .values(rightsToClone)
       .onConflictDoNothing({ target: [userRights.userId, userRights.formId] });
 
-    revalidateTag(getUserFormsGlobalTag(cloningTo));
+    revalidateTag(getUserFormsGlobalTag(cloningTo), 'max');
 
     return {
       error: false,
