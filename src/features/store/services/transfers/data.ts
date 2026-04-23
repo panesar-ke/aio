@@ -1,6 +1,6 @@
 'use cache';
 
-import { cacheTag } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import {
   getTransfersGlobalTag,
   getTransfersIdTag,

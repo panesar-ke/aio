@@ -1,6 +1,6 @@
 'use cache';
 
-import { cacheTag } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import { eq, gte, count, sum, lte, and, desc, sql, or, asc } from 'drizzle-orm';
 import { subYears, subDays } from 'date-fns';
 import db from '@/drizzle/db';

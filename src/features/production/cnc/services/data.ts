@@ -1,6 +1,6 @@
 'use cache';
 
-import { cacheTag } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import db from '@/drizzle/db';
 import { getJobTrackingGlobalTag } from '@/features/production/cnc/utils/cache';
 import { and, ilike, ne, or } from 'drizzle-orm';

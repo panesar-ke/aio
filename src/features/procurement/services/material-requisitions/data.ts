@@ -2,7 +2,7 @@
 import { and, asc, desc, eq } from 'drizzle-orm';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import { cacheTag } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import db from '@/drizzle/db';
 import { mrqHeaders, products, projects, services } from '@/drizzle/schema';
 import { transformOptions } from '@/lib/helpers/formatters';

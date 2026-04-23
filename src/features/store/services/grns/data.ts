@@ -1,7 +1,7 @@
 'use cache';
 
 import { and, desc, eq, ilike, max, or, sql } from 'drizzle-orm';
-import { cacheTag } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import {
   getGrnsGlobalTag,
   getGrnsIdTag,
