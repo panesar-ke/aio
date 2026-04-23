@@ -10,7 +10,7 @@ import { OrderRegisterParamsForm } from '@/features/procurement/components/order
 import { getActiveVendors } from '@/features/procurement/services/purchase-orders/data';
 import { orderRegisterReport } from '@/features/procurement/services/reports/data';
 import { dateFormat, titleCase } from '@/lib/helpers/formatters';
-import { isEmptyObject } from '@/lib/utils';
+import { hasRequiredValues } from '@/lib/utils';
 import { ErrorNotification } from '@/components/custom/error-components';
 import { ReportLoader } from '@/components/custom/loaders';
 import {
@@ -37,6 +37,12 @@ export default async function OrderRegisterPage({
   const vendors = await getActiveVendors();
   const params = await searchParams;
   const { from, to, vendorId } = params;
+  const hasValidReportParams = hasRequiredValues(params, [
+    'from',
+    'to',
+    'reportType',
+    'vendorId',
+  ]);
 
   const vendorName =
     vendorId === 'all'
@@ -56,7 +62,7 @@ export default async function OrderRegisterPage({
         }
       />
       <OrderRegisterParamsForm vendors={vendors} />
-      {!isEmptyObject(params) && (
+      {hasValidReportParams && (
         <ErrorBoundary
           fallback={
             <ErrorNotification message="Error loading order register data" />

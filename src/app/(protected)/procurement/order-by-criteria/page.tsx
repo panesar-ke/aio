@@ -8,7 +8,7 @@ import {
   getSelectableProjects,
   getSelectableServices,
 } from '@/features/procurement/services/material-requisitions/data';
-import { isEmptyObject } from '@/lib/utils';
+import { hasRequiredValues } from '@/lib/utils';
 import { ReportLoader } from '@/components/custom/loaders';
 import type {
   OrderByCriteriaFormValues,
@@ -38,6 +38,12 @@ export default async function OrderByCriteriaPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const hasValidReportParams = hasRequiredValues(params, [
+    'from',
+    'to',
+    'criteria',
+    'option',
+  ]);
   const [projects, products, services] = await Promise.all([
     getSelectableProjects(),
     getSelectableProducts(),
@@ -54,7 +60,7 @@ export default async function OrderByCriteriaPage({
         projects={projects}
         services={services}
       />
-      {!isEmptyObject(params) && (
+      {hasValidReportParams && (
         <ErrorBoundary
           fallback={
             <ErrorNotification message="Error loading order register data" />

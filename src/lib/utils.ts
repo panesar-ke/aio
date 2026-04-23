@@ -59,3 +59,18 @@ export function isValidEmail(email: string) {
 export function isEmptyObject(obj: Record<string, unknown>): boolean {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
+
+export function hasRequiredValues<T extends Record<string, unknown>>(
+  obj: T,
+  requiredKeys: Array<keyof T>
+): boolean {
+  return requiredKeys.every(key => {
+    const value = obj[key];
+
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+
+    return value !== undefined && value !== null;
+  });
+}

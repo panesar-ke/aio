@@ -4,7 +4,7 @@ import { TopVendorForm } from '@/features/procurement/components/vendors/top-ven
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { ErrorNotification } from '@/components/custom/error-components';
 import { getTopVendors } from '@/features/procurement/services/reports/data';
-import { isEmptyObject } from '@/lib/utils';
+import { hasRequiredValues } from '@/lib/utils';
 import { TopVendorsTable } from '@/features/procurement/components/vendors/top-vendors-table';
 
 export const metadata: Metadata = {
@@ -24,11 +24,17 @@ export default async function TopVendorsPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const hasValidReportParams = hasRequiredValues(params, [
+    'from',
+    'to',
+    'criteria',
+    'top',
+  ]);
 
   return (
     <div className="space-y-6">
       <TopVendorForm />
-      {!isEmptyObject(params) && (
+      {hasValidReportParams && (
         <ErrorBoundaryWithSuspense
           errorMessage="Error loading top vendors"
           loaderType="tableOnly"
