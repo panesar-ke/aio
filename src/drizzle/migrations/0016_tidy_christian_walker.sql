@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "it_sub_category_name_category_unique" ON "it_sub_categories" USING btree ("name","category_id");
