@@ -1,5 +1,5 @@
 'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import db from '@/drizzle/db';
 import {
@@ -58,10 +58,10 @@ export const getPurchaseOrders = async (q?: string) => {
               sql`${ordersHeader.documentDate}::text ILIKE ${`%${q}%`}`,
               ilike(users.name, `%${q}%`),
               ilike(vendors.vendorName, `%${q}%`),
-              sql`${ordersHeader.id}::text ILIKE ${`%${q}%`}`
+              sql`${ordersHeader.id}::text ILIKE ${`%${q}%`}`,
             )
-          : undefined
-      )
+          : undefined,
+      ),
     )
     .innerJoin(users, eq(ordersHeader.createdBy, users.id))
     .innerJoin(vendors, eq(ordersHeader.vendorId, vendors.id))
@@ -72,7 +72,7 @@ export const getPurchaseOrders = async (q?: string) => {
       users.name,
       vendors.vendorName,
       ordersHeader.billNo,
-      ordersHeader.createdOn
+      ordersHeader.createdOn,
     )
     .orderBy(desc(ordersHeader.createdOn))
     .limit(100);

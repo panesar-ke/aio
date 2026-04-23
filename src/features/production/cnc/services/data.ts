@@ -1,6 +1,6 @@
 'use cache';
 
-import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import db from '@/drizzle/db';
 import { getJobTrackingGlobalTag } from '@/features/production/cnc/utils/cache';
 import { and, ilike, ne, or } from 'drizzle-orm';
@@ -17,9 +17,9 @@ export const getJobTrackerEntries = async (q?: string) => {
         ? or(
             ilike(cncJobTracker.jobCardNo, `%${q}%`),
             ilike(cncJobTracker.jobDescription, `%${q}%`),
-            ilike(cncJobTracker.jobType, `%${q}%`)
+            ilike(cncJobTracker.jobType, `%${q}%`),
           )
-        : undefined
+        : undefined,
     ),
     orderBy: (model, { desc }) => [desc(model.createdAt)],
   });

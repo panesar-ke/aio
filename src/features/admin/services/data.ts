@@ -1,5 +1,5 @@
 'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import {
   getFormsGlobalTag,
@@ -9,7 +9,7 @@ import {
 } from '@/features/admin/utils/cache';
 import db from '@/drizzle/db';
 
-import { type User } from '@/types/index.types';
+import type { User } from '@/types/index.types';
 import { forms, userRights } from '@/drizzle/schema';
 import { notFound } from 'next/navigation';
 
@@ -38,7 +38,7 @@ export const getUsers = async (q?: string) => {
             ilike(users.name, `%${q}%`),
             ilike(users.email, `%${q}%`),
             ilike(users.contact, `%${q}%`),
-            ilike(sql`CAST(${users.userType} AS TEXT)`, `%${q}%`)
+            ilike(sql`CAST(${users.userType} AS TEXT)`, `%${q}%`),
           )
       : undefined,
     orderBy: (users, { asc }) => [asc(sql`lower(${users.name})`)],
@@ -64,7 +64,7 @@ export const getUser = async (userId: string) => {
 
 export const getUserForms = async (
   userId: string,
-  userType: User['userType']
+  userType: User['userType'],
 ) => {
   cacheTag(getUserFormsGlobalTag(userId));
 

@@ -1,6 +1,6 @@
 'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, eq, ilike, max, or, sql,desc } from 'drizzle-orm';
+import { cacheTag } from 'next/cache';
+import { and, eq, ilike, max, or, sql, desc } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import {
   getMaterialIssueNo,
@@ -31,7 +31,7 @@ export const getMaterialIssues = async (q?: string) => {
       ilike(sql`CAST(${materialIssuesHeader.issueNo} AS TEXT)`, `%${q}%`),
       ilike(stores.storeName, `%${q}%`),
       ilike(materialIssuesHeader.jobcardNo, `%${q}%`),
-      ilike(materialIssuesHeader.staffName, `%${q}%`)
+      ilike(materialIssuesHeader.staffName, `%${q}%`),
     );
     if (searchFilter) {
       filters.push(searchFilter);
@@ -76,7 +76,7 @@ export const getMaterialIssue = async (id: string) => {
         and(
           eq(model.transactionType, 'ISSUE'),
           eq(model.transactionId, id),
-          eq(model.isDeleted, false)
+          eq(model.isDeleted, false),
         ),
     }),
   ]);
