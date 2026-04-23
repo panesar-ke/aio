@@ -11,7 +11,14 @@ import {
 } from '@/features/it/utils/expenses/schemas';
 import db from '@/drizzle/db';
 import { itCategories, itSubCategories } from '@/drizzle/schema';
+import { normalizeString } from '@/lib/string-normalizers';
 import { and, eq, sql } from 'drizzle-orm';
+
+const isUniqueViolation = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  error.code === '23505';
 
 export const createExpenseCategory = async (values: unknown) => {
   try {
@@ -27,10 +34,12 @@ export const createExpenseCategory = async (values: unknown) => {
       };
     }
 
+    const normalizedName = normalizeString(data.name);
+
     const category = await db.query.itCategories.findFirst({
       where: eq(
         sql`lower(${itCategories.name})`,
-        data.name.trim().toLowerCase(),
+        normalizedName.toLowerCase(),
       ),
     });
 
@@ -43,7 +52,10 @@ export const createExpenseCategory = async (values: unknown) => {
 
     const [{ id }] = await db
       .insert(itCategories)
-      .values({ ...data })
+      .values({
+        ...data,
+        name: normalizedName,
+      })
       .returning({ id: itCategories.id });
 
     return {
@@ -52,6 +64,13 @@ export const createExpenseCategory = async (values: unknown) => {
       data: { id },
     };
   } catch (error) {
+    if (isUniqueViolation(error)) {
+      return {
+        error: true,
+        message: 'Category already exists.',
+      };
+    }
+
     console.error('Error creating expense category:', error);
     return {
       error: true,
@@ -74,9 +93,11 @@ export const createExpenseSubCategory = async (values: unknown) => {
       };
     }
 
+    const normalizedName = normalizeString(data.name);
+
     const subCategory = await db.query.itSubCategories.findFirst({
       where: and(
-        eq(sql`lower(${itSubCategories.name})`, data.name.trim().toLowerCase()),
+        eq(sql`lower(${itSubCategories.name})`, normalizedName.toLowerCase()),
         eq(itSubCategories.categoryId, data.categoryId),
       ),
     });
@@ -90,7 +111,10 @@ export const createExpenseSubCategory = async (values: unknown) => {
 
     const [{ id }] = await db
       .insert(itSubCategories)
-      .values({ ...data })
+      .values({
+        ...data,
+        name: normalizedName,
+      })
       .returning({ id: itSubCategories.id });
 
     return {
@@ -99,6 +123,13 @@ export const createExpenseSubCategory = async (values: unknown) => {
       data: { id },
     };
   } catch (error) {
+    if (isUniqueViolation(error)) {
+      return {
+        error: true,
+        message: 'Sub-category already exists for this category.',
+      };
+    }
+
     console.error('Error creating expense sub-category:', error);
     return {
       error: true,

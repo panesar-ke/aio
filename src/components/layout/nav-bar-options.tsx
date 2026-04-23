@@ -5,6 +5,7 @@ import {
   BlocksIcon,
   ChevronsUpDownIcon,
   DrillIcon,
+  ListTreeIcon,
   ShoppingBasketIcon,
   User2Icon,
 } from 'lucide-react';
@@ -134,7 +135,7 @@ function ITOptions() {
   function handleCreateSubCategory() {
     setOpen(
       <CustomModal
-        title="Create Sub-Category"
+        title="Create Sub Category"
         subtitle="Manage IT Expenses Sub-Categories"
       >
         <SubCategoriesForm />
@@ -148,7 +149,7 @@ function ITOptions() {
         <span>Create Category</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleCreateSubCategory}>
-        <ShoppingBasketIcon className="size-4" />
+        <ListTreeIcon className="size-4" />
         <span>Create Sub Category</span>
       </DropdownMenuItem>
     </>

@@ -30,7 +30,7 @@ const aj = arcjet({
   ],
 });
 
-export default async function proxy(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   if (
