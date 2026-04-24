@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUserOrNull } from '@/lib/session';
-import type { User } from '@/types/index.types';
+
 import type { Permission } from '@/lib/permissions/catalog';
+import type { User } from '@/types/index.types';
+
+import { ForbiddenError, UnauthorizedError } from '@/lib/permissions/errors';
 import { getCurrentUserPermissions } from '@/lib/permissions/service';
-import {
-  ForbiddenError,
-  UnauthorizedError,
-} from '@/lib/permissions/errors';
+import { getCurrentUserOrNull } from '@/lib/session';
 
 type GuardMode = 'action' | 'api' | 'page';
 
@@ -20,12 +19,12 @@ type PermissionContext = {
 };
 
 async function getAuthenticatedUser(
-  mode: GuardMode
+  mode: GuardMode,
 ): Promise<PermissionContext> {
   const user = await getCurrentUserOrNull();
 
   if (!user) {
-    if (mode === 'api') {
+    if (mode === 'api' || mode === 'action') {
       throw new UnauthorizedError();
     }
 
@@ -48,13 +47,13 @@ function handleForbidden(mode: GuardMode): never {
 
 async function requirePermissions(
   requiredPermissions: Array<Permission>,
-  options?: GuardOptions
+  options?: GuardOptions,
 ): Promise<PermissionContext> {
   const mode = options?.mode ?? 'action';
   const user = await getAuthenticatedUser(mode);
   const currentPermissions = await getCurrentUserPermissions();
   const allowed = requiredPermissions.some(permission =>
-    currentPermissions.has(permission)
+    currentPermissions.has(permission),
   );
 
   if (!allowed) {
@@ -66,21 +65,21 @@ async function requirePermissions(
 
 export async function requirePermission(
   permission: Permission,
-  options?: GuardOptions
+  options?: GuardOptions,
 ): Promise<void> {
   await requirePermissions([permission], options);
 }
 
 export async function requireAnyPermission(
   permissions: Array<Permission>,
-  options?: GuardOptions
+  options?: GuardOptions,
 ): Promise<void> {
   await requirePermissions(permissions, options);
 }
 
 export function withPermission<T extends Array<unknown>, R>(
   permission: Permission,
-  action: (ctx: PermissionContext, ...args: T) => Promise<R>
+  action: (ctx: PermissionContext, ...args: T) => Promise<R>,
 ): (...args: T) => Promise<R> {
   return async (...args: T) => {
     const ctx = await requirePermissions([permission]);

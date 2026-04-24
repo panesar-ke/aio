@@ -1,8 +1,9 @@
 'use client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeftIcon, FileWarningIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 export function Unauthorized() {
   const router = useRouter();
@@ -20,9 +21,9 @@ export function Unauthorized() {
             This page requires specific permissions to access. Please contact
             your administrator if you need access.
           </p>
-          <Button className="w-full" onClick={() => router.back()}>
+          <Button className="w-full" onClick={() => router.push('/')}>
             <ArrowLeftIcon className="size-4 mr-2" />
-            Go Back
+            Go Home
           </Button>
         </CardContent>
       </Card>

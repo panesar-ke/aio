@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
+
 import type { Permission } from '@/lib/permissions/catalog';
+
 import { getCurrentUserPermissions } from '@/lib/permissions/service';
 
 type ServerPermissionGateProps = {
   children: ReactNode;
   permissions: Array<Permission>;
   fallback?: ReactNode;
-  loadingComponent?: ReactNode;
   match?: 'any' | 'all';
 };
 
