@@ -25,6 +25,7 @@ import { VendorForm } from '@/features/procurement/components/vendors/vendor-for
 import { ProjectForm } from '@/features/procurement/components/project/project-form';
 import { CategoriesForm } from '@/features/it/components/expenses/categories';
 import { SubCategoriesForm } from '@/features/it/components/expenses/sub-categories';
+import { PermissionGate } from '@/components/auth/client-permission-gate';
 
 export function NavBarOptions({
   categories,
@@ -54,7 +55,11 @@ export function NavBarOptions({
         {pathName.startsWith('/procurement') && (
           <ProcurementOptions categories={categories} units={units} />
         )}
-        {pathName.startsWith('/it') && <ITOptions />}
+        {pathName.startsWith('/it') && (
+          <PermissionGate permissions={['it:admin']}>
+            <ITOptions />
+          </PermissionGate>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,5 +1,6 @@
 import PageHeader from '@/components/custom/page-header';
 import { buttonVariants } from '@/components/ui/button';
+import { requireAnyPermission } from '@/lib/permissions/guards';
 import { HandCoinsIcon, PlusIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -8,7 +9,9 @@ export const metadata: Metadata = {
   title: 'IT Expenses & Budgeting',
 };
 
-export default function ITExpensesBudgetingPage() {
+export default async function ITExpensesBudgetingPage() {
+  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+
   return (
     <PageHeader
       title="IT Expenses & Budgeting"

@@ -2,7 +2,11 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import db from '@/drizzle/db';
 import { userRights } from '@/drizzle/schema';
-import { getCurrentUser } from '@/lib/session';
+import { requirePermission } from '@/lib/permissions/guards';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from '@/lib/permissions/errors';
 
 type ResponseData = {
   error: string | null;
@@ -13,12 +17,9 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const user = await getCurrentUser();
-
-  if (!user)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
   try {
+    await requirePermission('admin:admin', { mode: 'api' });
+
     const { userId } = await params;
     if (!userId) {
       return NextResponse.json<ResponseData>(
@@ -37,6 +38,20 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json<ResponseData>(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json<ResponseData>(
+        { error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     console.error('Error fetching user rights:', error);
     return NextResponse.json<ResponseData>(
       { error: 'Failed to fetch user rights' },

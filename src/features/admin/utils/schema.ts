@@ -3,6 +3,7 @@ import {
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
 } from '@/lib/schema-rules';
+import { PERMISSIONS } from '@/lib/permissions/catalog';
 
 export const userSchema = z.object({
   id: z.string().optional(),
@@ -17,6 +18,7 @@ export const userSchema = z.object({
     invalid_type_error: 'Invalid user type',
   }),
   active: z.boolean(),
+  permissions: z.array(z.enum(PERMISSIONS)),
 });
 
 export const userRightsFormSchema = z.object({
@@ -25,7 +27,7 @@ export const userRightsFormSchema = z.object({
     z.object({
       formId: requiredNumberSchemaEntry('Form is required'),
       hasAccess: z.boolean(),
-    })
+    }),
   ),
 });
 
@@ -44,22 +46,22 @@ export const cloneUserRightsFormSchema = z
     }
   });
 
-  export const resetPasswordFormSchema = z
-	.object({
-		userId: z.string().min(1, { message: "User is required" }),
-		resetMethod: z.enum(["automatic", "manual"], {
-			message: "Reset method is required",
-		}),
-		password: z.string().nullish(),
-	})
-	.superRefine((data, ctx) => {
-		if (data.resetMethod === "manual") {
-			if (!data.password || data.password.length < 8) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Password must be at least 8 characters long",
-					path: ["password"],
-				});
-			}
-		}
-	});
+export const resetPasswordFormSchema = z
+  .object({
+    userId: z.string().min(1, { message: 'User is required' }),
+    resetMethod: z.enum(['automatic', 'manual'], {
+      message: 'Reset method is required',
+    }),
+    password: z.string().nullish(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.resetMethod === 'manual') {
+      if (!data.password || data.password.length < 8) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Password must be at least 8 characters long',
+          path: ['password'],
+        });
+      }
+    }
+  });

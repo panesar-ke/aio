@@ -1,4 +1,10 @@
-import { integer, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { forms, users } from '@/drizzle/schema';
 
 export const userRights = pgTable(
@@ -12,4 +18,15 @@ export const userRights = pgTable(
       .notNull(),
   },
   table => [primaryKey({ columns: [table.userId, table.formId] })]
+);
+
+export const permissions = pgTable(
+  'permissions',
+  {
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+    permission: varchar('permission', { length: 64 }).notNull(),
+  },
+  table => [primaryKey({ columns: [table.userId, table.permission] })]
 );

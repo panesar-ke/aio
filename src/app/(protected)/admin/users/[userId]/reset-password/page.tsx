@@ -3,6 +3,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { ResetPasswordForm } from '@/features/admin/components/users/reset-password-form';
 import { getUser } from '@/features/admin/services/data';
 import { titleCase } from '@/lib/helpers/formatters';
+import { requirePermission } from '@/lib/permissions/guards';
 
 export const metadata = {
   title: 'Reset user password',
@@ -13,6 +14,8 @@ export default async function ResetPasswordPage({
 }: {
   params: Promise<{ userId: string }>;
 }) {
+  await requirePermission('admin:admin', { mode: 'page' });
+
   const { userId } = await params;
   const user = await getUser(userId);
   return (

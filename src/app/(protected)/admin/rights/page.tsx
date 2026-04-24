@@ -1,12 +1,15 @@
 import { RightsForm } from '@/features/admin/components/rights/rights-form';
 import { getForms, getUsers } from '@/features/admin/services/data';
 import { transformOptions } from '@/lib/helpers/formatters';
+import { requirePermission } from '@/lib/permissions/guards';
 
 export const metadata = {
   title: 'User rights',
 };
 
 export default async function UserRightsPage() {
+  await requirePermission('admin:admin', { mode: 'page' });
+
   const [forms, users] = await Promise.all([getForms(), getUsers()]);
   // log
   return (

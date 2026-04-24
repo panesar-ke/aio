@@ -113,10 +113,10 @@ export async function getSession() {
   return payload as SessionPayload;
 }
 
-export const getCurrentUser = cache(async () => {
-  const session = await getSession();
+export const getCurrentUserOrNull = cache(async () => {
+  const session = await getSession().catch(() => null);
   if (!session) {
-    return redirect('/login');
+    return null;
   }
 
   const user = await db.query.users.findFirst({
@@ -131,7 +131,14 @@ export const getCurrentUser = cache(async () => {
     where: (model, { eq }) => eq(model.id, session.userId),
   });
 
-  if (!user) return redirect('/login');
+  if (!user) return null;
 
   return { ...user, email: user.email as string };
+});
+
+export const getCurrentUser = cache(async () => {
+  const user = await getCurrentUserOrNull();
+  if (!user) return redirect('/login');
+
+  return user;
 });

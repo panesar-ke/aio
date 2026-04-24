@@ -9,7 +9,11 @@ import type {
   UserRightsFormValue,
 } from '@/features/admin/utils/admin.types';
 import type { ApiFailureWithoutData } from '@/types/index.types';
-import { userRights, users } from '@/drizzle/schema';
+import {
+  permissions as userPermissions,
+  userRights,
+  users,
+} from '@/drizzle/schema';
 import db from '@/drizzle/db';
 import {
   getUserFormsGlobalTag,
@@ -21,7 +25,6 @@ import {
   userRightsFormSchema,
   userSchema,
 } from '@/features/admin/utils/schema';
-import { getCurrentUser } from '@/lib/session';
 import { inngest } from '@/inngest/client';
 import {
   internationalizePhoneNumber,
@@ -30,8 +33,12 @@ import {
 import { redirect } from 'next/navigation';
 import { generatePassword, hashPassword } from '@/features/admin/utils/helpers';
 import { getUser } from '@/features/admin/services/data';
+import { requirePermission } from '@/lib/permissions/guards';
+import { normalizePermissions } from '@/lib/permissions/service';
 
 export async function updateUserRights(values: unknown) {
+  await requirePermission('admin:admin');
+
   const { data, error } = validateFields<UserRightsFormValue>(
     values,
     userRightsFormSchema
@@ -76,6 +83,8 @@ export async function updateUserRights(values: unknown) {
 }
 
 export const cloneUserRights = async (values: unknown) => {
+  await requirePermission('admin:admin');
+
   const { data, error } = validateFields<CloneUserRightsFormValues>(
     values,
     cloneUserRightsFormSchema
@@ -128,14 +137,7 @@ export const cloneUserRights = async (values: unknown) => {
 };
 
 export const upsertUser = async (values: unknown) => {
-  const user = await getCurrentUser();
-
-  if (user.userType === 'STANDARD USER') {
-    return {
-      error: true,
-      message: 'You do not have permission to perform this action',
-    };
-  }
+  await requirePermission('admin:admin');
 
   const { data, error } = validateFields<User>(values, userSchema);
 
@@ -146,7 +148,19 @@ export const upsertUser = async (values: unknown) => {
     };
   }
 
-  const { id, name, contact, email, userType, active } = data;
+  const {
+    id,
+    name,
+    contact,
+    email,
+    userType,
+    active,
+    permissions: assignedPermissions,
+  } = data;
+  const permissionsToSave =
+    userType === 'STANDARD USER'
+      ? normalizePermissions(assignedPermissions)
+      : [];
 
   const password = generatePassword(8);
   const hashedPassword = await hashPassword(password);
@@ -164,29 +178,46 @@ export const upsertUser = async (values: unknown) => {
       };
     }
 
-    const [{ id: userId }] = await db
-      .insert(users)
-      .values({
-        id: id ?? undefined,
-        name,
-        password: hashedPassword,
-        contact,
-        email,
-        userType,
-        active: true,
-        promptPasswordChange: true,
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
+    const userId = await db.transaction(async tx => {
+      const [{ id: savedUserId }] = await tx
+        .insert(users)
+        .values({
+          id: id ?? undefined,
           name,
+          password: hashedPassword,
           contact,
           email,
           userType,
-          active,
-        },
-      })
-      .returning({ id: users.id });
+          active: true,
+          promptPasswordChange: true,
+        })
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            name,
+            contact,
+            email,
+            userType,
+            active,
+          },
+        })
+        .returning({ id: users.id });
+
+      await tx
+        .delete(userPermissions)
+        .where(eq(userPermissions.userId, savedUserId));
+
+      if (permissionsToSave.length > 0) {
+        await tx.insert(userPermissions).values(
+          permissionsToSave.map(permission => ({
+            userId: savedUserId,
+            permission,
+          }))
+        );
+      }
+
+      return savedUserId;
+    });
 
     if (!id) {
       await inngest.send({
@@ -214,14 +245,7 @@ export const toggleUserActiveState = async (
   userId: string,
   currentState: boolean
 ) => {
-  const user = await getCurrentUser();
-  console.log('Toggling user:', userId, 'Current state:', currentState);
-  if (user.userType === 'STANDARD USER') {
-    return {
-      error: true,
-      message: 'You do not have permission to perform this action',
-    };
-  }
+  await requirePermission('admin:admin');
 
   try {
     await getUser(userId);
@@ -245,6 +269,8 @@ export const toggleUserActiveState = async (
 };
 
 export const resetPassword = async (data: ResetPasswordFormValues) => {
+  await requirePermission('admin:admin');
+
   const { userId, resetMethod, password } = data;
 
   await getUser(userId);
