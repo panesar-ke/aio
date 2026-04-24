@@ -1,9 +1,11 @@
 'use client';
-import PageHeader from '@/components/custom/page-header';
-import { Card, CardContent } from '@/components/ui/card';
+import toast from 'react-hot-toast';
+
 import type { User } from '@/features/admin/utils/admin.types';
-import { useAppForm } from '@/lib/form';
-import { userSchema } from '@/features/admin/utils/schema';
+
+import PageHeader from '@/components/custom/page-header';
+import { ToastContent } from '@/components/custom/toast';
+import { Card, CardContent } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
 import {
   Field,
@@ -11,10 +13,6 @@ import {
   FieldError,
   FieldLabel,
 } from '@/components/ui/field';
-import { SelectItem } from '@/components/ui/select';
-import { upsertUser } from '@/features/admin/services/action';
-import { ToastContent } from '@/components/custom/toast';
-import toast from 'react-hot-toast';
 import {
   MultiSelect,
   MultiSelectContent,
@@ -23,10 +21,11 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from '@/components/ui/multi-select';
-import {
-  PERMISSION_OPTIONS,
-  type Permission,
-} from '@/lib/permissions/catalog';
+import { SelectItem } from '@/components/ui/select';
+import { upsertUser } from '@/features/admin/services/action';
+import { userSchema } from '@/features/admin/utils/schema';
+import { useAppForm } from '@/lib/form';
+import { type Permission, PERMISSION_OPTIONS } from '@/lib/permissions/catalog';
 
 const defaultValues = {
   active: true,
