@@ -4,6 +4,7 @@ import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
 import { UsersDatatable } from '@/features/admin/components/users/users-table';
 import { getUsers } from '@/features/admin/services/data';
+import { requirePermission } from '@/lib/permissions/guards';
 import type { SearchParams } from '@/types/index.types';
 import type { Metadata } from 'next';
 
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Users({ searchParams }: SearchParams) {
+  await requirePermission('admin:admin', { mode: 'page' });
+
   const { search } = await searchParams;
   return (
     <div className="space-y-6">
