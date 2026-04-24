@@ -30,7 +30,7 @@ const getActiveVendorsYear = async () => {
     .from(vendors)
     .innerJoin(ordersHeader, eq(vendors.id, ordersHeader.vendorId))
     .where(
-      gte(ordersHeader.documentDate, subYears(new Date(), 1).toDateString())
+      gte(ordersHeader.documentDate, subYears(new Date(), 1).toDateString()),
     )
     .then(res => res[0]?.value ?? 0);
 };
@@ -46,10 +46,10 @@ const revenueValues = async () => {
       and(
         gte(
           ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0]
+          last30DaysStart.toISOString().split('T')[0],
         ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0])
-      )
+        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+      ),
     )
     .then(res => Number(res[0]?.total) || 0);
 
@@ -63,13 +63,13 @@ const revenueValues = async () => {
       and(
         gte(
           ordersHeader.documentDate,
-          previous30DaysStart.toISOString().split('T')[0]
+          previous30DaysStart.toISOString().split('T')[0],
         ),
         lte(
           ordersHeader.documentDate,
-          previous30DaysEnd.toISOString().split('T')[0]
-        )
-      )
+          previous30DaysEnd.toISOString().split('T')[0],
+        ),
+      ),
     )
     .then(res => Number(res[0]?.total) || 0);
 
@@ -79,8 +79,8 @@ const revenueValues = async () => {
           previousPeriodRevenue) *
         100
       : currentPeriodRevenue > 0
-      ? 100
-      : 0;
+        ? 100
+        : 0;
 
   return {
     currentPeriod: currentPeriodRevenue,
@@ -105,10 +105,10 @@ const topVendorStats = async () => {
       and(
         gte(
           ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0]
+          last30DaysStart.toISOString().split('T')[0],
         ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0])
-      )
+        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+      ),
     )
     .groupBy(vendors.id)
     .orderBy(desc(sum(ordersDetails.amountInclusive)))
@@ -160,9 +160,9 @@ export const getVendors = async (search?: string) => {
               vendors.vendorName
             }) like ${`%${search.toLowerCase()}%`}`,
             sql`lower(${vendors.contact}) like ${`%${search.toLowerCase()}%`}`,
-            sql`lower(${vendors.email}) like ${`%${search.toLowerCase()}%`}`
+            sql`lower(${vendors.email}) like ${`%${search.toLowerCase()}%`}`,
           )
-        : undefined
+        : undefined,
     )
     .leftJoin(ordersHeader, eq(vendors.id, ordersHeader.vendorId))
     .leftJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
@@ -201,6 +201,6 @@ export const getVendorOrders = async (id: string) => {
       ordersHeader.id,
       ordersHeader.documentDate,
       ordersHeader.billNo,
-      ordersHeader.billDate
+      ordersHeader.billDate,
     );
 };

@@ -31,9 +31,9 @@ export const getProducts = async (q?: string) => {
             sql`LOWER(${uoms.uom}) LIKE LOWER(${`%${q.toLowerCase()}%`})`,
             sql`LOWER(${
               productCategories.categoryName
-            }) LIKE LOWER(${`%${q.toLowerCase()}%`})`
+            }) LIKE LOWER(${`%${q.toLowerCase()}%`})`,
           )
-        : undefined
+        : undefined,
     )
     .orderBy(sql`LOWER(${products.productName})`);
 };

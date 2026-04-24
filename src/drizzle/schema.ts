@@ -5,3 +5,4 @@ export * from '@/drizzle/schemas/admin';
 export * from '@/drizzle/schemas/store';
 export * from '@/drizzle/schemas/cnc';
 export * from '@/drizzle/schemas/website';
+export * from '@/drizzle/schemas/it';

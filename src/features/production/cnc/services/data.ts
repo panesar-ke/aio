@@ -17,9 +17,9 @@ export const getJobTrackerEntries = async (q?: string) => {
         ? or(
             ilike(cncJobTracker.jobCardNo, `%${q}%`),
             ilike(cncJobTracker.jobDescription, `%${q}%`),
-            ilike(cncJobTracker.jobType, `%${q}%`)
+            ilike(cncJobTracker.jobType, `%${q}%`),
           )
-        : undefined
+        : undefined,
     ),
     orderBy: (model, { desc }) => [desc(model.createdAt)],
   });

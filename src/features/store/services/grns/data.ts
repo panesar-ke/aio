@@ -42,10 +42,10 @@ export const getGrns = async (q?: string) => {
               ilike(vendors.vendorName, `%${q}%`),
               ilike(stores.storeName, `%${q}%`),
               sql`${grnsHeader.id}::text LIKE ${`%${q}%`}`,
-              sql`${ordersHeader.id}::text LIKE ${`%${q}%`}`
+              sql`${ordersHeader.id}::text LIKE ${`%${q}%`}`,
             )
-          : undefined
-      )
+          : undefined,
+      ),
     )
     .limit(100)
     .orderBy(desc(grnsHeader.id));
@@ -68,7 +68,7 @@ export const getPendingReceiptOrders = async () => {
         and(
           eq(model.grnReceipt, false),
           eq(model.isDeleted, false),
-          ne(model.billNo, '')
+          ne(model.billNo, ''),
         ),
     })
     .then(dt =>
@@ -77,7 +77,7 @@ export const getPendingReceiptOrders = async () => {
         .map(i => ({
           id: i.id,
           name: `${i.id}-${i.vendor?.vendorName.toUpperCase()}`,
-        }))
+        })),
     );
 };
 

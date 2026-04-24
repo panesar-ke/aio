@@ -1,6 +1,6 @@
 'use cache';
 
-import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
 import { and, eq, lte, or, sql } from 'drizzle-orm';
 import {
   getProductStockBalanceTags,
