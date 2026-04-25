@@ -134,6 +134,20 @@
       "when": 1777015768422,
       "tag": "0018_real_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777057698173,
+      "tag": "0019_famous_nightshade",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1777130374569,
+      "tag": "0020_luxuriant_synch",
+      "breakpoints": true
     }
   ]
 }

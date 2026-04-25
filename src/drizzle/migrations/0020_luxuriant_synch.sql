@@ -1,0 +1,1 @@
+ALTER TABLE "it_expenses" ALTER COLUMN "sub_category_id" SET NOT NULL;

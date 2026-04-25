@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
-import localFont from 'next/font/local';
-import './globals.css';
+
 import { Geist, Geist_Mono, Raleway } from 'next/font/google';
+
+import './globals.css';
+import localFont from 'next/font/local';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+
 import Providers from '@/features/integrations/provider';
 
 const classico = localFont({
@@ -64,7 +68,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${classico.variable} ${brown.variable} ${raleway.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <NuqsAdapter>
+          <Providers>{children}</Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );

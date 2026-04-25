@@ -1,30 +1,34 @@
 'use client';
 
-import { useTransition } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
+
+import { useTransition } from 'react';
 import toast from 'react-hot-toast';
-import { LoadingSwap } from '@/components/ui/loading-swap';
+
+import { ToastContent } from '@/components/custom/toast';
 import {
   AlertDialog,
-  AlertDialogDescription,
-  AlertDialogTitle,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
+import { LoadingSwap } from '@/components/ui/loading-swap';
 
 export function ActionButton({
   action,
   requireAreYouSure = false,
+  onSuccess,
   areYouSureDescription = 'This action cannot be undone.',
   ...props
 }: ComponentProps<typeof Button> & {
   action: () => Promise<{ error: boolean; message?: string }>;
+  onSuccess?: () => void;
   requireAreYouSure?: boolean;
   areYouSureDescription?: ReactNode;
 }) {
@@ -33,13 +37,17 @@ export function ActionButton({
   function performAction() {
     startTransition(async () => {
       const data = await action();
-      if (data.error)
+      if (data.error) {
         toast.error(() => (
           <ToastContent
             title="Something went wrong"
             message={data.message ?? 'Error'}
           />
         ));
+        return;
+      }
+
+      onSuccess?.();
     });
   }
 
