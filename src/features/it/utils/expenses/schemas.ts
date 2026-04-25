@@ -22,7 +22,7 @@ export const expenseFormSchemaValues = z
     vendorId: z.string().min(1, 'Vendor is required'),
     assetId: z.string().nullish(),
     licenseId: z.string().nullish(),
-    amount: z.number().min(1, 'Amount is required'),
+    amount: z.number().positive('Amount must be greater than 0'),
   })
   .superRefine((data, ctx) => {
     if (data.expenseDate) {

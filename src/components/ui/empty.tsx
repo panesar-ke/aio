@@ -1,3 +1,5 @@
+import type * as React from 'react';
+
 import { cva, type VariantProps } from 'class-variance-authority';
 import { FileIcon, type LucideIcon, SearchIcon } from 'lucide-react';
 

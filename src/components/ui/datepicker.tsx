@@ -73,7 +73,13 @@ export function DatePicker({
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    setDate(initialDateRange || undefined);
+    setDate(prev => {
+      const sameFrom =
+        prev?.from?.getTime() === initialDateRange?.from?.getTime();
+      const sameTo = prev?.to?.getTime() === initialDateRange?.to?.getTime();
+      if (sameFrom && sameTo) return prev;
+      return initialDateRange ?? undefined;
+    });
   }, [initialDateRange]);
 
   const handleApply = () => {

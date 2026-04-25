@@ -6,7 +6,7 @@ type FinancialYearRange = {
 export function getFinancialYearRanges(date?: Date): FinancialYearRange {
   const ref = date ?? new Date();
   const year = ref.getFullYear();
-  const month = ref.getMonth(); // 0-indexed: Oct = 9
+  const month = ref.getMonth();
 
   const fyStartYear = month >= 6 ? year : year - 1;
 

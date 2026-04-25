@@ -22,13 +22,14 @@ import {
 } from '@/features/it/utils/expenses/schemas';
 import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
+import { dateFormat } from '@/lib/helpers/formatters';
 import { type Option } from '@/types/index.types';
 
 type ExpenseFormProps = {
   categories: Array<{ id: string; name: string }>;
   subCategories: Array<{ id: string; name: string; categoryId: string }>;
-  // assets: Array<{id:string,name:string}>
-  // licenses: Array<{id:string,name:string}>
+  assets?: Array<{ id: string; name: string }>;
+  licenses?: Array<{ id: string; name: string }>;
   vendors: Array<Option>;
   initialValues?: ExpenseFormSchemaValues;
 };
@@ -38,6 +39,8 @@ export function ExpenseForm({
   vendors,
   subCategories,
   initialValues,
+  licenses,
+  assets,
 }: ExpenseFormProps) {
   const isEdit = Boolean(initialValues?.id);
   const queryClient = useQueryClient();
@@ -50,7 +53,7 @@ export function ExpenseForm({
         categoryId: '',
         subCategoryId: '',
         vendorId: '',
-        expenseDate: new Date().toISOString().split('T')[0],
+        expenseDate: dateFormat(new Date()),
         title: '',
         referenceNo: '',
         description: undefined,
@@ -187,16 +190,22 @@ export function ExpenseForm({
               <AppField name="assetId">
                 {field => (
                   <field.Select label="Asset" placeholder="Select Asset">
-                    <SelectItem value="1">Asset 1</SelectItem>
-                    <SelectItem value="2">Asset 2</SelectItem>
+                    {assets?.map(({ id, name }) => (
+                      <SelectItem key={id} value={id}>
+                        {name.toUpperCase()}
+                      </SelectItem>
+                    ))}
                   </field.Select>
                 )}
               </AppField>
               <AppField name="licenseId">
                 {field => (
                   <field.Select label="License" placeholder="Select License">
-                    <SelectItem value="1">License 1</SelectItem>
-                    <SelectItem value="2">License 2</SelectItem>
+                    {licenses?.map(({ id, name }) => (
+                      <SelectItem key={id} value={id}>
+                        {name.toUpperCase()}
+                      </SelectItem>
+                    ))}
                   </field.Select>
                 )}
               </AppField>

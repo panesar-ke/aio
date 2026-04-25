@@ -8,8 +8,6 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 import Link from 'next/link';
-// import { parseAsIsoDateTime, parseAsIsoDate, parseAsString } from 'nuqs/server';
-import { parseAsString } from 'nuqs';
 import { useRouter } from 'next/navigation';
 
 import type { ExpensesSearchParamsSchema } from '@/features/it/utils/expenses/schemas';
@@ -30,12 +28,6 @@ import { dateFormat, numberFormat } from '@/lib/helpers/formatters';
 
 import { useExpenseFilters } from '../../hooks/expenses/use-filters';
 import { deleteExpense } from '../../services/expenses/actions';
-
-export const expensesParsers = {
-  search: parseAsString.withDefault(''),
-  from: parseAsString,
-  to: parseAsString,
-};
 
 type Expense = {
   id: string;
@@ -76,6 +68,7 @@ export function ExpensePage() {
           onHandleSearch={onHandleSearch}
           defaultValue={filters.search}
           placeholder="Search by vendor or reference number..."
+          key={filters.search}
         />
         <DatePicker
           onDateChange={date => {
