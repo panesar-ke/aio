@@ -1,6 +1,8 @@
-import PageHeader from '@/components/custom/page-header';
-import { requireAnyPermission } from '@/lib/permissions/guards';
 import type { Metadata } from 'next';
+
+import PageHeader from '@/components/custom/page-header';
+import { ExpensePage } from '@/features/it/components/expenses/expense-page';
+import { requireAnyPermission } from '@/lib/permissions/guards';
 
 export const metadata: Metadata = {
   title: 'IT Expenses',
@@ -16,6 +18,7 @@ export default async function ITExpensesBudgetingExpensesPage() {
         description="Manage IT department expenses"
         path="/it/expenses-budgeting/expenses/new"
       />
+      <ExpensePage />
     </div>
   );
 }
