@@ -10,6 +10,7 @@ import {
 import Link from 'next/link';
 // import { parseAsIsoDateTime, parseAsIsoDate, parseAsString } from 'nuqs/server';
 import { parseAsString } from 'nuqs';
+import { useRouter } from 'next/navigation';
 
 import type { ExpensesSearchParamsSchema } from '@/features/it/utils/expenses/schemas';
 
@@ -101,7 +102,11 @@ function ExpenseTable() {
   const { filters, onReset } = useExpenseFilters();
   const { data } = useSuspenseQuery(expenseQueries(filters));
   const queryClient = useQueryClient();
-  const hasFilters = Object.values(filters).some(v => v !== '');
+  const router = useRouter();
+  const hasFilters =
+    Boolean(filters.search?.trim()) ||
+    Boolean(filters.from) ||
+    Boolean(filters.to);
   const columns: Array<ColumnDef<(typeof data)[0]>> = [
     {
       accessorKey: 'expenseDate',
@@ -184,7 +189,10 @@ function ExpenseTable() {
           onClick: () => {
             if (hasFilters) {
               onReset();
+              return;
             }
+
+            router.push('/it/expenses-budgeting/expenses/new');
           },
         }}
       />
