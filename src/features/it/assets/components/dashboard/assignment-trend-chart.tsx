@@ -45,12 +45,13 @@ export function AssignmentTrendChart({
               axisLine={false}
               tickMargin={8}
               minTickGap={24}
-              tickFormatter={value =>
-                new Date(value).toLocaleDateString('en-US', {
+              tickFormatter={value => {
+                const [y, m, d] = value.split('-').map(Number);
+                return new Date(y, m - 1, d).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
-                })
-              }
+                });
+              }}
             />
             <ChartTooltip
               content={

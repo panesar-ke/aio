@@ -34,8 +34,11 @@ export function useAssetFilters() {
     });
   }
 
-  function onFilterChange(key: keyof typeof assetFiltersParsers, value?: string) {
-    setFilters({ [key]: value || null });
+  function onFilterChange(
+    key: keyof typeof assetFiltersParsers,
+    value?: string,
+  ) {
+    setFilters({ [key]: value && value !== '__all__' ? value : null });
   }
 
   function onReset() {
@@ -71,7 +74,7 @@ export function useAssetAssignmentFilters() {
     key: keyof typeof assignmentFiltersParsers,
     value?: string,
   ) {
-    setFilters({ [key]: value || null });
+    setFilters({ [key]: value && value !== '__all__' ? value : null });
   }
 
   function onReset() {

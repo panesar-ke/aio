@@ -15,15 +15,18 @@ import {
   assignmentFormSchemaValues,
 } from '@/features/it/assets/utils/schemas';
 import { parseOrFail, runAction } from '@/lib/actions/safe-action';
+import { dateFormat } from '@/lib/helpers/formatters';
 import {
   requireAnyPermission,
   requirePermission,
 } from '@/lib/permissions/guards';
+import { getCurrentUser } from '@/lib/session';
 import {
   normalizeNullableString,
   normalizeString,
 } from '@/lib/string-normalizers';
-import { getCurrentUser } from '@/lib/session';
+
+import { persistAssetUpsert } from './upsert-asset-persist';
 
 const isUniqueViolation = (error: unknown) =>
   typeof error === 'object' &&
@@ -144,22 +147,40 @@ export const upsertAsset = async (values: unknown) =>
         notes: normalizeNullableString(data.notes),
       } as const;
 
-      const [{ id }] = await db
-        .insert(itAssets)
-        .values({
-          ...payload,
-          createdBy: user.id,
-        })
-        .onConflictDoUpdate({
-          target: itAssets.id,
-          set: payload,
-        })
-        .returning({ id: itAssets.id });
+      const result = await persistAssetUpsert({
+        id: data.id,
+        payload,
+        createdBy: user.id,
+        insert: async ({ payload, createdBy }) => {
+          const [{ id }] = await db
+            .insert(itAssets)
+            .values({
+              ...payload,
+              createdBy,
+            })
+            .returning({ id: itAssets.id });
+
+          return { id };
+        },
+        update: async ({ id, payload }) => {
+          const rows = await db
+            .update(itAssets)
+            .set(payload)
+            .where(eq(itAssets.id, id))
+            .returning({ id: itAssets.id });
+
+          return rows[0] ?? null;
+        },
+      });
+
+      if (result.error) {
+        return result;
+      }
 
       return {
         error: false,
-        message: `Asset ${data.id ? 'updated' : 'created'} successfully.`,
-        data: { id },
+        message: `Asset ${result.operation} successfully.`,
+        data: { id: result.id },
       };
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -253,7 +274,7 @@ export const returnAsset = async (assetId: string) =>
       };
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = dateFormat(new Date());
 
     await db.transaction(async tx => {
       await tx
