@@ -1,15 +1,20 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import {
   BlocksIcon,
   ChevronsUpDownIcon,
   DrillIcon,
   ListTreeIcon,
+  MonitorSmartphoneIcon,
   ShoppingBasketIcon,
   User2Icon,
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+
 import type { Option } from '@/types/index.types';
+
+import { PermissionGate } from '@/components/auth/client-permission-gate';
+import CustomModal from '@/components/custom/custom-modal';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,14 +23,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useModal } from '@/features/integrations/modal-provider';
-import CustomModal from '@/components/custom/custom-modal';
-import { ProductsForm } from '@/features/procurement/components/products/products-form';
-import { ServiceForm } from '@/features/procurement/components/services/service-form';
-import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
-import { ProjectForm } from '@/features/procurement/components/project/project-form';
+import { AssetCategoryForm } from '@/features/it/assets/components/asset-category-form';
 import { CategoriesForm } from '@/features/it/components/expenses/categories';
 import { SubCategoriesForm } from '@/features/it/components/expenses/sub-categories';
-import { PermissionGate } from '@/components/auth/client-permission-gate';
+import { ProductsForm } from '@/features/procurement/components/products/products-form';
+import { ProjectForm } from '@/features/procurement/components/project/project-form';
+import { ServiceForm } from '@/features/procurement/components/services/service-form';
+import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
 
 export function NavBarOptions({
   categories,
@@ -127,6 +131,7 @@ function ProcurementOptions({
 
 function ITOptions() {
   const { setOpen } = useModal();
+
   function handleCreateCategory() {
     setOpen(
       <CustomModal
@@ -147,6 +152,26 @@ function ITOptions() {
       </CustomModal>,
     );
   }
+  function handleCreateAssetCategory() {
+    setOpen(
+      <CustomModal
+        title="Create Asset Category"
+        subtitle="Manage IT Asset Categories"
+      >
+        <AssetCategoryForm />
+      </CustomModal>,
+    );
+  }
+
+  // if (pathName.startsWith('/it/assets')) {
+  //   return (
+  //     <DropdownMenuItem onClick={handleCreateAssetCategory}>
+  //       <BlocksIcon className="size-4" />
+  //       <span>Create Asset Category</span>
+  //     </DropdownMenuItem>
+  //   );
+  // }
+
   return (
     <>
       <DropdownMenuItem onClick={handleCreateCategory}>
@@ -156,6 +181,10 @@ function ITOptions() {
       <DropdownMenuItem onClick={handleCreateSubCategory}>
         <ListTreeIcon className="size-4" />
         <span>Create Sub Category</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={handleCreateAssetCategory}>
+        <MonitorSmartphoneIcon className="size-4" />
+        <span>Create Asset Category</span>
       </DropdownMenuItem>
     </>
   );
