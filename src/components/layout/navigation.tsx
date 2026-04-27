@@ -1,17 +1,28 @@
-import Link from 'next/link';
+import type { LucideIcon } from 'lucide-react';
+import type { Route } from 'next';
+
 import {
   Armchair,
   CircleGauge,
   DollarSign,
   HandCoins,
   Minus,
+  MonitorSmartphoneIcon,
   Plus,
   ShieldCheck,
   ShoppingBag,
   Store,
   Users,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+
+import type { Form } from '@/types/index.types';
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   SidebarGroup,
   SidebarMenu,
@@ -21,14 +32,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import type { Form } from '@/types/index.types';
 import { generateRandomString } from '@/lib/utils';
-import type { Route } from 'next';
 
 interface FormattedArray {
   title: string;
@@ -49,6 +53,7 @@ const icons = {
   sales: HandCoins,
   accounts: DollarSign,
   logistics: CircleGauge,
+  'I.T': MonitorSmartphoneIcon,
   site: Armchair,
 } as const;
 
@@ -72,7 +77,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
   }
 
   const formattedArray: Array<FormattedArray> = Object.entries(
-    groupedModules
+    groupedModules,
   ).map(([module, items]) => ({
     title: module,
     url: '#',
