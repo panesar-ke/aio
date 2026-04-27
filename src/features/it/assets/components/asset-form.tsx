@@ -57,7 +57,7 @@ export function AssetForm({
         purchaseDate: dateFormat(new Date()),
         purchaseCost: 0,
         vendorId: '',
-        warrantyExpiryDate: '',
+        warrantyExpiryDate: null,
         status: 'in_stock',
         condition: 'new',
         departmentId: '',
