@@ -55,7 +55,8 @@ async function fetchAssignments(
   if (params?.from) searchParams.append('from', params.from);
   if (params?.to) searchParams.append('to', params.to);
   if (params?.assetId) searchParams.append('assetId', params.assetId);
-  if (params?.custodyType) searchParams.append('custodyType', params.custodyType);
+  if (params?.custodyType)
+    searchParams.append('custodyType', params.custodyType);
   if (params?.userId) searchParams.append('userId', params.userId);
   if (params?.departmentId) {
     searchParams.append('departmentId', params.departmentId);
@@ -76,7 +77,11 @@ export const assignmentQueries = (
     queryFn: () => fetchAssignments(params),
   });
 
-export function AssignmentsPage({ assets, users, departments }: AssignmentsPageProps) {
+export function AssignmentsPage({
+  assets,
+  users,
+  departments,
+}: AssignmentsPageProps) {
   const { filters, onDateChange, onFilterChange, onHandleSearch, onReset } =
     useAssetAssignmentFilters();
 
@@ -180,7 +185,13 @@ export function AssignmentsPage({ assets, users, departments }: AssignmentsPageP
 
 function AssignmentsTable() {
   const { filters } = useAssetAssignmentFilters();
-  const { data } = useSuspenseQuery(assignmentQueries(filters));
+  const { data } = useSuspenseQuery(
+    assignmentQueries({
+      ...filters,
+      custodyType:
+        filters.custodyType as AssetAssignmentsSearchParamsSchema['custodyType'],
+    }),
+  );
 
   const columns: Array<ColumnDef<AssignmentRow>> = [
     {
