@@ -1,4 +1,5 @@
 import type { Option } from '@/types/index.types';
+
 import { FormControl } from '@/components/ui/form';
 import {
   Select,
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 import { cn } from '@/lib/utils';
 
 interface BasicSelectProps {
@@ -19,6 +19,7 @@ interface BasicSelectProps {
   hasError?: boolean;
   value?: string;
   className?: string;
+  withForm?: boolean;
 }
 
 export function MiniSelect({
@@ -30,6 +31,7 @@ export function MiniSelect({
   hasError,
   value,
   className,
+  withForm = true,
 }: BasicSelectProps) {
   return (
     <Select
@@ -37,18 +39,31 @@ export function MiniSelect({
       defaultValue={defaultValue}
       disabled={disabled}
     >
-      <FormControl>
+      {withForm ? (
+        <FormControl>
+          <SelectTrigger
+            className={cn(
+              'w-full overflow-hidden whitespace-nowrap truncate',
+              hasError && 'border border-destructive',
+              className,
+            )}
+            value={value}
+          >
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+        </FormControl>
+      ) : (
         <SelectTrigger
           className={cn(
             'w-full overflow-hidden whitespace-nowrap truncate',
             hasError && 'border border-destructive',
-            className
+            className,
           )}
           value={value}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-      </FormControl>
+      )}
       <SelectContent>
         {options.map(option => (
           <SelectItem value={option.value} key={option.value}>
