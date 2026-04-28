@@ -8,8 +8,11 @@ import { dateFormat } from '@/lib/helpers/formatters';
 
 type AssetHistoryRecord = {
   id: string;
+  assetAssignmentCustodyType: 'user' | 'department';
   userId: string | null;
   userName: string | null;
+  departmentId: number | null;
+  departmentName: string | null;
   assignedDate: string;
   returnedDate: string | null;
   assignmentNotes: string | null;
@@ -27,7 +30,21 @@ export function AssetHistoryPage({
     {
       accessorKey: 'userName',
       header: 'Assigned To',
-      cell: ({ row }) => row.original.userName?.toUpperCase() ?? 'UNASSIGNED',
+      cell: ({ row }) => {
+        if (row.original.assetAssignmentCustodyType === 'department') {
+          return row.original.departmentName?.toUpperCase() ?? 'UNASSIGNED';
+        }
+
+        return row.original.userName?.toUpperCase() ?? 'UNASSIGNED';
+      },
+    },
+    {
+      accessorKey: 'assetAssignmentCustodyType',
+      header: 'Custody',
+      cell: ({ row }) =>
+        row.original.assetAssignmentCustodyType === 'department'
+          ? 'DEPARTMENT'
+          : 'USER',
     },
     {
       accessorKey: 'assignedDate',

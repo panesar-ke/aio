@@ -63,9 +63,45 @@ export const assetFormSchemaValues = z
 
 export const assignmentFormSchemaValues = z.object({
   assetId: z.string().min(1, 'Asset is required'),
-  userId: z.string().min(1, 'User is required'),
+  assetAssignmentCustodyType: z.enum(['user', 'department']),
+  userId: z.preprocess(
+    value =>
+      typeof value === 'string' && value.trim() === '' ? undefined : value,
+    z.string().min(1).optional(),
+  ),
+  departmentId: z.preprocess(
+    value =>
+      typeof value === 'string' && value.trim() === '' ? undefined : value,
+    z.string().min(1).optional(),
+  ),
   assignedDate: z.string().date(),
   assignmentNotes: z.string().nullish(),
+}).superRefine((data, ctx) => {
+  if (data.assetAssignmentCustodyType === 'user') {
+    if (!data.userId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'User is required',
+        path: ['userId'],
+      });
+    }
+  }
+
+  if (data.assetAssignmentCustodyType === 'department') {
+    if (!data.departmentId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Department is required',
+        path: ['departmentId'],
+      });
+    } else if (!/^[1-9]\d*$/.test(data.departmentId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Department is invalid',
+        path: ['departmentId'],
+      });
+    }
+  }
 });
 
 export const assetStatusChangeSchema = z.object({
@@ -106,7 +142,9 @@ export const assetAssignmentsSearchParamsSchema = z
     from: z.string().date().nullish(),
     to: z.string().date().nullish(),
     assetId: z.string().nullish(),
+    custodyType: z.enum(['user', 'department']).nullish(),
     userId: z.string().nullish(),
+    departmentId: z.string().regex(/^[1-9]\d*$/).nullish(),
   })
   .refine(
     data => {

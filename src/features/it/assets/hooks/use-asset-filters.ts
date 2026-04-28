@@ -17,7 +17,9 @@ export const assignmentFiltersParsers = {
   from: parseAsString,
   to: parseAsString,
   assetId: parseAsString,
+  custodyType: parseAsString,
   userId: parseAsString,
+  departmentId: parseAsString,
 };
 
 export function useAssetFilters() {
@@ -83,7 +85,9 @@ export function useAssetAssignmentFilters() {
       from: null,
       to: null,
       assetId: null,
+      custodyType: null,
       userId: null,
+      departmentId: null,
     });
   }
 

@@ -2,7 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import db from '@/drizzle/db';
-import { itAssetAssignments, users } from '@/drizzle/schema';
+import { departments, itAssetAssignments, users } from '@/drizzle/schema';
 import { ForbiddenError, UnauthorizedError } from '@/lib/permissions/errors';
 import { requireAnyPermission } from '@/lib/permissions/guards';
 
@@ -20,8 +20,11 @@ export async function GET(
       .select({
         id: itAssetAssignments.id,
         assetId: itAssetAssignments.assetId,
+        assetAssignmentCustodyType: itAssetAssignments.assetAssignmentCustodyType,
         userId: itAssetAssignments.userId,
         userName: users.name,
+        departmentId: itAssetAssignments.departmentId,
+        departmentName: departments.departmentName,
         assignedDate: itAssetAssignments.assignedDate,
         returnedDate: itAssetAssignments.returnedDate,
         assignmentNotes: itAssetAssignments.assignmentNotes,
@@ -29,6 +32,7 @@ export async function GET(
       })
       .from(itAssetAssignments)
       .leftJoin(users, eq(users.id, itAssetAssignments.userId))
+      .leftJoin(departments, eq(departments.id, itAssetAssignments.departmentId))
       .where(eq(itAssetAssignments.assetId, assetId))
       .orderBy(desc(itAssetAssignments.assignedDate));
 

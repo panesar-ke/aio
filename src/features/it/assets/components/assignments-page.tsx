@@ -31,8 +31,11 @@ type AssignmentRow = {
   id: string;
   assetId: string;
   assetName: string;
+  assetAssignmentCustodyType: 'user' | 'department';
   userId: string | null;
   userName: string | null;
+  departmentId: number | null;
+  departmentName: string | null;
   assignedDate: string;
   returnedDate: string | null;
   assignmentNotes: string | null;
@@ -41,6 +44,7 @@ type AssignmentRow = {
 type AssignmentsPageProps = {
   assets: Array<Option>;
   users: Array<Option>;
+  departments: Array<Option>;
 };
 
 async function fetchAssignments(
@@ -51,7 +55,11 @@ async function fetchAssignments(
   if (params?.from) searchParams.append('from', params.from);
   if (params?.to) searchParams.append('to', params.to);
   if (params?.assetId) searchParams.append('assetId', params.assetId);
+  if (params?.custodyType) searchParams.append('custodyType', params.custodyType);
   if (params?.userId) searchParams.append('userId', params.userId);
+  if (params?.departmentId) {
+    searchParams.append('departmentId', params.departmentId);
+  }
 
   const response = await fetch(
     `/api/it/asset-assignments?${searchParams.toString()}`,
@@ -68,13 +76,13 @@ export const assignmentQueries = (
     queryFn: () => fetchAssignments(params),
   });
 
-export function AssignmentsPage({ assets, users }: AssignmentsPageProps) {
+export function AssignmentsPage({ assets, users, departments }: AssignmentsPageProps) {
   const { filters, onDateChange, onFilterChange, onHandleSearch, onReset } =
     useAssetAssignmentFilters();
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         <Search
           onHandleSearch={onHandleSearch}
           defaultValue={filters.search}
@@ -99,8 +107,26 @@ export function AssignmentsPage({ assets, users }: AssignmentsPageProps) {
           </SelectContent>
         </Select>
         <Select
+          value={filters.custodyType || '__all__'}
+          onValueChange={value => {
+            onFilterChange('custodyType', value);
+            if (value === 'department') onFilterChange('userId', '__all__');
+            if (value === 'user') onFilterChange('departmentId', '__all__');
+          }}
+        >
+          <SelectTrigger className="w-full bg-card">
+            <SelectValue placeholder="Filter by custody" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All custody types</SelectItem>
+            <SelectItem value="user">User</SelectItem>
+            <SelectItem value="department">Department</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
           value={filters.userId || '__all__'}
           onValueChange={value => onFilterChange('userId', value)}
+          disabled={filters.custodyType === 'department'}
         >
           <SelectTrigger className="w-full bg-card">
             <SelectValue placeholder="Filter by user" />
@@ -110,6 +136,23 @@ export function AssignmentsPage({ assets, users }: AssignmentsPageProps) {
             {users.map(user => (
               <SelectItem key={user.value} value={user.value}>
                 {user.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.departmentId || '__all__'}
+          onValueChange={value => onFilterChange('departmentId', value)}
+          disabled={filters.custodyType === 'user'}
+        >
+          <SelectTrigger className="w-full bg-card">
+            <SelectValue placeholder="Filter by department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All departments</SelectItem>
+            {departments.map(department => (
+              <SelectItem key={department.value} value={department.value}>
+                {department.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -148,7 +191,21 @@ function AssignmentsTable() {
     {
       accessorKey: 'userName',
       header: 'Assigned To',
-      cell: ({ row }) => row.original.userName?.toUpperCase() ?? 'UNASSIGNED',
+      cell: ({ row }) => {
+        if (row.original.assetAssignmentCustodyType === 'department') {
+          return row.original.departmentName?.toUpperCase() ?? 'UNASSIGNED';
+        }
+
+        return row.original.userName?.toUpperCase() ?? 'UNASSIGNED';
+      },
+    },
+    {
+      accessorKey: 'assetAssignmentCustodyType',
+      header: 'Custody',
+      cell: ({ row }) =>
+        row.original.assetAssignmentCustodyType === 'department'
+          ? 'DEPARTMENT'
+          : 'USER',
     },
     {
       accessorKey: 'assignedDate',

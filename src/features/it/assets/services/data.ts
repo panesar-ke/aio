@@ -43,8 +43,11 @@ export async function getAssetAssignmentHistoryByAssetId(assetId: string) {
   return db
     .select({
       id: itAssetAssignments.id,
+      assetAssignmentCustodyType: itAssetAssignments.assetAssignmentCustodyType,
       userId: itAssetAssignments.userId,
       userName: users.name,
+      departmentId: itAssetAssignments.departmentId,
+      departmentName: departments.departmentName,
       assignedDate: itAssetAssignments.assignedDate,
       returnedDate: itAssetAssignments.returnedDate,
       assignmentNotes: itAssetAssignments.assignmentNotes,
@@ -52,6 +55,7 @@ export async function getAssetAssignmentHistoryByAssetId(assetId: string) {
     })
     .from(itAssetAssignments)
     .leftJoin(users, eq(users.id, itAssetAssignments.userId))
+    .leftJoin(departments, eq(departments.id, itAssetAssignments.departmentId))
     .where(eq(itAssetAssignments.assetId, assetId))
     .orderBy(sql`${itAssetAssignments.assignedDate} desc`);
 }
@@ -112,6 +116,19 @@ export async function getAssignableAssets() {
       ),
     )
     .orderBy(asc(sql`lower(${itAssets.name})`));
+
+  return rows as Array<Option>;
+}
+
+export async function getAssignableDepartments() {
+  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+  const rows = await db
+    .select({
+      value: sql<string>`${departments.id}::text`,
+      label: departments.departmentName,
+    })
+    .from(departments)
+    .orderBy(asc(sql`lower(${departments.departmentName})`));
 
   return rows as Array<Option>;
 }

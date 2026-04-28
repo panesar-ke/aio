@@ -35,6 +35,15 @@ export const assetConditionEnum = pgEnum('asset_condition', [
   'refurbished',
 ]);
 
+export const ASSET_ASSIGNMENT_CUSTODY_TYPE = ['user', 'department'] as const;
+export type AssetAssignmentCustodyType =
+  (typeof ASSET_ASSIGNMENT_CUSTODY_TYPE)[number];
+
+export const assetAssignmentCustodyTypeEnum = pgEnum(
+  'asset_assignment_custody_type',
+  ASSET_ASSIGNMENT_CUSTODY_TYPE,
+);
+
 export const itCategories = pgTable(
   'it_categories',
   {
@@ -184,7 +193,13 @@ export const itAssetAssignments = pgTable(
     assetId: varchar('asset_id')
       .references(() => itAssets.id)
       .notNull(),
+    assetAssignmentCustodyType: assetAssignmentCustodyTypeEnum(
+      'asset_assignment_custody_type',
+    )
+      .default('user')
+      .notNull(),
     userId: uuid('user_id').references(() => users.id),
+    departmentId: integer('department_id').references(() => departments.id),
     assignedDate: date('assigned_date').notNull(),
     returnedDate: date('returned_date'),
     assignmentNotes: text('assignment_notes'),

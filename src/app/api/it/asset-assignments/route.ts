@@ -2,7 +2,7 @@ import { and, desc, eq, gte, ilike, lte, or, type SQL } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import db from '@/drizzle/db';
-import { itAssetAssignments, itAssets, users } from '@/drizzle/schema';
+import { departments, itAssetAssignments, itAssets, users } from '@/drizzle/schema';
 import { assetAssignmentsSearchParamsSchema } from '@/features/it/assets/utils/schemas';
 import { ForbiddenError, UnauthorizedError } from '@/lib/permissions/errors';
 import { requireAnyPermission } from '@/lib/permissions/guards';
@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { assetId, from, search, to, userId } = results.data;
+    const { assetId, custodyType, departmentId, from, search, to, userId } =
+      results.data;
     const filters: Array<SQL> = [];
 
     if (from && to) {
@@ -40,10 +41,21 @@ export async function GET(request: NextRequest) {
       filters.push(eq(itAssetAssignments.userId, userId));
     }
 
+    if (departmentId) {
+      filters.push(eq(itAssetAssignments.departmentId, Number(departmentId)));
+    }
+
+    if (custodyType) {
+      filters.push(
+        eq(itAssetAssignments.assetAssignmentCustodyType, custodyType),
+      );
+    }
+
     if (search) {
       const searchFilters = or(
         ilike(itAssets.name, `%${search}%`),
         ilike(users.name, `%${search}%`),
+        ilike(departments.departmentName, `%${search}%`),
         ilike(itAssetAssignments.assignmentNotes, `%${search}%`),
       );
       if (searchFilters) filters.push(searchFilters);
@@ -54,8 +66,11 @@ export async function GET(request: NextRequest) {
         id: itAssetAssignments.id,
         assetId: itAssetAssignments.assetId,
         assetName: itAssets.name,
+        assetAssignmentCustodyType: itAssetAssignments.assetAssignmentCustodyType,
         userId: itAssetAssignments.userId,
         userName: users.name,
+        departmentId: itAssetAssignments.departmentId,
+        departmentName: departments.departmentName,
         assignedDate: itAssetAssignments.assignedDate,
         returnedDate: itAssetAssignments.returnedDate,
         assignmentNotes: itAssetAssignments.assignmentNotes,
@@ -63,6 +78,7 @@ export async function GET(request: NextRequest) {
       .from(itAssetAssignments)
       .innerJoin(itAssets, eq(itAssets.id, itAssetAssignments.assetId))
       .leftJoin(users, eq(users.id, itAssetAssignments.userId))
+      .leftJoin(departments, eq(departments.id, itAssetAssignments.departmentId))
       .where(and(...filters))
       .orderBy(desc(itAssetAssignments.assignedDate));
 

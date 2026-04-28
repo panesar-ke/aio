@@ -1,5 +1,6 @@
 'use client';
 
+import { useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { Option } from '@/types/index.types';
@@ -17,22 +18,27 @@ import { dateFormat } from '@/lib/helpers/formatters';
 
 type AssignmentFormProps = {
   users: Array<Option>;
+  departments: Array<Option>;
   assets: Array<Option>;
   initialValues?: Partial<AssignmentFormSchemaValues>;
 };
 
 export function AssignmentForm({
   users,
+  departments,
   assets,
   initialValues,
 }: AssignmentFormProps) {
   const queryClient = useQueryClient();
   const { setClose } = useModal();
 
-  const { handleSubmit, AppField, AppForm, SubmitButton } = useAppForm({
+  const { handleSubmit, AppField, AppForm, SubmitButton, store } = useAppForm({
     defaultValues: {
       assetId: initialValues?.assetId ?? '',
+      assetAssignmentCustodyType:
+        initialValues?.assetAssignmentCustodyType ?? 'user',
       userId: initialValues?.userId ?? '',
+      departmentId: initialValues?.departmentId ?? '',
       assignedDate: initialValues?.assignedDate ?? dateFormat(new Date()),
       assignmentNotes: initialValues?.assignmentNotes ?? '',
     } as AssignmentFormSchemaValues,
@@ -54,6 +60,10 @@ export function AssignmentForm({
     },
   });
 
+  const [custodyType] = useStore(store, state => [
+    state.values.assetAssignmentCustodyType,
+  ]);
+
   return (
     <form
       onSubmit={e => {
@@ -74,17 +84,48 @@ export function AssignmentForm({
           </field.Select>
         )}
       </AppField>
-      <AppField name="userId">
+      <AppField name="assetAssignmentCustodyType">
         {field => (
-          <field.Select required label="Assign To" placeholder="Select user">
-            {users.map(user => (
-              <SelectItem key={user.value} value={user.value}>
-                {user.label}
-              </SelectItem>
-            ))}
+          <field.Select
+            required
+            label="Custody Type"
+            placeholder="Select custody type"
+          >
+            <SelectItem value="user">User</SelectItem>
+            <SelectItem value="department">Department</SelectItem>
           </field.Select>
         )}
       </AppField>
+      {custodyType === 'user' && (
+        <AppField name="userId">
+          {field => (
+            <field.Select required label="Assign To" placeholder="Select user">
+              {users.map(user => (
+                <SelectItem key={user.value} value={user.value}>
+                  {user.label}
+                </SelectItem>
+              ))}
+            </field.Select>
+          )}
+        </AppField>
+      )}
+      {custodyType === 'department' && (
+        <AppField name="departmentId">
+          {field => (
+            <field.Select
+              required
+              label="Department"
+              placeholder="Select department"
+            >
+              {departments.map(department => (
+                <SelectItem key={department.value} value={department.value}>
+                  {department.label}
+                </SelectItem>
+              ))}
+            </field.Select>
+          )}
+        </AppField>
+      )}
       <AppField name="assignedDate">
         {field => <field.Input type="date" required label="Assigned Date" />}
       </AppField>
