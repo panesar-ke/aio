@@ -169,6 +169,20 @@
       "when": 1777355727785,
       "tag": "0023_crazy_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1777360607150,
+      "tag": "0024_serious_luminals",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1777376018707,
+      "tag": "0025_concerned_zarda",
+      "breakpoints": true
     }
   ]
 }
