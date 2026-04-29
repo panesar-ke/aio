@@ -127,17 +127,18 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
               </AppField>
               <AppField name="vendorId">
                 {field => (
-                  <field.Select
-                    required
-                    label="Vendor"
-                    fieldClassName="col-span-full"
-                  >
+                  <field.Select required label="Vendor">
                     {vendors.map(vendor => (
                       <SelectItem key={vendor.value} value={vendor.value}>
                         {vendor.label.toUpperCase()}
                       </SelectItem>
                     ))}
                   </field.Select>
+                )}
+              </AppField>
+              <AppField name="renewalCost">
+                {field => (
+                  <field.Input type="number" required label="Initial Cost" />
                 )}
               </AppField>
               <AppField name="licenseKey">

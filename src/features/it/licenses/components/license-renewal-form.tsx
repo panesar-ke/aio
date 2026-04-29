@@ -65,17 +65,18 @@ export function LicenseRenewalForm({
         <FieldGroup className="grid md:grid-cols-2 gap-6">
           <AppField name="vendorId">
             {field => (
-              <field.Select
-                required
-                label="Vendor"
-                fieldClassName="col-span-full"
-              >
+              <field.Select required label="Vendor">
                 {vendors.map(vendor => (
                   <SelectItem key={vendor.value} value={vendor.value}>
                     {vendor.label.toUpperCase()}
                   </SelectItem>
                 ))}
               </field.Select>
+            )}
+          </AppField>
+          <AppField name="renewalCost">
+            {field => (
+              <field.Input type="number" required label="Renewal Cost" />
             )}
           </AppField>
           <AppField name="renewalDate">
@@ -115,6 +116,7 @@ export function LicenseRenewalForm({
           <AppField name="endDate">
             {field => <field.Input type="date" required label="End Date" />}
           </AppField>
+
           <AppField name="notes">
             {field => (
               <field.Textarea

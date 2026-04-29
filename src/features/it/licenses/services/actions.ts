@@ -1,5 +1,6 @@
 'use server';
-import { and, between, desc, eq, ne, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, ne, or, sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 import db from '@/drizzle/db';
 import { itLicenseRenewals, itLicenses } from '@/drizzle/schema';
@@ -136,6 +137,8 @@ export const upsertLicenseDetails = async (values: unknown) =>
         return { error: true, message: 'License key already exists.' };
       }
 
+      revalidateTag(`licenses-${id}`);
+
       return {
         error: false,
         message: `License ${data.id ? 'updated' : 'created'} successfully.`,
@@ -174,8 +177,8 @@ export const renewLicense = async (values: unknown) =>
       where: and(
         eq(itLicenseRenewals.licenseId, data.licenseId),
         or(
-          between(itLicenseRenewals.startDate, data.startDate, data.endDate),
-          between(itLicenseRenewals.endDate, data.startDate, data.endDate),
+          lte(itLicenseRenewals.startDate, data.endDate),
+          gte(itLicenseRenewals.endDate, data.startDate),
         ),
       ),
     });
@@ -203,6 +206,8 @@ export const renewLicense = async (values: unknown) =>
           notes: normalizeNullableString(data.notes),
         })
         .returning({ id: itLicenseRenewals.id });
+
+      revalidateTag(`licenses-${data.licenseId}`);
 
       return {
         error: false,

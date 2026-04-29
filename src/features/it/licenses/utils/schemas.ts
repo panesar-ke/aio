@@ -5,7 +5,7 @@ import { LICENSE_STATUS, LICENSE_TYPE } from '@/drizzle/schema';
 const licenseSchema = z.object({
   vendorId: z.string().min(1, 'Vendor is required'),
   totalSeats: z.number().positive({ message: 'Enter a valid value' }),
-  usedSeats: z.number().positive({ message: 'Enter a valid value' }),
+  usedSeats: z.number().nonnegative({ message: 'Enter a valid value' }),
   startDate: z.string().date().optional(),
   endDate: z.string().date().optional(),
   renewalDate: z.string().date().optional(),
@@ -102,7 +102,7 @@ export const licenseRenewalFormSchema = licenseSchema
       });
     }
 
-    if (data.usedSeats && data.totalSeats) {
+    if (data.usedSeats !== undefined && data.totalSeats !== undefined) {
       if (data.usedSeats > data.totalSeats) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
