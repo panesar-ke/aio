@@ -1,5 +1,5 @@
 'use server';
-import { and, between, eq, ne, or, sql } from 'drizzle-orm';
+import { and, between, desc, eq, ne, or, sql } from 'drizzle-orm';
 
 import db from '@/drizzle/db';
 import { itLicenseRenewals, itLicenses } from '@/drizzle/schema';
@@ -7,8 +7,7 @@ import {
   licenseFormSchemaValues,
   licenseRenewalFormSchema,
 } from '@/features/it/licenses/utils/schemas';
-import { runAction } from '@/lib/actions/safe-action';
-import { parseOrFail } from '@/lib/actions/safe-action';
+import { parseOrFail, runAction } from '@/lib/actions/safe-action';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { requireAnyPermission } from '@/lib/permissions/guards';
 import {
@@ -21,53 +20,68 @@ export const upsertLicenseDetails = async (values: unknown) =>
     await requireAnyPermission(['it:admin', 'it:standard']);
 
     const data = parseOrFail(licenseFormSchemaValues, values);
-    if (data.licenseKey) {
-      const normalizedName = normalizeString(data.licenseKey);
-      const existing = await db.query.itLicenseRenewals.findFirst({
-        where: and(
-          eq(
-            sql`lower(${itLicenseRenewals.licenseKey})`,
-            normalizedName.toLowerCase(),
-          ),
-          data.id ? ne(itLicenseRenewals.id, data.id) : undefined,
-        ),
-      });
-
-      if (existing) {
-        return {
-          error: true,
-          message: 'License already exists.',
-        };
-      }
-    }
 
     try {
       const id = await db.transaction(async tx => {
-        const [{ id }] = await tx
-          .insert(itLicenses)
-          .values({
-            ...data,
-            name: normalizeString(data.name),
-            softwareName: normalizeString(data.softwareName),
-          })
-          .onConflictDoUpdate({
-            target: itLicenses.id,
-            set: {
-              ...data,
-              name: normalizeString(data.name),
-              softwareName: normalizeString(data.softwareName),
-            },
-          })
-          .returning({ id: itLicenses.id });
+        const licensePayload = {
+          name: normalizeString(data.name),
+          softwareName: normalizeString(data.softwareName),
+          licenseType: data.licenseType,
+          status: data.status,
+        } as const;
 
-        if (data.id) {
-          await tx
-            .delete(itLicenseRenewals)
-            .where(eq(itLicenseRenewals.licenseId, data.id));
+        const licenseRows = data.id
+          ? await tx
+              .update(itLicenses)
+              .set(licensePayload)
+              .where(eq(itLicenses.id, data.id))
+              .returning({ id: itLicenses.id })
+          : await tx
+              .insert(itLicenses)
+              .values(licensePayload)
+              .returning({ id: itLicenses.id });
+
+        const licenseId = licenseRows[0]?.id;
+        if (!licenseId) {
+          return '__NOT_FOUND__' as const;
         }
 
-        await tx.insert(itLicenseRenewals).values({
-          licenseId: id,
+        const latestRenewalRows = await tx
+          .select({ id: itLicenseRenewals.id })
+          .from(itLicenseRenewals)
+          .where(eq(itLicenseRenewals.licenseId, licenseId))
+          .orderBy(desc(itLicenseRenewals.createdAt))
+          .limit(1);
+
+        const latestRenewalId = latestRenewalRows[0]?.id ?? null;
+        const licenseKeyValue = normalizeNullableString(data.licenseKey);
+        const normalizedLicenseKey = licenseKeyValue
+          ? licenseKeyValue.toLowerCase()
+          : null;
+
+        if (normalizedLicenseKey) {
+          const existingRows = await tx
+            .select({ id: itLicenseRenewals.id })
+            .from(itLicenseRenewals)
+            .where(
+              and(
+                eq(
+                  sql`lower(${itLicenseRenewals.licenseKey})`,
+                  normalizedLicenseKey,
+                ),
+                latestRenewalId
+                  ? ne(itLicenseRenewals.id, latestRenewalId)
+                  : undefined,
+              ),
+            )
+            .limit(1);
+
+          if (existingRows[0]) {
+            return '__LICENSE_KEY_EXISTS__' as const;
+          }
+        }
+
+        const renewalPayload = {
           vendorId: data.vendorId,
           startDate:
             data.licenseType === 'subscription'
@@ -97,8 +111,30 @@ export const upsertLicenseDetails = async (values: unknown) =>
           usedSeats: data.usedSeats,
           licenseKey: normalizeNullableString(data.licenseKey),
           notes: normalizeNullableString(data.notes),
-        });
+        } as const;
+
+        if (latestRenewalId) {
+          await tx
+            .update(itLicenseRenewals)
+            .set(renewalPayload)
+            .where(eq(itLicenseRenewals.id, latestRenewalId));
+        } else {
+          await tx.insert(itLicenseRenewals).values({
+            licenseId,
+            ...renewalPayload,
+          });
+        }
+
+        return licenseId;
       });
+
+      if (id === '__NOT_FOUND__') {
+        return { error: true, message: 'License not found.' };
+      }
+
+      if (id === '__LICENSE_KEY_EXISTS__') {
+        return { error: true, message: 'License key already exists.' };
+      }
 
       return {
         error: false,

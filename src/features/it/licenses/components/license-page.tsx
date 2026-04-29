@@ -47,7 +47,7 @@ async function fetchLicenses(
 ): Promise<Array<License>> {
   const searchParams = new URLSearchParams();
   if (params?.search) searchParams.append('search', params.search);
-  if (params?.status) searchParams.append('from', params.status);
+  if (params?.status) searchParams.append('status', params.status);
 
   const response = await fetch(`/api/it/licenses?${searchParams.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch');
@@ -87,7 +87,7 @@ function LicenseTable({ vendors }: { vendors: Array<Option> }) {
   const { filters, onReset } = useLicenseFilters();
   const router = useRouter();
   const { data } = useSuspenseQuery({
-    queryKey: ['it-licenses'],
+    queryKey: ['it-licenses', filters],
     queryFn: () => fetchLicenses(filters),
   });
 
