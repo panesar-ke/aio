@@ -230,6 +230,7 @@ export function AssetPage({
         <AssetTable
           assignableAssets={assignableAssets}
           assignableUsers={assignableUsers}
+          departments={departments}
         />
       </ErrorBoundaryWithSuspense>
     </div>
@@ -239,9 +240,11 @@ export function AssetPage({
 function AssetTable({
   assignableUsers,
   assignableAssets,
+  departments,
 }: {
   assignableUsers: Array<Option>;
   assignableAssets: Array<Option>;
+  departments: Array<Option>;
 }) {
   const { setOpen } = useModal();
   const { filters, onReset } = useAssetFilters();
@@ -329,6 +332,7 @@ function AssetTable({
                     >
                       <AssignmentForm
                         users={assignableUsers}
+                        departments={departments}
                         assets={assignableAssets}
                         initialValues={{ assetId: row.original.id }}
                       />

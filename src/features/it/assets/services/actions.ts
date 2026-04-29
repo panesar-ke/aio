@@ -215,6 +215,13 @@ export const assignAsset = async (values: unknown) =>
       };
     }
 
+    const custodyType = data.assetAssignmentCustodyType;
+    const assignedUserId = custodyType === 'user' ? data.userId ?? null : null;
+    const assignedDepartmentId =
+      custodyType === 'department' && data.departmentId
+        ? Number(data.departmentId)
+        : null;
+
     await db.transaction(async tx => {
       const activeAssignment = await tx.query.itAssetAssignments.findFirst({
         where: and(
@@ -235,17 +242,24 @@ export const assignAsset = async (values: unknown) =>
 
       await tx.insert(itAssetAssignments).values({
         assetId: data.assetId,
-        userId: data.userId,
+        assetAssignmentCustodyType: custodyType,
+        userId: assignedUserId,
+        departmentId: assignedDepartmentId,
         assignedDate: data.assignedDate,
         assignmentNotes: normalizeNullableString(data.assignmentNotes),
       });
 
+      const assetUpdate = {
+        currentAssignedUserId: assignedUserId,
+        status: 'assigned' as const,
+        ...(assignedDepartmentId != null
+          ? { departmentId: assignedDepartmentId }
+          : {}),
+      };
+
       await tx
         .update(itAssets)
-        .set({
-          currentAssignedUserId: data.userId,
-          status: 'assigned',
-        })
+        .set(assetUpdate)
         .where(eq(itAssets.id, data.assetId));
     });
 
@@ -304,7 +318,7 @@ export const changeAssetStatus = async (values: unknown) =>
 
     const asset = await db.query.itAssets.findFirst({
       where: eq(itAssets.id, data.id),
-      columns: { id: true, currentAssignedUserId: true },
+      columns: { id: true, status: true },
     });
 
     if (!asset) {
@@ -314,7 +328,7 @@ export const changeAssetStatus = async (values: unknown) =>
       };
     }
 
-    if (asset.currentAssignedUserId) {
+    if (asset.status === 'assigned') {
       return {
         error: true,
         message:

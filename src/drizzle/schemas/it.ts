@@ -35,6 +35,29 @@ export const assetConditionEnum = pgEnum('asset_condition', [
   'refurbished',
 ]);
 
+export const ASSET_ASSIGNMENT_CUSTODY_TYPE = ['user', 'department'] as const;
+export type AssetAssignmentCustodyType =
+  (typeof ASSET_ASSIGNMENT_CUSTODY_TYPE)[number];
+
+export const assetAssignmentCustodyTypeEnum = pgEnum(
+  'asset_assignment_custody_type',
+  ASSET_ASSIGNMENT_CUSTODY_TYPE,
+);
+
+export const LICENSE_TYPE = ['subscription', 'perpetual'] as const;
+export type LicenseType = (typeof LICENSE_TYPE)[number];
+
+export const LICENSE_STATUS = [
+  'active',
+  'expired',
+  'suspended',
+  'cancelled',
+] as const;
+export type LicenseStatus = (typeof LICENSE_STATUS)[number];
+
+export const licenseTypeEnum = pgEnum('license_type', LICENSE_TYPE);
+export const licenseStatusEnum = pgEnum('license_status', LICENSE_STATUS);
+
 export const itCategories = pgTable(
   'it_categories',
   {
@@ -184,7 +207,13 @@ export const itAssetAssignments = pgTable(
     assetId: varchar('asset_id')
       .references(() => itAssets.id)
       .notNull(),
+    assetAssignmentCustodyType: assetAssignmentCustodyTypeEnum(
+      'asset_assignment_custody_type',
+    )
+      .default('user')
+      .notNull(),
     userId: uuid('user_id').references(() => users.id),
+    departmentId: integer('department_id').references(() => departments.id),
     assignedDate: date('assigned_date').notNull(),
     returnedDate: date('returned_date'),
     assignmentNotes: text('assignment_notes'),
@@ -196,6 +225,79 @@ export const itAssetAssignments = pgTable(
     index('it_asset_assignments_assigned_date_idx').on(table.assignedDate),
     index('it_asset_assignments_returned_date_idx').on(table.returnedDate),
   ],
+);
+
+export const itLicenses = pgTable(
+  'it_licenses',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => nanoid()),
+    name: varchar('name', { length: 255 }).notNull(),
+    softwareName: varchar('software_name', { length: 255 }).notNull(),
+    licenseType: licenseTypeEnum('license_type')
+      .notNull()
+      .default('subscription'),
+    status: licenseStatusEnum('status').default('active').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => [
+    index('it_licenses_name_idx').on(table.name),
+    index('it_licenses_software_name_idx').on(table.softwareName),
+    index('it_licenses_license_type_idx').on(table.licenseType),
+    index('it_licenses_status_idx').on(table.status),
+  ],
+);
+
+export const itLicenseRenewals = pgTable(
+  'it_license_renewals',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => nanoid()),
+    licenseId: varchar('license_id')
+      .notNull()
+      .references(() => itLicenses.id),
+    vendorId: uuid('vendor_id')
+      .references(() => vendors.id)
+      .notNull(),
+    licenseKey: text('license_key'),
+    totalSeats: integer('total_seats').default(1).notNull(),
+    usedSeats: integer('used_seats').default(0).notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    renewalCost: numeric('renewal_cost', { precision: 14, scale: 2 }),
+    renewalDate: date('renewal_date'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => [
+    index('it_license_renewals_license_idx').on(table.licenseId),
+    index('it_license_renewals_renewal_date_idx').on(table.renewalDate),
+    uniqueIndex('it_license_renewals_license_key_ci_unique').on(
+      sql`lower(${table.licenseKey})`,
+    ),
+  ],
+);
+
+export const itLicensesRelations = relations(itLicenses, ({ many }) => ({
+  renewals: many(itLicenseRenewals),
+}));
+
+export const itLicenseRenewalsRelations = relations(
+  itLicenseRenewals,
+  ({ one }) => ({
+    vendor: one(vendors, {
+      fields: [itLicenseRenewals.vendorId],
+      references: [vendors.id],
+    }),
+    license: one(itLicenses, {
+      fields: [itLicenseRenewals.licenseId],
+      references: [itLicenses.id],
+    }),
+  }),
 );
 
 export const itCategoriesRelations = relations(itCategories, ({ many }) => ({
