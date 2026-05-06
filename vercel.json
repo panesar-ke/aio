@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "crons": [
+    { "path": "/api/cron/it-license-renewals", "schedule": "0 5 * * *" }
+  ],
   "git": {
     "deploymentEnabled": {
       "v2": true,
