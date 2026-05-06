@@ -282,6 +282,32 @@ export const itLicenseRenewals = pgTable(
   ],
 );
 
+export const itLicenseRenewalReminderEmails = pgTable(
+  'it_license_renewal_reminder_emails',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => nanoid()),
+    licenseId: varchar('license_id')
+      .notNull()
+      .references(() => itLicenses.id),
+    endDate: date('end_date').notNull(),
+    daysBefore: integer('days_before').notNull(),
+    resendEmailId: varchar('resend_email_id', { length: 255 }),
+    sentAt: timestamp('sent_at').defaultNow().notNull(),
+  },
+  table => [
+    index('it_license_renewal_reminder_emails_license_idx').on(table.licenseId),
+    index('it_license_renewal_reminder_emails_end_date_idx').on(table.endDate),
+    uniqueIndex('it_license_renewal_reminder_emails_unique').on(
+      table.licenseId,
+      table.endDate,
+      table.daysBefore,
+    ),
+  ],
+);
+
 export const itLicensesRelations = relations(itLicenses, ({ many }) => ({
   renewals: many(itLicenseRenewals),
 }));
