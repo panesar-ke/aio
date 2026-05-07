@@ -36,12 +36,11 @@ export default async function middleware(req: NextRequest) {
 
   if (
     path.startsWith('/api/inngest') ||
-    path.startsWith('/api/website-enquries') ||
-    path.startsWith('/api/cron/')
+    path.startsWith('/api/website-enquries/log') ||
+    path.startsWith('/api/cron')
   ) {
     return NextResponse.next();
   }
-
   const decision = await aj.protect(req);
 
   if (decision.isDenied()) {
