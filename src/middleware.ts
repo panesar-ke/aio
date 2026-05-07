@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+
 import arcjet, { detectBot, shield, slidingWindow } from '@arcjet/next';
+import { NextResponse } from 'next/server';
 
 const publicRoutes = [
   '/login',
@@ -35,7 +36,8 @@ export default async function middleware(req: NextRequest) {
 
   if (
     path.startsWith('/api/inngest') ||
-    path.startsWith('/api/website-enquries')
+    path.startsWith('/api/website-enquries') ||
+    path.startsWith('/api/cron/')
   ) {
     return NextResponse.next();
   }
