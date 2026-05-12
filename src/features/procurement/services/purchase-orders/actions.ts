@@ -1,29 +1,25 @@
 'use server';
-import { redirect } from 'next/navigation';
-import { revalidateTag } from 'next/cache';
-import { createId } from '@paralleldrive/cuid2';
-import { eq, inArray } from 'drizzle-orm';
-import { isAxiosError } from 'axios';
 import type { AxiosResponse } from 'axios';
+
+import { createId } from '@paralleldrive/cuid2';
+import { isAxiosError } from 'axios';
+import { eq, inArray } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+import type {
+  OrderData,
+  OrderFormValues,
+} from '@/features/procurement/utils/procurement.types';
 import type {
   ApiFailure,
   ApiFailureWithoutData,
   ApiSuccess,
   ApiSuccessWithoutData,
 } from '@/types/index.types';
-import type {
-  OrderData,
-  OrderFormValues,
-} from '@/features/procurement/utils/procurement.types';
-import { getPurchaseOrder, getPurchaseOrderNo } from './data';
-import { orderSchema } from '@/features/procurement/utils/schemas';
+
 import db from '@/drizzle/db';
 import { mrqDetails, ordersDetails, ordersHeader } from '@/drizzle/schema';
-import { getCurrentUser } from '@/lib/session';
-import {
-  calculateDiscount,
-  calculateVatValues,
-} from '@/features/procurement/utils/calculators';
 import {
   getMaterialRequisitionGlobalTag,
   getPendingRequestsGlobalTag,
@@ -31,9 +27,17 @@ import {
   revalidateMaterialRequisitions,
   revalidatePurchaseOrders,
 } from '@/features/procurement/utils/cache';
-import axios from '@/lib/axios';
-import { apiErrorHandler } from '@/lib/utils';
+import {
+  calculateDiscount,
+  calculateVatValues,
+} from '@/features/procurement/utils/calculators';
+import { orderSchema } from '@/features/procurement/utils/schemas';
 import { inngest } from '@/inngest/client';
+import axios from '@/lib/axios';
+import { getCurrentUser } from '@/lib/session';
+import { apiErrorHandler } from '@/lib/utils';
+
+import { getPurchaseOrder, getPurchaseOrderNo } from './data';
 
 export const createOrder = async ({
   values,
@@ -85,7 +89,8 @@ export const createOrder = async ({
         billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
         billNo: invoiceNo,
         vatType,
-        vatId: vatType !== 'NONE' ? 1 : null,
+        vatId:
+          vatType !== 'NONE' ? (vat ? (vat === '16' ? 1 : 2) : null) : null,
         createdBy: user.id,
       })
       .onConflictDoUpdate({
@@ -97,7 +102,9 @@ export const createOrder = async ({
           billNo: invoiceNo,
           vatType,
           fileUrl: null,
-          vatId: vatType !== 'NONE' ? 1 : null,
+          vatId:
+            vatType !== 'NONE' ? (vat ? (vat === '16' ? 1 : 2) : null) : null,
+          // vatId: vatType !== 'NONE' ? 1 : null,
         },
       })
       .returning({ reference: ordersHeader.reference });
@@ -134,7 +141,7 @@ export const createOrder = async ({
         const discountedAmount = calculateDiscount(
           discountType ?? 'NONE',
           discount ?? 0,
-          gross
+          gross,
         );
         const subTotal = gross - discountedAmount;
         const vatValues = calculateVatValues(vatType, subTotal, vat ?? 0);
@@ -153,7 +160,7 @@ export const createOrder = async ({
           vat: vatValues.vatValue.toString(),
           amountInclusive: vatValues.inclusive.toString(),
         };
-      }
+      },
     );
 
     await tx.insert(ordersDetails).values(formattedDetails);
@@ -196,7 +203,7 @@ export async function updateOrderUrl({
 
 export const generateOrderFile = async (
   data: OrderData,
-  orderId: string
+  orderId: string,
 ): Promise<ApiSuccess | ApiFailure> => {
   try {
     const res: AxiosResponse<{
@@ -251,7 +258,7 @@ export const generateOrderFile = async (
 export const sendOrderEmailAction = async (
   email: string,
   orderNo: string | number,
-  fileUrl: string
+  fileUrl: string,
 ): Promise<ApiSuccessWithoutData | ApiFailureWithoutData> => {
   try {
     await axios.post('/send-order-mail', {
