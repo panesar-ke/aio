@@ -1,6 +1,8 @@
 import { useWatch } from 'react-hook-form';
+
 import type { OrderForm } from '@/features/procurement/utils/procurement.types';
 import type { Option } from '@/types/index.types';
+
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
 import {
@@ -148,7 +150,10 @@ export function OrderFormHeader({ form, vendors }: OrderFormHeaderProps) {
                   defaultValue={field.value}
                   placeholder="Select VAT"
                   onChange={field.onChange}
-                  options={[{ value: '16', label: '16%' }]}
+                  options={[
+                    { value: '16', label: '16%' },
+                    { value: '8', label: '8%' },
+                  ]}
                   disabled={vatType === 'NONE'}
                 />
               </FormControl>
