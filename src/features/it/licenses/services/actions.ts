@@ -33,14 +33,14 @@ export const upsertLicenseDetails = async (values: unknown) =>
 
         const licenseRows = data.id
           ? await tx
-              .update(itLicenses)
-              .set(licensePayload)
-              .where(eq(itLicenses.id, data.id))
-              .returning({ id: itLicenses.id })
+            .update(itLicenses)
+            .set(licensePayload)
+            .where(eq(itLicenses.id, data.id))
+            .returning({ id: itLicenses.id })
           : await tx
-              .insert(itLicenses)
-              .values(licensePayload)
-              .returning({ id: itLicenses.id });
+            .insert(itLicenses)
+            .values(licensePayload)
+            .returning({ id: itLicenses.id });
 
         const licenseId = licenseRows[0]?.id;
         if (!licenseId) {
@@ -176,7 +176,7 @@ export const renewLicense = async (values: unknown) =>
     const overlapping = await db.query.itLicenseRenewals.findFirst({
       where: and(
         eq(itLicenseRenewals.licenseId, data.licenseId),
-        or(
+        and(
           lte(itLicenseRenewals.startDate, data.endDate),
           gte(itLicenseRenewals.endDate, data.startDate),
         ),
