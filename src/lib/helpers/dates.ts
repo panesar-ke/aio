@@ -8,13 +8,13 @@ export function getFinancialYearRanges(date?: Date): FinancialYearRange {
   const year = ref.getFullYear();
   const month = ref.getMonth();
 
-  const fyStartYear = month >= 6 ? year : year - 1;
+  const fyStartYear = month >= 4 ? year : year - 1;
 
-  const currentYearFrom = new Date(fyStartYear, 6, 1);
+  const currentYearFrom = new Date(fyStartYear, 4, 1);
   const currentYearTo = ref;
 
-  const previousYearFrom = new Date(fyStartYear - 1, 6, 1);
-  const previousYearTo = new Date(fyStartYear, 5, 30);
+  const previousYearFrom = new Date(fyStartYear - 1, 4, 1);
+  const previousYearTo = new Date(fyStartYear, 3, 30);
 
   return {
     currentYear: { from: currentYearFrom, to: currentYearTo },
