@@ -1,33 +1,34 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from "@tanstack/react-table";
 
 import {
   queryOptions,
   useQueryClient,
   useSuspenseQuery,
-} from '@tanstack/react-query';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+} from "@tanstack/react-query";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import type { ExpensesSearchParamsSchema } from '@/features/it/utils/expenses/schemas';
+import type { ExpensesSearchParamsSchema } from "@/features/it/utils/expenses/schemas";
 
-import { PermissionGate } from '@/components/auth/client-permission-gate';
-import { DeleteAction, EditAction } from '@/components/custom/custom-button';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { DataTable } from '@/components/custom/datatable';
-import { DatePicker } from '@/components/custom/date-range';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import Search from '@/components/custom/search';
-import { ActionButton } from '@/components/ui/action-button';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { EmptyState } from '@/components/ui/empty';
-import { dateFormat, numberFormat } from '@/lib/helpers/formatters';
+import { PermissionGate } from "@/components/auth/client-permission-gate";
+import { DeleteAction, EditAction } from "@/components/custom/custom-button";
+import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
+import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
+import { DataTable } from "@/components/custom/datatable";
+import { DatePicker } from "@/components/custom/date-range";
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import Search from "@/components/custom/search";
+import { ActionButton } from "@/components/ui/action-button";
+import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty";
+import { dateFormat, numberFormat } from "@/lib/helpers/formatters";
 
-import { useExpenseFilters } from '../../hooks/expenses/use-filters';
-import { deleteExpense } from '../../services/expenses/actions';
+import { useExpenseFilters } from "../../hooks/expenses/use-filters";
+import { deleteExpense } from "../../services/expenses/actions";
+import { getFinancialYearRanges } from "@/lib/helpers/dates";
 
 type Expense = {
   id: string;
@@ -44,23 +45,24 @@ async function fetchExpenses(
   params?: ExpensesSearchParamsSchema,
 ): Promise<Array<Expense>> {
   const searchParams = new URLSearchParams();
-  if (params?.search) searchParams.append('search', params.search);
-  if (params?.from) searchParams.append('from', params.from);
-  if (params?.to) searchParams.append('to', params.to);
+  if (params?.search) searchParams.append("search", params.search);
+  if (params?.from) searchParams.append("from", params.from);
+  if (params?.to) searchParams.append("to", params.to);
   const response = await fetch(`/api/it/expenses?${searchParams.toString()}`);
-  if (!response.ok) throw new Error('Failed to fetch');
+  if (!response.ok) throw new Error("Failed to fetch");
   return response.json();
 }
 
 export const expenseQueries = (params?: ExpensesSearchParamsSchema) =>
   queryOptions({
-    queryKey: ['it-expenses', params],
+    queryKey: ["it-expenses", params],
     queryFn: () => fetchExpenses(params),
   });
 
 export function ExpensePage() {
   const { filters, onHandleSearch, onDateChange, onReset } =
     useExpenseFilters();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -71,16 +73,20 @@ export function ExpensePage() {
           key={filters.search}
         />
         <DatePicker
-          onDateChange={date => {
+          onDateChange={(date) => {
             onDateChange({
-              from: date.from || null,
-              to: date.to || null,
+              from: date.from || getFinancialYearRanges().currentYear.from,
+              to: date.to || getFinancialYearRanges().currentYear.to,
             });
           }}
           onReset={onReset}
           initialDateRange={{
-            from: filters.from ? new Date(filters.from) : undefined,
-            to: filters.to ? new Date(filters.to) : undefined,
+            from: filters.from
+              ? new Date(filters.from)
+              : getFinancialYearRanges().currentYear.from,
+            to: filters.to
+              ? new Date(filters.to)
+              : getFinancialYearRanges().currentYear.to,
           }}
         />
       </div>
@@ -102,28 +108,28 @@ function ExpenseTable() {
     Boolean(filters.to);
   const columns: Array<ColumnDef<(typeof data)[0]>> = [
     {
-      accessorKey: 'expenseDate',
-      header: 'Date',
-      cell: ({ row }) => dateFormat(row.original.expenseDate, 'long'),
+      accessorKey: "expenseDate",
+      header: "Date",
+      cell: ({ row }) => dateFormat(row.original.expenseDate, "long"),
     },
     {
-      accessorKey: 'referenceNo',
-      header: 'Reference No.',
+      accessorKey: "referenceNo",
+      header: "Reference No.",
       cell: ({ row }) => row.original.referenceNo.toUpperCase(),
     },
     {
-      accessorKey: 'vendor',
-      header: 'Vendor',
+      accessorKey: "vendor",
+      header: "Vendor",
       cell: ({ row }) => row.original.vendor.toUpperCase(),
     },
     {
-      accessorKey: 'amount',
-      header: 'Amount',
+      accessorKey: "amount",
+      header: "Amount",
       cell: ({ row }) => numberFormat(row.original.amount),
     },
     {
-      accessorKey: 'category',
-      header: 'Category',
+      accessorKey: "category",
+      header: "Category",
       cell: ({ row }) => (
         <Badge className="capitalize" variant="secondary">
           {row.original.category}
@@ -131,7 +137,7 @@ function ExpenseTable() {
       ),
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }) => (
         <DropdownMenu>
           <CustomDropdownTrigger />
@@ -143,14 +149,14 @@ function ExpenseTable() {
                 <EditAction />
               </Link>
             </DropdownMenuItem>
-            <PermissionGate permissions={['it:admin']} match="all">
+            <PermissionGate permissions={["it:admin"]} match="all">
               <ActionButton
                 variant="ghost"
                 className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
                 action={deleteExpense.bind(null, row.original.id)}
                 requireAreYouSure={true}
                 onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['it-expenses'] });
+                  queryClient.invalidateQueries({ queryKey: ["it-expenses"] });
                 }}
               >
                 <DeleteAction />
@@ -167,25 +173,25 @@ function ExpenseTable() {
       <EmptyState
         title={
           !hasFilters
-            ? 'No expenses yet for current year'
-            : 'No expenses found matching your criteria'
+            ? "No expenses yet for current year"
+            : "No expenses found matching your criteria"
         }
         description={
           !hasFilters
-            ? 'Get started by creating your first expense.'
-            : 'Try adjusting your filters to find expenses.'
+            ? "Get started by creating your first expense."
+            : "Try adjusting your filters to find expenses."
         }
-        variant={!hasFilters ? 'default' : 'search'}
+        variant={!hasFilters ? "default" : "search"}
         action={{
-          label: hasFilters ? 'Clear filters' : 'Create Expense',
-          variant: hasFilters ? 'outline' : 'default',
+          label: hasFilters ? "Clear filters" : "Create Expense",
+          variant: hasFilters ? "outline" : "default",
           onClick: () => {
             if (hasFilters) {
               onReset();
               return;
             }
 
-            router.push('/it/expenses-budgeting/expenses/new');
+            router.push("/it/expenses-budgeting/expenses/new");
           },
         }}
       />
