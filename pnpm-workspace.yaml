@@ -1,0 +1,7 @@
+allowBuilds:
+  core-js: true
+  esbuild: true
+  inngest-cli: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true

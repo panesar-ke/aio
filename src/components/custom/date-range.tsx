@@ -1,27 +1,17 @@
-'use client';
-import {
-  endOfMonth,
-  endOfYear,
-  format,
-  isEqual,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-  subDays,
-  subMonths,
-  subYears,
-} from 'date-fns';
-import { useEffect, useState } from 'react';
-import type { DateRange } from 'react-day-picker';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+"use client";
+import { format, isEqual, startOfDay, subDays } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Button } from '@/components/ui/reui-btn';
-import { cn, generateRandomId } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/reui-btn";
+import { cn, generateRandomId } from "@/lib/utils";
+import { getFinancialYearRanges } from "@/lib/helpers/dates";
 
 type DateRangePickerProps = {
   initialDateRange?: DateRange;
@@ -36,41 +26,35 @@ export function DatePicker({
   onReset,
   className,
 }: DateRangePickerProps) {
-  const today = new Date();
-
-  const presets = [
-    { label: 'Today', range: { from: today, to: today } },
-    {
-      label: 'Yesterday',
-      range: { from: subDays(today, 1), to: subDays(today, 1) },
-    },
-    { label: 'Last 7 days', range: { from: subDays(today, 6), to: today } },
-    { label: 'Last 30 days', range: { from: subDays(today, 29), to: today } },
-    { label: 'Month to date', range: { from: startOfMonth(today), to: today } },
-    {
-      label: 'Last month',
-      range: {
-        from: startOfMonth(subMonths(today, 1)),
-        to: endOfMonth(subMonths(today, 1)),
+  const today = useMemo(() => new Date(), []);
+  const presets = useMemo(
+    () => [
+      { label: "Today", range: { from: today, to: today } },
+      {
+        label: "Yesterday",
+        range: { from: subDays(today, 1), to: subDays(today, 1) },
       },
-    },
-    { label: 'Year to date', range: { from: startOfYear(today), to: today } },
-    {
-      label: 'Last year',
-      range: {
-        from: startOfYear(subYears(today, 1)),
-        to: endOfYear(subYears(today, 1)),
+      { label: "Last 7 days", range: { from: subDays(today, 6), to: today } },
+      { label: "Last 30 days", range: { from: subDays(today, 29), to: today } },
+      {
+        label: "Year to date",
+        range: getFinancialYearRanges(today).currentYear,
       },
-    },
-  ];
+      {
+        label: "Previous year",
+        range: getFinancialYearRanges(today).previousYear,
+      },
+    ],
+    [today],
+  );
 
   const [month, setMonth] = useState(today);
   const defaultPreset = presets[2];
   const [date, setDate] = useState<DateRange | undefined>(
-    initialDateRange || defaultPreset.range
+    initialDateRange || defaultPreset.range,
   ); // Default: Last 7 days
   const [selectedPreset, setSelectedPreset] = useState<string | null>(
-    defaultPreset.label
+    defaultPreset.label,
   );
 
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -106,15 +90,15 @@ export function DatePicker({
   // Update `selectedPreset` whenever `date` changes
   useEffect(() => {
     const matchedPreset = presets.find(
-      preset =>
+      (preset) =>
         isEqual(
           startOfDay(preset.range.from),
-          startOfDay(date?.from || new Date(0))
+          startOfDay(date?.from || new Date(0)),
         ) &&
         isEqual(
           startOfDay(preset.range.to),
-          startOfDay(date?.to || new Date(0))
-        )
+          startOfDay(date?.to || new Date(0)),
+        ),
     );
     setSelectedPreset(matchedPreset?.label || null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,18 +112,18 @@ export function DatePicker({
           variant="outline"
           mode="input"
           placeholder={!date?.from && !date?.to}
-          className={cn('w-full md:max-w-lg', className)}
+          className={cn("w-full md:max-w-lg", className)}
           size="lg"
         >
           <CalendarIcon />
           {date?.from ? (
             date.to ? (
               <>
-                {format(date.from, 'LLL dd, y')} -{' '}
-                {format(date.to, 'LLL dd, y')}
+                {format(date.from, "LLL dd, y")} -{" "}
+                {format(date.to, "LLL dd, y")}
               </>
             ) : (
-              format(date.from, 'LLL dd, y')
+              format(date.from, "LLL dd, y")
             )
           ) : (
             <span>Pick a date range</span>
@@ -157,8 +141,8 @@ export function DatePicker({
                     type="button"
                     variant="ghost"
                     className={cn(
-                      'h-8 w-full justify-start',
-                      selectedPreset === preset.label && 'bg-accent'
+                      "h-8 w-full justify-start",
+                      selectedPreset === preset.label && "bg-accent",
                     )}
                     onClick={() => {
                       setDate(preset.range);

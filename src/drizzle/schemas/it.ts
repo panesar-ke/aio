@@ -134,6 +134,57 @@ export const itExpenses = pgTable(
   ],
 );
 
+export const itBudgets = pgTable(
+  'it_budgets',
+  {
+    id: varchar('id')
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    financialYearStart: integer('financial_year_start').notNull(),
+    subCategoryId: varchar('sub_category_id')
+      .references(() => itSubCategories.id)
+      .notNull(),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt,
+    updatedAt,
+  },
+  t => [
+    index('it_budget_fy_idx').on(t.financialYearStart),
+    index('it_budget_sub_category_idx').on(t.subCategoryId),
+    uniqueIndex('it_budget_fy_sub_category_unique').on(
+      t.financialYearStart,
+      t.subCategoryId,
+    ),
+  ],
+);
+
+export const itBudgetLines = pgTable(
+  'it_budget_lines',
+  {
+    id: varchar('id')
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    budgetId: varchar('budget_id')
+      .references(() => itBudgets.id, { onDelete: 'cascade' })
+      .notNull(),
+    monthDate: date('month_date').notNull(),
+    amount: numeric('amount', { precision: 14, scale: 2 })
+      .notNull()
+      .default('0'),
+    createdAt,
+    updatedAt,
+  },
+  t => [
+    index('it_budget_line_month_idx').on(t.monthDate),
+    uniqueIndex('it_budget_line_budget_month_unique').on(
+      t.budgetId,
+      t.monthDate,
+    ),
+  ],
+);
+
 export const itAssetCategories = pgTable(
   'it_asset_categories',
   {
@@ -339,8 +390,28 @@ export const itSubCategoriesRelations = relations(
       references: [itCategories.id],
     }),
     itExpenses: many(itExpenses),
+    itBudgets: many(itBudgets),
   }),
 );
+
+export const itBudgetsRelations = relations(itBudgets, ({ one, many }) => ({
+  subCategory: one(itSubCategories, {
+    fields: [itBudgets.subCategoryId],
+    references: [itSubCategories.id],
+  }),
+  createdByUser: one(users, {
+    fields: [itBudgets.createdBy],
+    references: [users.id],
+  }),
+  lines: many(itBudgetLines),
+}));
+
+export const itBudgetLinesRelations = relations(itBudgetLines, ({ one }) => ({
+  budget: one(itBudgets, {
+    fields: [itBudgetLines.budgetId],
+    references: [itBudgets.id],
+  }),
+}));
 
 export const itExpensesRelations = relations(itExpenses, ({ one }) => ({
   itCategory: one(itCategories, {
