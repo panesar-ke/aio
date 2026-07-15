@@ -7,6 +7,7 @@ import {
   BanknoteArrowDownIcon,
   CircleGaugeIcon,
   ClipboardListIcon,
+  CornerUpLeftIcon,
   FileIcon,
   FileTextIcon,
   ListCheckIcon,
@@ -178,6 +179,11 @@ const NAV_ITEMS: Array<NavItem> = [
         icon: ArrowLeftRightIcon,
       },
       {
+        label: "Material Issues",
+        href: "/store/issues",
+        icon: CornerUpLeftIcon,
+      },
+      {
         label: "Material Conversion",
         href: "/store/conversion",
         icon: RecycleIcon,
@@ -197,11 +203,6 @@ const NAV_ITEMS: Array<NavItem> = [
         label: "Expenses & Budgeting",
         href: "/it/expenses-budgeting",
         icon: BanknoteArrowDownIcon,
-      },
-      {
-        label: "Budgets",
-        href: "/it/expenses-budgeting/budgets",
-        icon: WalletIcon,
       },
       {
         label: "Assets Management",
