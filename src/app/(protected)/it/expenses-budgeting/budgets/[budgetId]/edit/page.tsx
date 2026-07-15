@@ -8,8 +8,10 @@ import {
 } from '@/features/it/services/expenses/data';
 import {
   getFinancialYearLabel,
+  getFinancialYearMonths,
   getFinancialYearOptions,
 } from '@/lib/helpers/dates';
+import { dateFormat } from '@/lib/helpers/formatters';
 import { requireAnyPermission } from '@/lib/permissions/guards';
 
 export const metadata: Metadata = {
@@ -41,6 +43,13 @@ export default async function EditBudgetPage({ params }: { params: Params }) {
     });
   }
 
+  const amountsByMonth = new Map(
+    budget.lines.map(line => [line.monthDate, Number(line.amount)]),
+  );
+  const monthAmounts = getFinancialYearMonths(budget.financialYearStart).map(
+    month => amountsByMonth.get(dateFormat(month.date)) ?? 0,
+  );
+
   return (
     <div className="container max-w-4xl mx-auto p-4">
       <BudgetForm
@@ -52,7 +61,7 @@ export default async function EditBudgetPage({ params }: { params: Params }) {
           financialYearStart: budget.financialYearStart.toString(),
           categoryId: budget.subCategory.categoryId,
           subCategoryId: budget.subCategoryId,
-          monthAmounts: budget.lines.map(line => Number(line.amount)),
+          monthAmounts,
         }}
       />
     </div>

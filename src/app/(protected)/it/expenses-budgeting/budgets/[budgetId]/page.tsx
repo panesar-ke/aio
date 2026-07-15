@@ -33,11 +33,15 @@ export default async function BudgetDetailPage({
     budget.subCategoryId,
   );
 
-  const months = budget.lines.map((line, index) => ({
-    monthDate: line.monthDate,
-    label: actuals[index]?.label ?? line.monthDate,
-    budgeted: Number(line.amount),
-    actual: actuals[index]?.actual ?? 0,
+  const budgetedByMonth = new Map(
+    budget.lines.map(line => [line.monthDate, Number(line.amount)]),
+  );
+
+  const months = actuals.map(({ monthDate, label, actual }) => ({
+    monthDate,
+    label,
+    budgeted: budgetedByMonth.get(monthDate) ?? 0,
+    actual,
   }));
 
   return (

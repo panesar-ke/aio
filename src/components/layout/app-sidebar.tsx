@@ -28,7 +28,6 @@ import Link from "next/link";
 import type { Permission } from "@/lib/permissions/catalog";
 
 import Logo from "@/components/layout/logo";
-import { Navigation } from "@/components/layout/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -41,16 +40,14 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getUserForms } from "@/features/admin/services/data";
-import { getCurrentUserPermissions } from "@/lib/permissions/service";
 import { getCurrentUser } from "@/lib/session";
 import { generateRandomString } from "@/lib/utils";
+import { getCurrentUserPermissions } from "@/lib/permissions/service";
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const user = await getCurrentUser();
-  const forms = await getUserForms(user.id, user.userType);
   const permissions = await getCurrentUserPermissions();
   const navItems = NAV_ITEMS.filter((item) =>
     item.permissions.some((permission) => permissions.has(permission)),
@@ -193,7 +190,7 @@ const NAV_ITEMS: Array<NavItem> = [
     items: [
       {
         label: "Dashboard",
-        href: "/",
+        href: "/it",
         icon: CircleGaugeIcon,
       },
       {
