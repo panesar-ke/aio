@@ -1,3 +1,34 @@
+import type { Route } from "next";
+
+import {
+  ArrowLeftRightIcon,
+  AwardIcon,
+  BadgeIcon,
+  BanknoteArrowDownIcon,
+  CircleGaugeIcon,
+  ClipboardListIcon,
+  FileIcon,
+  FileTextIcon,
+  ListCheckIcon,
+  ListTreeIcon,
+  type LucideIcon,
+  PackageIcon,
+  ReceiptIcon,
+  RecycleIcon,
+  ShieldAlertIcon,
+  TabletSmartphoneIcon,
+  Users2,
+  Users2Icon,
+  WalletIcon,
+  WarehouseIcon,
+  WrenchIcon,
+} from "lucide-react";
+import Link from "next/link";
+
+import type { Permission } from "@/lib/permissions/catalog";
+
+import Logo from "@/components/layout/logo";
+import { Navigation } from "@/components/layout/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -10,37 +41,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import Logo from "@/components/layout/logo";
-import { generateRandomString } from "@/lib/utils";
-import { Navigation } from "@/components/layout/navigation";
 import { getUserForms } from "@/features/admin/services/data";
-import { getCurrentUser } from "@/lib/session";
-import Link from "next/link";
-import {
-  ArrowLeftRightIcon,
-  AwardIcon,
-  BadgeIcon,
-  BanknoteArrowDownIcon,
-  CircleGaugeIcon,
-  ClipboardListIcon,
-  FileIcon,
-  FileTextIcon,
-  ListCheckIcon,
-  ListTreeIcon,
-  LucideIcon,
-  PackageIcon,
-  ReceiptIcon,
-  RecycleIcon,
-  ShieldAlertIcon,
-  TabletSmartphoneIcon,
-  Users2,
-  Users2Icon,
-  WarehouseIcon,
-  WrenchIcon,
-} from "lucide-react";
-import type { Route } from "next";
-import type { Permission } from "@/lib/permissions/catalog";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
+import { getCurrentUser } from "@/lib/session";
+import { generateRandomString } from "@/lib/utils";
 
 export async function AppSidebar({
   ...props
@@ -90,14 +94,14 @@ export function SidebarSkeleton() {
 
 type NavItem = {
   title: string;
-  items: {
+  items: Array<{
     icon: LucideIcon;
     label: string;
     href: Route;
-  }[];
+  }>;
   permissions: Array<Permission>;
 };
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: Array<NavItem> = [
   {
     title: "Admin",
     items: [
@@ -198,6 +202,11 @@ const NAV_ITEMS: NavItem[] = [
         icon: BanknoteArrowDownIcon,
       },
       {
+        label: "Budgets",
+        href: "/it/expenses-budgeting/budgets",
+        icon: WalletIcon,
+      },
+      {
         label: "Assets Management",
         href: "/it/assets",
         icon: TabletSmartphoneIcon,
@@ -211,7 +220,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-function NavItems({ items }: { items: NavItem[] }) {
+function NavItems({ items }: { items: Array<NavItem> }) {
   return (
     <>
       {items.map((item, index) => (
