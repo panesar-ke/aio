@@ -50,6 +50,14 @@ export function numberFormat(
   }).format(Number(number));
 }
 
+export function calculatePercentDelta(
+  current: number,
+  previous: number
+): number | null {
+  if (previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
 export const compactNumberFormatter = (value: string | number) => {
   return new Intl.NumberFormat('en-KE', {
     notation: 'compact',
