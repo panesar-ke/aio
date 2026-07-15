@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PlusIcon } from "lucide-react";
+import { HandCoinsIcon, PlusIcon, WalletIcon } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -55,17 +55,24 @@ export default async function ITExpensesBudgetingPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
+        title="Expenses & Budgeting Overview"
         description={DASHBOARD_PERIOD_LABELS[period]}
         content={
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             <PeriodSelect />
             <Link
-              href="/it/expenses-budgeting/expenses/new"
-              className={buttonVariants({ variant: "default" })}
+              href="/it/expenses-budgeting/budgets"
+              className={buttonVariants({ variant: "tertiary" })}
             >
-              <PlusIcon />
-              Add Expense
+              <WalletIcon />
+              Manage Budgets
+            </Link>
+            <Link
+              href="/it/expenses-budgeting/expenses"
+              className={buttonVariants({ variant: "pdfExport" })}
+            >
+              <HandCoinsIcon />
+              Manage Expenses
             </Link>
           </div>
         }
