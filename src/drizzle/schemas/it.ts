@@ -1,5 +1,5 @@
-import { relations } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { relations } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   date,
   index,
@@ -13,81 +13,81 @@ import {
   uniqueIndex,
   uuid,
   varchar,
-} from 'drizzle-orm/pg-core';
-import { nanoid } from 'nanoid';
+} from "drizzle-orm/pg-core";
+import { nanoid } from "nanoid";
 
-import { createdAt, id, updatedAt } from '@/drizzle/helpers';
-import { departments, users, vendors } from '@/drizzle/schema';
+import { createdAt, id, updatedAt } from "@/drizzle/helpers";
+import { departments, users, vendors } from "@/drizzle/schema";
 
-export const assetStatusEnum = pgEnum('asset_status', [
-  'in_stock',
-  'assigned',
-  'in_repair',
-  'retired',
-  'disposed',
-  'lost',
+export const assetStatusEnum = pgEnum("asset_status", [
+  "in_stock",
+  "assigned",
+  "in_repair",
+  "retired",
+  "disposed",
+  "lost",
 ]);
-export const assetConditionEnum = pgEnum('asset_condition', [
-  'new',
-  'good',
-  'fair',
-  'damaged',
-  'refurbished',
+export const assetConditionEnum = pgEnum("asset_condition", [
+  "new",
+  "good",
+  "fair",
+  "damaged",
+  "refurbished",
 ]);
 
-export const ASSET_ASSIGNMENT_CUSTODY_TYPE = ['user', 'department'] as const;
+export const ASSET_ASSIGNMENT_CUSTODY_TYPE = ["user", "department"] as const;
 export type AssetAssignmentCustodyType =
   (typeof ASSET_ASSIGNMENT_CUSTODY_TYPE)[number];
 
 export const assetAssignmentCustodyTypeEnum = pgEnum(
-  'asset_assignment_custody_type',
+  "asset_assignment_custody_type",
   ASSET_ASSIGNMENT_CUSTODY_TYPE,
 );
 
-export const LICENSE_TYPE = ['subscription', 'perpetual'] as const;
+export const LICENSE_TYPE = ["subscription", "perpetual"] as const;
 export type LicenseType = (typeof LICENSE_TYPE)[number];
 
 export const LICENSE_STATUS = [
-  'active',
-  'expired',
-  'suspended',
-  'cancelled',
+  "active",
+  "expired",
+  "suspended",
+  "cancelled",
 ] as const;
 export type LicenseStatus = (typeof LICENSE_STATUS)[number];
 
-export const licenseTypeEnum = pgEnum('license_type', LICENSE_TYPE);
-export const licenseStatusEnum = pgEnum('license_status', LICENSE_STATUS);
+export const licenseTypeEnum = pgEnum("license_type", LICENSE_TYPE);
+export const licenseStatusEnum = pgEnum("license_status", LICENSE_STATUS);
 
 export const itCategories = pgTable(
-  'it_categories',
+  "it_categories",
   {
     id,
-    name: varchar('name', { length: 255 }).notNull(),
-    description: text('description'),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
     createdAt,
     updatedAt,
   },
-  t => [
-    index('it_category_name_idx').on(t.name),
-    uniqueIndex('it_category_name_ci_unique').on(sql`lower(${t.name})`),
+  (t) => [
+    index("it_category_name_idx").on(t.name),
+    uniqueIndex("it_category_name_ci_unique").on(sql`lower(${t.name})`),
   ],
 );
 
 export const itSubCategories = pgTable(
-  'it_sub_categories',
+  "it_sub_categories",
   {
     id,
-    name: varchar('name', { length: 255 }).notNull(),
-    categoryId: varchar('category_id')
+    name: varchar("name", { length: 255 }).notNull(),
+    categoryId: varchar("category_id")
       .notNull()
       .references(() => itCategories.id),
     createdAt,
     updatedAt,
   },
-  t => [
-    index('it_sub_category_name_idx').on(t.name),
-    index('it_sub_category_category_idx').on(t.categoryId),
-    uniqueIndex('it_sub_category_name_category_ci_unique').on(
+  (t) => [
+    index("it_sub_category_name_idx").on(t.name),
+    index("it_sub_category_category_idx").on(t.categoryId),
+    uniqueIndex("it_sub_category_name_category_ci_unique").on(
       sql`lower(${t.name})`,
       t.categoryId,
     ),
@@ -95,64 +95,64 @@ export const itSubCategories = pgTable(
 );
 
 export const itExpenses = pgTable(
-  'it_expenses',
+  "it_expenses",
   {
-    id: varchar('id')
+    id: varchar("id")
       .notNull()
       .primaryKey()
       .$defaultFn(() => nanoid()),
-    expenseDate: date('expense_date').notNull(),
-    referenceNo: varchar('reference_no', { length: 100 }).notNull().unique(),
-    title: varchar('title', { length: 255 }).notNull(),
-    description: text('description'),
-    categoryId: varchar('category_id')
+    expenseDate: date("expense_date").notNull(),
+    referenceNo: varchar("reference_no", { length: 100 }).notNull().unique(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    categoryId: varchar("category_id")
       .references(() => itCategories.id)
       .notNull(),
-    subCategoryId: varchar('sub_category_id')
+    subCategoryId: varchar("sub_category_id")
       .references(() => itSubCategories.id)
       .notNull(),
-    vendorId: uuid('vendor_id')
+    vendorId: uuid("vendor_id")
       .references(() => vendors.id)
       .notNull(),
-    assetId: uuid('asset_id'),
-    licenseId: uuid('license_id'),
-    amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    assetId: varchar("asset_id").references(() => itAssets.id),
+    licenseId: varchar("license_id").references(() => itLicenses.id),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  t => [
-    index('it_expense_name_idx').on(t.title),
-    index('it_expense_date_idx').on(t.expenseDate),
-    index('it_expense_category_idx').on(t.categoryId),
-    index('it_expense_sub_category_idx').on(t.subCategoryId),
-    index('it_expense_vendor_idx').on(t.vendorId),
-    index('it_expense_asset_idx').on(t.assetId),
-    index('it_expense_license_idx').on(t.licenseId),
-    index('it_expense_amount_idx').on(t.amount),
-    uniqueIndex('it_expense_reference_no_ci_unique').on(
+  (t) => [
+    index("it_expense_name_idx").on(t.title),
+    index("it_expense_date_idx").on(t.expenseDate),
+    index("it_expense_category_idx").on(t.categoryId),
+    index("it_expense_sub_category_idx").on(t.subCategoryId),
+    index("it_expense_vendor_idx").on(t.vendorId),
+    index("it_expense_asset_idx").on(t.assetId),
+    index("it_expense_license_idx").on(t.licenseId),
+    index("it_expense_amount_idx").on(t.amount),
+    uniqueIndex("it_expense_reference_no_ci_unique").on(
       sql`lower(${t.referenceNo})`,
     ),
   ],
 );
 
 export const itBudgets = pgTable(
-  'it_budgets',
+  "it_budgets",
   {
-    id: varchar('id')
+    id: varchar("id")
       .notNull()
       .primaryKey()
       .$defaultFn(() => nanoid()),
-    financialYearStart: integer('financial_year_start').notNull(),
-    subCategoryId: varchar('sub_category_id')
+    financialYearStart: integer("financial_year_start").notNull(),
+    subCategoryId: varchar("sub_category_id")
       .references(() => itSubCategories.id)
       .notNull(),
-    createdBy: uuid('created_by').references(() => users.id),
+    createdBy: uuid("created_by").references(() => users.id),
     createdAt,
     updatedAt,
   },
-  t => [
-    index('it_budget_fy_idx').on(t.financialYearStart),
-    index('it_budget_sub_category_idx').on(t.subCategoryId),
-    uniqueIndex('it_budget_fy_sub_category_unique').on(
+  (t) => [
+    index("it_budget_fy_idx").on(t.financialYearStart),
+    index("it_budget_sub_category_idx").on(t.subCategoryId),
+    uniqueIndex("it_budget_fy_sub_category_unique").on(
       t.financialYearStart,
       t.subCategoryId,
     ),
@@ -160,25 +160,25 @@ export const itBudgets = pgTable(
 );
 
 export const itBudgetLines = pgTable(
-  'it_budget_lines',
+  "it_budget_lines",
   {
-    id: varchar('id')
+    id: varchar("id")
       .notNull()
       .primaryKey()
       .$defaultFn(() => nanoid()),
-    budgetId: varchar('budget_id')
-      .references(() => itBudgets.id, { onDelete: 'cascade' })
+    budgetId: varchar("budget_id")
+      .references(() => itBudgets.id, { onDelete: "cascade" })
       .notNull(),
-    monthDate: date('month_date').notNull(),
-    amount: numeric('amount', { precision: 14, scale: 2 })
+    monthDate: date("month_date").notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2 })
       .notNull()
-      .default('0'),
+      .default("0"),
     createdAt,
     updatedAt,
   },
-  t => [
-    index('it_budget_line_month_idx').on(t.monthDate),
-    uniqueIndex('it_budget_line_budget_month_unique').on(
+  (t) => [
+    index("it_budget_line_month_idx").on(t.monthDate),
+    uniqueIndex("it_budget_line_budget_month_unique").on(
       t.budgetId,
       t.monthDate,
     ),
@@ -186,172 +186,172 @@ export const itBudgetLines = pgTable(
 );
 
 export const itAssetCategories = pgTable(
-  'it_asset_categories',
+  "it_asset_categories",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    name: varchar('name', { length: 150 }).notNull().unique(),
-    description: text('description'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    name: varchar("name", { length: 150 }).notNull().unique(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  t => [
-    index('it_asset_category_name_idx').on(t.name),
-    uniqueIndex('it_asset_category_name_ci_unique').on(sql`lower(${t.name})`),
+  (t) => [
+    index("it_asset_category_name_idx").on(t.name),
+    uniqueIndex("it_asset_category_name_ci_unique").on(sql`lower(${t.name})`),
   ],
 );
 
 export const itAssets = pgTable(
-  'it_assets',
+  "it_assets",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    categoryId: varchar('category_id')
+    categoryId: varchar("category_id")
       .references(() => itAssetCategories.id)
       .notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
-    brand: varchar('brand', { length: 150 }),
-    model: varchar('model', { length: 150 }),
-    serialNumber: varchar('serial_number', { length: 150 }),
-    specs: jsonb('specs'),
-    purchaseDate: date('purchase_date'),
-    purchaseCost: numeric('purchase_cost', { precision: 14, scale: 2 }),
-    vendorId: uuid('vendor_id').references(() => vendors.id),
-    warrantyExpiryDate: date('warranty_expiry_date'),
-    status: assetStatusEnum('status').default('in_stock').notNull(),
-    condition: assetConditionEnum('condition').default('new').notNull(),
-    departmentId: integer('department_id').references(() => departments.id),
-    currentAssignedUserId: uuid('current_assigned_user_id').references(
+    name: varchar("name", { length: 255 }).notNull(),
+    brand: varchar("brand", { length: 150 }),
+    model: varchar("model", { length: 150 }),
+    serialNumber: varchar("serial_number", { length: 150 }),
+    specs: jsonb("specs"),
+    purchaseDate: date("purchase_date"),
+    purchaseCost: numeric("purchase_cost", { precision: 14, scale: 2 }),
+    vendorId: uuid("vendor_id").references(() => vendors.id),
+    warrantyExpiryDate: date("warranty_expiry_date"),
+    status: assetStatusEnum("status").default("in_stock").notNull(),
+    condition: assetConditionEnum("condition").default("new").notNull(),
+    departmentId: integer("department_id").references(() => departments.id),
+    currentAssignedUserId: uuid("current_assigned_user_id").references(
       () => users.id,
     ),
-    notes: text('notes'),
-    createdBy: uuid('created_by').references(() => users.id),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  table => [
-    index('it_assets_category_idx').on(table.categoryId),
-    index('it_assets_name_idx').on(table.name),
-    index('it_assets_brand_idx').on(table.brand),
-    index('it_assets_model_idx').on(table.model),
-    index('it_assets_serial_number_idx').on(table.serialNumber),
-    index('it_assets_vendor_idx').on(table.vendorId),
-    index('it_assets_status_idx').on(table.status),
-    index('it_assets_condition_idx').on(table.condition),
-    index('it_assets_department_idx').on(table.departmentId),
-    index('it_assets_assigned_user_idx').on(table.currentAssignedUserId),
-    uniqueIndex('it_assets_serial_number_ci_unique').on(
+  (table) => [
+    index("it_assets_category_idx").on(table.categoryId),
+    index("it_assets_name_idx").on(table.name),
+    index("it_assets_brand_idx").on(table.brand),
+    index("it_assets_model_idx").on(table.model),
+    index("it_assets_serial_number_idx").on(table.serialNumber),
+    index("it_assets_vendor_idx").on(table.vendorId),
+    index("it_assets_status_idx").on(table.status),
+    index("it_assets_condition_idx").on(table.condition),
+    index("it_assets_department_idx").on(table.departmentId),
+    index("it_assets_assigned_user_idx").on(table.currentAssignedUserId),
+    uniqueIndex("it_assets_serial_number_ci_unique").on(
       sql`lower(${table.serialNumber})`,
     ),
   ],
 );
 
 export const itAssetAssignments = pgTable(
-  'it_asset_assignments',
+  "it_asset_assignments",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    assetId: varchar('asset_id')
+    assetId: varchar("asset_id")
       .references(() => itAssets.id)
       .notNull(),
     assetAssignmentCustodyType: assetAssignmentCustodyTypeEnum(
-      'asset_assignment_custody_type',
+      "asset_assignment_custody_type",
     )
-      .default('user')
+      .default("user")
       .notNull(),
-    userId: uuid('user_id').references(() => users.id),
-    departmentId: integer('department_id').references(() => departments.id),
-    assignedDate: date('assigned_date').notNull(),
-    returnedDate: date('returned_date'),
-    assignmentNotes: text('assignment_notes'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    userId: uuid("user_id").references(() => users.id),
+    departmentId: integer("department_id").references(() => departments.id),
+    assignedDate: date("assigned_date").notNull(),
+    returnedDate: date("returned_date"),
+    assignmentNotes: text("assignment_notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  table => [
-    index('it_asset_assignments_asset_idx').on(table.assetId),
-    index('it_asset_assignments_user_idx').on(table.userId),
-    index('it_asset_assignments_assigned_date_idx').on(table.assignedDate),
-    index('it_asset_assignments_returned_date_idx').on(table.returnedDate),
+  (table) => [
+    index("it_asset_assignments_asset_idx").on(table.assetId),
+    index("it_asset_assignments_user_idx").on(table.userId),
+    index("it_asset_assignments_assigned_date_idx").on(table.assignedDate),
+    index("it_asset_assignments_returned_date_idx").on(table.returnedDate),
   ],
 );
 
 export const itLicenses = pgTable(
-  'it_licenses',
+  "it_licenses",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    name: varchar('name', { length: 255 }).notNull(),
-    softwareName: varchar('software_name', { length: 255 }).notNull(),
-    licenseType: licenseTypeEnum('license_type')
+    name: varchar("name", { length: 255 }).notNull(),
+    softwareName: varchar("software_name", { length: 255 }).notNull(),
+    licenseType: licenseTypeEnum("license_type")
       .notNull()
-      .default('subscription'),
-    status: licenseStatusEnum('status').default('active').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+      .default("subscription"),
+    status: licenseStatusEnum("status").default("active").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  table => [
-    index('it_licenses_name_idx').on(table.name),
-    index('it_licenses_software_name_idx').on(table.softwareName),
-    index('it_licenses_license_type_idx').on(table.licenseType),
-    index('it_licenses_status_idx').on(table.status),
+  (table) => [
+    index("it_licenses_name_idx").on(table.name),
+    index("it_licenses_software_name_idx").on(table.softwareName),
+    index("it_licenses_license_type_idx").on(table.licenseType),
+    index("it_licenses_status_idx").on(table.status),
   ],
 );
 
 export const itLicenseRenewals = pgTable(
-  'it_license_renewals',
+  "it_license_renewals",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    licenseId: varchar('license_id')
+    licenseId: varchar("license_id")
       .notNull()
       .references(() => itLicenses.id),
-    vendorId: uuid('vendor_id')
+    vendorId: uuid("vendor_id")
       .references(() => vendors.id)
       .notNull(),
-    licenseKey: text('license_key'),
-    totalSeats: integer('total_seats').default(1).notNull(),
-    usedSeats: integer('used_seats').default(0).notNull(),
-    startDate: date('start_date'),
-    endDate: date('end_date'),
-    renewalCost: numeric('renewal_cost', { precision: 14, scale: 2 }),
-    renewalDate: date('renewal_date'),
-    notes: text('notes'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    licenseKey: text("license_key"),
+    totalSeats: integer("total_seats").default(1).notNull(),
+    usedSeats: integer("used_seats").default(0).notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    renewalCost: numeric("renewal_cost", { precision: 14, scale: 2 }),
+    renewalDate: date("renewal_date"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  table => [
-    index('it_license_renewals_license_idx').on(table.licenseId),
-    index('it_license_renewals_renewal_date_idx').on(table.renewalDate),
-    uniqueIndex('it_license_renewals_license_key_ci_unique').on(
+  (table) => [
+    index("it_license_renewals_license_idx").on(table.licenseId),
+    index("it_license_renewals_renewal_date_idx").on(table.renewalDate),
+    uniqueIndex("it_license_renewals_license_key_ci_unique").on(
       sql`lower(${table.licenseKey})`,
     ),
   ],
 );
 
 export const itLicenseRenewalReminderEmails = pgTable(
-  'it_license_renewal_reminder_emails',
+  "it_license_renewal_reminder_emails",
   {
-    id: varchar('id')
+    id: varchar("id")
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    licenseId: varchar('license_id')
+    licenseId: varchar("license_id")
       .notNull()
       .references(() => itLicenses.id),
-    endDate: date('end_date').notNull(),
-    daysBefore: integer('days_before').notNull(),
-    resendEmailId: varchar('resend_email_id', { length: 255 }),
-    sentAt: timestamp('sent_at').defaultNow().notNull(),
+    endDate: date("end_date").notNull(),
+    daysBefore: integer("days_before").notNull(),
+    resendEmailId: varchar("resend_email_id", { length: 255 }),
+    sentAt: timestamp("sent_at").defaultNow().notNull(),
   },
-  table => [
-    index('it_license_renewal_reminder_emails_license_idx').on(table.licenseId),
-    index('it_license_renewal_reminder_emails_end_date_idx').on(table.endDate),
-    uniqueIndex('it_license_renewal_reminder_emails_unique').on(
+  (table) => [
+    index("it_license_renewal_reminder_emails_license_idx").on(table.licenseId),
+    index("it_license_renewal_reminder_emails_end_date_idx").on(table.endDate),
+    uniqueIndex("it_license_renewal_reminder_emails_unique").on(
       table.licenseId,
       table.endDate,
       table.daysBefore,
@@ -451,12 +451,12 @@ export const itAssetsRelations = relations(itAssets, ({ one, many }) => ({
   currentAssignedUser: one(users, {
     fields: [itAssets.currentAssignedUserId],
     references: [users.id],
-    relationName: 'it_assets_current_assigned_user',
+    relationName: "it_assets_current_assigned_user",
   }),
   createdByUser: one(users, {
     fields: [itAssets.createdBy],
     references: [users.id],
-    relationName: 'it_assets_created_by_user',
+    relationName: "it_assets_created_by_user",
   }),
   assignments: many(itAssetAssignments),
 }));

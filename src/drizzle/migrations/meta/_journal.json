@@ -197,6 +197,13 @@
       "when": 1784047629803,
       "tag": "0027_worthless_zarda",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1784100467965,
+      "tag": "0028_stiff_captain_flint",
+      "breakpoints": true
     }
   ]
 }
