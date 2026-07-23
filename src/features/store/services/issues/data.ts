@@ -1,14 +1,16 @@
-'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, eq, ilike, max, or, sql, desc } from 'drizzle-orm';
-import type { SQL } from 'drizzle-orm';
+"use cache";
+import type { SQL } from "drizzle-orm";
+
+import { and, desc, eq, ilike, max, or, sql } from "drizzle-orm";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+
+import db from "@/drizzle/db";
+import { materialIssuesHeader, stores } from "@/drizzle/schema";
 import {
   getMaterialIssueNo,
   getMaterialIssuesGlobalTag,
   getMaterialIssuesIdTag,
-} from '@/features/store/utils/cache';
-import { materialIssuesHeader, stores } from '@/drizzle/schema';
-import db from '@/drizzle/db';
+} from "@/features/store/utils/cache";
 
 export const getMaterialIssueNumber = async () => {
   cacheTag(getMaterialIssueNo());
@@ -16,7 +18,7 @@ export const getMaterialIssueNumber = async () => {
     .select({ id: max(materialIssuesHeader.issueNo) })
     .from(materialIssuesHeader)
     .where(eq(materialIssuesHeader.isDeleted, false))
-    .then(d => (d[0].id === null ? 1 : d[0].id + 1));
+    .then((d) => (d[0].id === null ? 1 : d[0].id + 1));
 };
 
 export const getMaterialIssues = async (q?: string) => {
@@ -32,6 +34,7 @@ export const getMaterialIssues = async (q?: string) => {
       ilike(stores.storeName, `%${q}%`),
       ilike(materialIssuesHeader.jobcardNo, `%${q}%`),
       ilike(materialIssuesHeader.staffName, `%${q}%`),
+      ilike(materialIssuesHeader.text, `%${q}%`),
     );
     if (searchFilter) {
       filters.push(searchFilter);
@@ -74,7 +77,7 @@ export const getMaterialIssue = async (id: string) => {
       },
       where: (model, { eq, and }) =>
         and(
-          eq(model.transactionType, 'ISSUE'),
+          eq(model.transactionType, "ISSUE"),
           eq(model.transactionId, id),
           eq(model.isDeleted, false),
         ),
