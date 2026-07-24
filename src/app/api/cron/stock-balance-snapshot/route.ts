@@ -1,0 +1,73 @@
+import { sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
+import { type NextRequest, NextResponse } from 'next/server';
+
+import db from '@/drizzle/db';
+import { stockBalanceSnapshots, stockMovements } from '@/drizzle/schema';
+import { env } from '@/env/server';
+
+export const dynamic = 'force-dynamic';
+
+const movementIn = ['GRN', 'TRANSFER_IN', 'CONVERSION_IN', 'OPENING_BAL'] as const;
+const movementOut = ['ISSUE', 'TRANSFER', 'CONVERSION_OUT'] as const;
+
+function getCronSecret(request: NextRequest): string | null {
+  const auth = request.headers.get('authorization');
+  if (!auth) return null;
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? null;
+}
+
+export async function GET(request: NextRequest) {
+  if (env.CRON_SECRET) {
+    const token = getCronSecret(request);
+    if (!token || token !== env.CRON_SECRET) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  const result = await db.execute(sql`
+    WITH last_snapshot AS (
+      SELECT DISTINCT ON (item_id, store_id)
+        item_id, store_id, snapshot_date, closing_balance
+      FROM ${stockBalanceSnapshots}
+      ORDER BY item_id, store_id, snapshot_date DESC
+    ),
+    deltas AS (
+      SELECT
+        sm.item_id,
+        sm.store_id,
+        SUM(
+          CASE
+            WHEN sm.transaction_type IN ${movementIn}
+              THEN sm.qty
+            WHEN sm.transaction_type IN ${movementOut}
+              THEN -sm.qty
+            ELSE 0
+          END
+        ) AS net_change
+      FROM ${stockMovements} sm
+      LEFT JOIN last_snapshot ls
+        ON ls.item_id = sm.item_id AND ls.store_id = sm.store_id
+      WHERE sm.is_deleted = false
+        AND sm.store_id IS NOT NULL
+        AND sm.transaction_date > COALESCE(ls.snapshot_date, '1900-01-01')
+        AND sm.transaction_date <= CURRENT_DATE - INTERVAL '1 day'
+      GROUP BY sm.item_id, sm.store_id
+    )
+    INSERT INTO ${stockBalanceSnapshots} (item_id, store_id, snapshot_date, closing_balance)
+    SELECT
+      d.item_id,
+      d.store_id,
+      CURRENT_DATE - INTERVAL '1 day',
+      COALESCE(ls.closing_balance, 0) + d.net_change
+    FROM deltas d
+    LEFT JOIN last_snapshot ls ON ls.item_id = d.item_id AND ls.store_id = d.store_id
+    ON CONFLICT (item_id, store_id, snapshot_date)
+    DO UPDATE SET closing_balance = EXCLUDED.closing_balance
+  `);
+
+  revalidateTag('stock-balance');
+
+  return NextResponse.json({ snapshotsWritten: result.rowCount });
+}
