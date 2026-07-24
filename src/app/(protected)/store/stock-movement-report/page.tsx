@@ -1,19 +1,19 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { endOfMonth, startOfMonth } from 'date-fns';
+import { endOfMonth, startOfMonth } from "date-fns";
 
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { ErrorNotification } from '@/components/custom/error-components';
-import PageHeader from '@/components/custom/page-header';
-import { StockMovementReportForm } from '@/features/store/components/reports/stock-movement-report-form';
-import { StockMovementReportTable } from '@/features/store/components/reports/stock-movement-report-table';
-import { getStockMovementReport } from '@/features/store/services/reports/data';
-import { getMainStore, getStores } from '@/features/store/services/stores/data';
-import { dateFormat, transformOptions } from '@/lib/helpers/formatters';
-import { requireAnyPermission } from '@/lib/permissions/guards';
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import { ErrorNotification } from "@/components/custom/error-components";
+import PageHeader from "@/components/custom/page-header";
+import { StockMovementReportForm } from "@/features/store/components/reports/stock-movement-report-form";
+import { StockMovementReportTable } from "@/features/store/components/reports/stock-movement-report-table";
+import { getStockMovementReport } from "@/features/store/services/reports/data";
+import { getMainStore, getStores } from "@/features/store/services/stores/data";
+import { dateFormat, transformOptions } from "@/lib/helpers/formatters";
+import { requireAnyPermission } from "@/lib/permissions/guards";
 
 export const metadata: Metadata = {
-  title: 'Stock Movement Report',
+  title: "Stock Movement Report",
 };
 
 type SearchParams = Promise<{
@@ -22,7 +22,7 @@ type SearchParams = Promise<{
   to?: string;
   page?: string;
   pageSize?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: "asc" | "desc";
   search?: string;
 }>;
 
@@ -31,26 +31,23 @@ export default async function StockMovementReportPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAnyPermission(['store:admin', 'store:standard'], {
-    mode: 'page',
+  await requireAnyPermission(["store:admin", "store:standard"], {
+    mode: "page",
   });
 
   const params = await searchParams;
-  const [stores, mainStore] = await Promise.all([
-    getStores(),
-    getMainStore(),
-  ]);
+  const [stores, mainStore] = await Promise.all([getStores(), getMainStore()]);
 
   const storeId = params.storeId || mainStore.value;
   const from = params.from || dateFormat(startOfMonth(new Date()));
   const to = params.to || dateFormat(endOfMonth(new Date()));
-  const page = Number(params.page) || 1;
-  const pageSize = Number(params.pageSize) || 10;
-  const sortDir = params.sortDir === 'desc' ? 'desc' : 'asc';
+  const page = Math.max(1, Number(params.page) || 1);
+  const pageSize = Math.min(100, Math.max(1, Number(params.pageSize) || 10));
+  const sortDir = params.sortDir === "desc" ? "desc" : "asc";
   const search = params.search;
 
   const storeOptions = transformOptions(
-    stores.map(store => ({ id: store.id, name: store.storeName })),
+    stores.map((store) => ({ id: store.id, name: store.storeName })),
   );
 
   return (
@@ -95,7 +92,7 @@ async function SuspendedStockMovementReport({
   to: string;
   page: number;
   pageSize: number;
-  sortDir: 'asc' | 'desc';
+  sortDir: "asc" | "desc";
   search?: string;
 }) {
   const result = await getStockMovementReport({

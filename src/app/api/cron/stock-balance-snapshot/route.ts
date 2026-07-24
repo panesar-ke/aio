@@ -1,29 +1,33 @@
-import { sql } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
-import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import { type NextRequest, NextResponse } from "next/server";
 
-import db from '@/drizzle/db';
-import { stockBalanceSnapshots, stockMovements } from '@/drizzle/schema';
-import { env } from '@/env/server';
+import db from "@/drizzle/db";
+import { stockBalanceSnapshots, stockMovements } from "@/drizzle/schema";
+import { env } from "@/env/server";
+import { sqlInList } from "@/features/store/services/stock-balance/utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const movementIn = ['GRN', 'TRANSFER_IN', 'CONVERSION_IN', 'OPENING_BAL'] as const;
-const movementOut = ['ISSUE', 'TRANSFER', 'CONVERSION_OUT'] as const;
+const movementIn = [
+  "GRN",
+  "TRANSFER_IN",
+  "CONVERSION_IN",
+  "OPENING_BAL",
+] as const;
+const movementOut = ["ISSUE", "TRANSFER", "CONVERSION_OUT"] as const;
 
 function getCronSecret(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization');
+  const auth = request.headers.get("authorization");
   if (!auth) return null;
   const match = auth.match(/^Bearer\s+(.+)$/i);
   return match?.[1]?.trim() ?? null;
 }
 
 export async function GET(request: NextRequest) {
-  if (env.CRON_SECRET) {
-    const token = getCronSecret(request);
-    if (!token || token !== env.CRON_SECRET) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+  const token = getCronSecret(request);
+  if (!env.CRON_SECRET || !token || token !== env.CRON_SECRET) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const result = await db.execute(sql`
@@ -39,9 +43,9 @@ export async function GET(request: NextRequest) {
         sm.store_id,
         SUM(
           CASE
-            WHEN sm.transaction_type IN ${movementIn}
+            WHEN sm.transaction_type IN ${sqlInList(movementIn)}
               THEN sm.qty
-            WHEN sm.transaction_type IN ${movementOut}
+            WHEN sm.transaction_type IN ${sqlInList(movementOut)}
               THEN -sm.qty
             ELSE 0
           END
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
     DO UPDATE SET closing_balance = EXCLUDED.closing_balance
   `);
 
-  revalidateTag('stock-balance');
+  revalidateTag("stock-balance");
 
   return NextResponse.json({ snapshotsWritten: result.rowCount });
 }

@@ -59,22 +59,27 @@ export const revalidateStoresTag = (id: string) => {
   revalidateTag(getStoresIdTag(id));
 };
 
+export const revalidateStockBalance = () => {
+  revalidateTag('stock-balance');
+};
+
 export const revalidateGrnsTag = (id: string) => {
   revalidateTag(getGrnsGlobalTag());
   revalidateTag(getGrnsIdTag(id));
   revalidateTag(getGrnsNoTag());
   revalidateTag(getUnreceivedGrnsGlobal());
-  revalidateTag('stock-balance');
+  revalidateStockBalance();
 };
 
 export const revalidateTransfersTag = (id: string) => {
   revalidateTag(getTransfersGlobalTag());
   revalidateTag(getTransfersIdTag(id));
-  revalidateTag('stock-balance');
+  revalidateStockBalance();
 };
 
 export const revalidateMaterialsIssues = (id: string) => {
   revalidateTag(getMaterialIssuesGlobalTag());
   revalidateTag(getMaterialIssuesIdTag(id));
   revalidateTag(getMaterialIssueNo());
+  revalidateStockBalance();
 };

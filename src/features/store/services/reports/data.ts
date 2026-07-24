@@ -10,6 +10,7 @@ import type {
 
 import db from "@/drizzle/db";
 import { products, stockMovements } from "@/drizzle/schema";
+import { sqlInList } from "@/features/store/services/stock-balance/utils";
 import { stockMovementReportSchema } from "@/features/store/utils/schema";
 import { validateFields } from "@/lib/action-validator";
 
@@ -94,7 +95,7 @@ export const getStockMovementReport = async (values: unknown) => {
         item_id, snapshot_date, closing_balance
       FROM stock_balance_snapshots
       WHERE store_id = ${storeId}
-        AND item_id IN ${itemIds}
+        AND item_id IN ${sqlInList(itemIds)}
         AND snapshot_date < ${from}
       ORDER BY item_id, snapshot_date DESC
     ),
@@ -103,15 +104,15 @@ export const getStockMovementReport = async (values: unknown) => {
         sm.item_id,
         SUM(
           CASE
-            WHEN sm.transaction_type IN ${movementIn} THEN sm.qty
-            WHEN sm.transaction_type IN ${movementOut} THEN -sm.qty
+            WHEN sm.transaction_type IN ${sqlInList(movementIn)} THEN sm.qty
+            WHEN sm.transaction_type IN ${sqlInList(movementOut)} THEN -sm.qty
             ELSE 0
           END
         ) AS delta
       FROM stock_movements sm
       LEFT JOIN nearest_snapshot ns ON ns.item_id = sm.item_id
       WHERE sm.store_id = ${storeId}
-        AND sm.item_id IN ${itemIds}
+        AND sm.item_id IN ${sqlInList(itemIds)}
         AND sm.is_deleted = false
         AND sm.transaction_date < ${from}
         AND sm.transaction_date > COALESCE(ns.snapshot_date, DATE '1900-01-01')
@@ -129,7 +130,7 @@ export const getStockMovementReport = async (values: unknown) => {
         SUM(sm.qty) FILTER (WHERE sm.transaction_type = 'OPENING_BAL') AS opening_bal_in_range
       FROM stock_movements sm
       WHERE sm.store_id = ${storeId}
-        AND sm.item_id IN ${itemIds}
+        AND sm.item_id IN ${sqlInList(itemIds)}
         AND sm.is_deleted = false
         AND sm.transaction_date BETWEEN ${from} AND ${to}
       GROUP BY sm.item_id
