@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import {
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
@@ -109,6 +110,39 @@ export const materialIssueFormSchema = z.object({
     })
   ),
 });
+
+const dateRangeOrderRefinement = (
+  { from, to }: { from: string; to: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (from && to && from > to) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['to'],
+      message: 'To date must be later than from date',
+    });
+  }
+};
+
+const stockMovementReportFilterFields = {
+  storeId: requiredStringSchemaEntry('Store is required'),
+  from: z.string().date('Start date must be a valid date'),
+  to: z.string().date('End date must be a valid date'),
+};
+
+export const stockMovementReportFilterSchema = z
+  .object(stockMovementReportFilterFields)
+  .superRefine(dateRangeOrderRefinement);
+
+export const stockMovementReportSchema = z
+  .object({
+    ...stockMovementReportFilterFields,
+    page: z.coerce.number().int().min(1),
+    pageSize: z.coerce.number().int().min(1).max(100),
+    sortDir: z.enum(['asc', 'desc']),
+    search: optionalStringSchemaEntry(),
+  })
+  .superRefine(dateRangeOrderRefinement);
 
 export const conversionSchema = z.object({
   conversionDate: z.coerce.date({
