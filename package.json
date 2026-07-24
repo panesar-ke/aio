@@ -17,6 +17,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
+    "backfill:stock-snapshots": "tsx scripts/backfill-stock-balance-snapshots.ts",
     "knip": "knip"
   },
   "dependencies": {
