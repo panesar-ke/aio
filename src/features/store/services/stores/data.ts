@@ -9,6 +9,7 @@ import {
 } from '@/features/store/utils/cache';
 import db from '@/drizzle/db';
 import { stockMovements, stores } from '@/drizzle/schema';
+import { sqlInList } from '@/features/store/services/stock-balance/utils';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { notFound } from 'next/navigation';
 
@@ -60,9 +61,9 @@ export const getProductBalance = async (
       COALESCE(
         SUM(
           CASE
-            WHEN ${stockMovements.transactionType} IN ${movementIn}
+            WHEN ${stockMovements.transactionType} IN ${sqlInList(movementIn)}
               THEN COALESCE(${stockMovements.qty},0)
-            WHEN ${stockMovements.transactionType} IN ${movementOut}
+            WHEN ${stockMovements.transactionType} IN ${sqlInList(movementOut)}
               THEN -COALESCE(${stockMovements.qty},0)
             ELSE 0
           END

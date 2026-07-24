@@ -1,10 +1,13 @@
 import type { z } from 'zod';
+
 import type { getStores } from '@/features/store/services/stores/data';
 import type {
   conversionSchema,
   grnFormSchema,
   materialIssueFormSchema,
   materialTransferFormSchema,
+  stockMovementReportFilterSchema,
+  stockMovementReportSchema,
   storeFormSchema,
 } from '@/features/store/utils/schema';
 
@@ -38,3 +41,24 @@ export type StockMovementType =
   | 'CONVERSION_IN'
   | 'CONVERSION_OUT'
   | 'TRANSFER_IN';
+
+export type StockMovementReportFormValues = z.infer<
+  typeof stockMovementReportSchema
+>;
+
+export type StockMovementReportFilterFormValues = z.infer<
+  typeof stockMovementReportFilterSchema
+>;
+
+export interface StockMovementReportRow {
+  itemId: string;
+  productName: string;
+  openingBalance: number;
+  grn: number;
+  issue: number;
+  transferOut: number;
+  transferIn: number;
+  conversionOut: number;
+  conversionIn: number;
+  closingBalance: number;
+}

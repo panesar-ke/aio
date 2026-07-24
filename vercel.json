@@ -1,7 +1,8 @@
 {
   "version": 2,
   "crons": [
-    { "path": "/api/cron/it-license-renewals", "schedule": "0 5 * * *" }
+    { "path": "/api/cron/it-license-renewals", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/stock-balance-snapshot", "schedule": "0 4 * * *" }
   ],
   "git": {
     "deploymentEnabled": {

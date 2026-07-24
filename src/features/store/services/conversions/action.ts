@@ -16,6 +16,8 @@ import { getProductBalance } from '@/features/store/services/stores/data';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { conversions, stockMovements } from '@/drizzle/schema';
 import db from '@/drizzle/db';
+import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock-balance/utils';
+import { revalidateStockBalance } from '@/features/store/utils/cache';
 
 const validateData = (values: unknown) => {
   const { error, data } = validateFields<ConversionFormValues>(
@@ -84,17 +86,19 @@ export async function createConversion(values: unknown) {
       })
       .returning();
 
+    const incomingMovement = {
+      itemId: finalProduct,
+      qty: convertedQty.toString(),
+      transactionDate: formattedConversionDate,
+      transactionType: 'CONVERSION_IN' as StockMovementType,
+      transactionId: conversion[0].id,
+      createdBy: user.id,
+      storeId: '0d5d9239-a507-4147-8725-bcf0401e21ee',
+    };
+
     const movementIn = await tx
       .insert(stockMovements)
-      .values({
-        itemId: finalProduct,
-        qty: convertedQty.toString(),
-        transactionDate: formattedConversionDate,
-        transactionType: 'CONVERSION_IN',
-        transactionId: conversion[0].id,
-        createdBy: user.id,
-        storeId: '0d5d9239-a507-4147-8725-bcf0401e21ee',
-      })
+      .values(incomingMovement)
       .returning();
 
     const itemsConvertingFrom = convertingItems.map(item => ({
@@ -112,11 +116,17 @@ export async function createConversion(values: unknown) {
       .values(itemsConvertingFrom)
       .returning();
 
+    await invalidateStockBalanceSnapshots(tx, [
+      incomingMovement,
+      ...itemsConvertingFrom,
+    ]);
+
     return !!conversion.length && !!movementIn.length && !!movementOut.length;
   });
 
   if (!isSuccess)
     return { error: true, message: 'Conversion failed. Please try again.' };
 
+  revalidateStockBalance();
   return { error: false, message: 'Successfully converted.' };
 }

@@ -1,23 +1,25 @@
+import { sql } from 'drizzle-orm';
 import {
-  pgTable,
-  foreignKey,
-  serial,
-  date,
-  integer,
-  uuid,
-  boolean,
-  varchar,
-  text,
-  numeric,
-  bigserial,
-  timestamp,
-  uniqueIndex,
-  index,
-  unique,
   bigint,
-  primaryKey,
+  bigserial,
+  boolean,
+  date,
+  foreignKey,
+  index,
+  integer,
+  numeric,
   pgEnum,
+  pgTable,
+  primaryKey,
+  serial,
+  text,
+  timestamp,
+  unique,
+  uniqueIndex,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
+
 import { stores } from '../schema';
 
 export const aalLevel = pgEnum('aal_level', ['aal3', 'aal2', 'aal1']);
@@ -1557,6 +1559,19 @@ export const stockMovements = pgTable(
     storeId: uuid('store_id').references(() => stores.id),
   },
   table => [
+    // Both partial (every report/snapshot query filters is_deleted = false).
+    // Two shapes because the report hits this table two ways: Step A
+    // (paginate products in a date range, no item filter) needs date
+    // directly after store_id to stay seekable — btree leftmost-prefix
+    // rules mean item_id-before-date would force a full store scan. Step B
+    // and the nightly snapshot job filter store_id + a handful of item_ids
+    // then a date range per item, which wants item_id before date instead.
+    index('stock_movements_store_item_date_idx')
+      .on(table.storeId, table.itemId, table.transactionDate)
+      .where(sql`${table.isDeleted} = false`),
+    index('stock_movements_store_date_item_idx')
+      .on(table.storeId, table.transactionDate, table.itemId)
+      .where(sql`${table.isDeleted} = false`),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],

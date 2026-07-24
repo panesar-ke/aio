@@ -24,6 +24,7 @@ import { dateFormat } from '@/lib/helpers/formatters';
 import { revalidateTransfersTag } from '@/features/store/utils/cache';
 import { getProductBalance } from '@/features/store/services/stores/data';
 import { getCurrentUser } from '@/lib/session';
+import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock-balance/utils';
 
 const validateData = (values: unknown) => {
   const { error, data } = validateFields<MaterialTransferFormValues>(
@@ -124,29 +125,31 @@ export const createTransfer = async (values: unknown) => {
           remarks: item.remarks || null,
         }))
       );
-      await tx.insert(stockMovements).values(
-        data.items.map(item => ({
-          transactionDate: transferDate,
-          itemId: item.itemId,
-          qty: item.transferredQty.toString(),
-          transactionType: 'TRANSFER' as StockMovementType,
-          transactionId: id.toString(),
-          createdBy: user.id,
-          storeId: data.fromStoreId,
-        }))
-      );
+      const outgoingMovements = data.items.map(item => ({
+        transactionDate: transferDate,
+        itemId: item.itemId,
+        qty: item.transferredQty.toString(),
+        transactionType: 'TRANSFER' as StockMovementType,
+        transactionId: id.toString(),
+        createdBy: user.id,
+        storeId: data.fromStoreId,
+      }));
+      const incomingMovements = data.items.map(item => ({
+        transactionDate: transferDate,
+        itemId: item.itemId,
+        qty: item.transferredQty.toString(),
+        transactionType: 'TRANSFER_IN' as StockMovementType,
+        transactionId: id.toString(),
+        createdBy: user.id,
+        storeId: data.toStoreId,
+      }));
 
-      await tx.insert(stockMovements).values(
-        data.items.map(item => ({
-          transactionDate: transferDate,
-          itemId: item.itemId,
-          qty: item.transferredQty.toString(),
-          transactionType: 'TRANSFER_IN' as StockMovementType,
-          transactionId: id.toString(),
-          createdBy: user.id,
-          storeId: data.toStoreId,
-        }))
-      );
+      await tx.insert(stockMovements).values(outgoingMovements);
+      await tx.insert(stockMovements).values(incomingMovements);
+      await invalidateStockBalanceSnapshots(tx, [
+        ...outgoingMovements,
+        ...incomingMovements,
+      ]);
 
       return id;
     });

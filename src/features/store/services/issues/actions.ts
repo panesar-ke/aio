@@ -24,6 +24,7 @@ import { revalidateMaterialsIssues } from '@/features/store/utils/cache';
 import { getProductBalance } from '@/features/store/services/stores/data';
 import { getCurrentUser } from '@/lib/session';
 import { getMaterialIssueNumber } from '@/features/store/services/issues/data';
+import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock-balance/utils';
 
 const validateData = (values: unknown) => {
   const { error, data } = validateFields<MaterialIssueFormValues>(
@@ -120,18 +121,19 @@ export const createIssue = async (values: unknown) => {
         })
         .returning({ id: materialIssuesHeader.id });
 
-      await tx.insert(stockMovements).values(
-        data.items.map(item => ({
-          transactionDate: issueDate,
-          itemId: item.itemId,
-          qty: item.issuedQty.toString(),
-          transactionType: 'ISSUE' as StockMovementType,
-          transactionId: id.toString(),
-          createdBy: user.id,
-          storeId: data.fromStoreId,
-          remarks: item.remarks || null,
-        }))
-      );
+      const issueMovements = data.items.map(item => ({
+        transactionDate: issueDate,
+        itemId: item.itemId,
+        qty: item.issuedQty.toString(),
+        transactionType: 'ISSUE' as StockMovementType,
+        transactionId: id.toString(),
+        createdBy: user.id,
+        storeId: data.fromStoreId,
+        remarks: item.remarks || null,
+      }));
+
+      await tx.insert(stockMovements).values(issueMovements);
+      await invalidateStockBalanceSnapshots(tx, issueMovements);
 
       return id;
     });
@@ -156,17 +158,32 @@ export const updateIssue = async (issueId: string, values: unknown) => {
   }
 
   const { data } = validation;
+  const issueDate = dateFormat(data.issueDate);
 
   try {
     await validateBusinessLogic(data);
     await db.transaction(async tx => {
+      const removedMovements = await tx
+        .select({
+          itemId: stockMovements.itemId,
+          storeId: stockMovements.storeId,
+          transactionDate: stockMovements.transactionDate,
+        })
+        .from(stockMovements)
+        .where(
+          and(
+            eq(stockMovements.transactionId, issueId),
+            eq(stockMovements.transactionType, 'ISSUE')
+          )
+        );
+
       await tx
         .update(materialIssuesHeader)
         .set({
           storeId: data.fromStoreId,
           staffName: data.staffIssued,
           jobcardNo: data.jobcardNo || null,
-          issueDate: dateFormat(data.issueDate),
+          issueDate,
           text: data.notes || null,
         })
         .where(eq(materialIssuesHeader.id, issueId));
@@ -180,18 +197,22 @@ export const updateIssue = async (issueId: string, values: unknown) => {
           )
         );
 
-      await tx.insert(stockMovements).values(
-        data.items.map(item => ({
-          transactionDate: dateFormat(data.issueDate),
-          itemId: item.itemId,
-          qty: item.issuedQty.toString(),
-          transactionType: 'ISSUE' as StockMovementType,
-          transactionId: issueId,
-          createdBy: user.id,
-          storeId: data.fromStoreId,
-          remarks: item.remarks || null,
-        }))
-      );
+      const replacementMovements = data.items.map(item => ({
+        transactionDate: issueDate,
+        itemId: item.itemId,
+        qty: item.issuedQty.toString(),
+        transactionType: 'ISSUE' as StockMovementType,
+        transactionId: issueId,
+        createdBy: user.id,
+        storeId: data.fromStoreId,
+        remarks: item.remarks || null,
+      }));
+
+      await tx.insert(stockMovements).values(replacementMovements);
+      await invalidateStockBalanceSnapshots(tx, [
+        ...removedMovements,
+        ...replacementMovements,
+      ]);
     });
 
     revalidateMaterialsIssues(issueId);
@@ -210,6 +231,20 @@ export const deleteIssue = async (issueId: string) => {
 
   try {
     await db.transaction(async tx => {
+      const removedMovements = await tx
+        .select({
+          itemId: stockMovements.itemId,
+          storeId: stockMovements.storeId,
+          transactionDate: stockMovements.transactionDate,
+        })
+        .from(stockMovements)
+        .where(
+          and(
+            eq(stockMovements.transactionId, issueId),
+            eq(stockMovements.transactionType, 'ISSUE')
+          )
+        );
+
       await tx
         .delete(materialIssuesHeader)
         .where(eq(materialIssuesHeader.id, issueId));
@@ -222,6 +257,7 @@ export const deleteIssue = async (issueId: string) => {
             eq(stockMovements.transactionType, 'ISSUE')
           )
         );
+      await invalidateStockBalanceSnapshots(tx, removedMovements);
     });
 
     revalidateMaterialsIssues(issueId);

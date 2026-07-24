@@ -22,6 +22,7 @@ import {
 } from '@/drizzle/schema';
 import { getCurrentUser } from '@/lib/session';
 import { getGrnNumber } from '@/features/store/services/grns/data';
+import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock-balance/utils';
 import { dateFormat } from '@/lib/helpers/formatters';
 
 const validateGrn = async (values: unknown) => {
@@ -119,6 +120,7 @@ export const createGrn = async (values: GrnFormValues) => {
       }));
 
       await tx.insert(stockMovements).values(grnItems);
+      await invalidateStockBalanceSnapshots(tx, grnItems);
 
       return id.toString();
     });
@@ -140,6 +142,20 @@ export const deleteGrn = async (id: string) => {
     });
 
     await db.transaction(async tx => {
+      const removedMovements = await tx
+        .select({
+          itemId: stockMovements.itemId,
+          storeId: stockMovements.storeId,
+          transactionDate: stockMovements.transactionDate,
+        })
+        .from(stockMovements)
+        .where(
+          and(
+            eq(stockMovements.transactionId, id),
+            eq(stockMovements.transactionType, 'GRN')
+          )
+        );
+
       if (grn?.orderId) {
         await tx
           .update(ordersHeader)
@@ -161,6 +177,7 @@ export const deleteGrn = async (id: string) => {
             eq(stockMovements.transactionType, 'GRN')
           )
         );
+      await invalidateStockBalanceSnapshots(tx, removedMovements);
     });
     revalidateGrnsTag(id);
 

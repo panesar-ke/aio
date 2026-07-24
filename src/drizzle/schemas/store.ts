@@ -1,14 +1,17 @@
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
+  date,
   index,
   numeric,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
-  boolean,
 } from 'drizzle-orm/pg-core';
+
 import { grnsHeader, materialIssuesHeader, products } from '@/drizzle/schema';
 
 export const stores = pgTable(
@@ -83,6 +86,43 @@ export const materialsTransferDetailsRelations = relations(
     item: one(products, {
       fields: [materialsTransferDetails.itemId],
       references: [products.id],
+    }),
+  }),
+);
+
+export const stockBalanceSnapshots = pgTable(
+  'stock_balance_snapshots',
+  {
+    id: uuid('id').notNull().primaryKey().defaultRandom(),
+    itemId: uuid('item_id')
+      .references(() => products.id)
+      .notNull(),
+    storeId: uuid('store_id')
+      .references(() => stores.id)
+      .notNull(),
+    snapshotDate: date('snapshot_date').notNull(),
+    closingBalance: numeric('closing_balance').notNull(),
+    createdOn: timestamp('created_on').defaultNow(),
+  },
+  table => [
+    uniqueIndex('stock_balance_snapshots_item_store_date_idx').on(
+      table.itemId,
+      table.storeId,
+      table.snapshotDate,
+    ),
+  ],
+);
+
+export const stockBalanceSnapshotsRelations = relations(
+  stockBalanceSnapshots,
+  ({ one }) => ({
+    item: one(products, {
+      fields: [stockBalanceSnapshots.itemId],
+      references: [products.id],
+    }),
+    store: one(stores, {
+      fields: [stockBalanceSnapshots.storeId],
+      references: [stores.id],
     }),
   }),
 );
