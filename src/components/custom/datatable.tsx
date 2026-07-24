@@ -1,5 +1,11 @@
 'use no memo';
-import React from 'react';
+import type {
+  ColumnDef,
+  PaginationState,
+  Table as ReactTable,
+  SortingState,
+} from '@tanstack/react-table';
+
 import {
   flexRender,
   getCoreRowModel,
@@ -13,20 +19,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import type {
-  ColumnDef,
-  Table as ReactTable,
-  SortingState,
-} from '@tanstack/react-table';
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData, TValue> {
@@ -43,6 +44,20 @@ interface DataTableProps<TData, TValue> {
   data: Array<TData>;
   denseCell?: boolean;
   withPaginationButtons?: boolean;
+
+  // Manual/server mode — all optional, default to undefined so existing
+  // (client-side) callers are unaffected.
+  manualPagination?: boolean;
+  manualSorting?: boolean;
+  pageCount?: number;
+  pagination?: PaginationState;
+  onPaginationChange?: (
+    updater: PaginationState | ((old: PaginationState) => PaginationState),
+  ) => void;
+  sorting?: SortingState;
+  onSortingChange?: (
+    updater: SortingState | ((old: SortingState) => SortingState),
+  ) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -50,18 +65,36 @@ export function DataTable<TData, TValue>({
   data,
   withPaginationButtons = true,
   denseCell = false,
+  manualPagination,
+  manualSorting,
+  pageCount,
+  pagination,
+  onPaginationChange,
+  sorting: controlledSorting,
+  onSortingChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>(
+    [],
+  );
+
+  const sorting = manualSorting ? (controlledSorting ?? []) : internalSorting;
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: manualPagination
+      ? undefined
+      : getPaginationRowModel(),
+    onSortingChange: manualSorting ? onSortingChange : setInternalSorting,
+    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
+    manualPagination,
+    manualSorting,
+    pageCount: manualPagination ? pageCount : undefined,
+    onPaginationChange: manualPagination ? onPaginationChange : undefined,
     state: {
       sorting,
+      ...(manualPagination && pagination ? { pagination } : {}),
     },
   });
 
