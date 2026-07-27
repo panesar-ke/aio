@@ -1,10 +1,10 @@
-'use no memo';
+"use no memo";
 import type {
   ColumnDef,
   PaginationState,
   Table as ReactTable,
   SortingState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
 import {
   flexRender,
@@ -12,23 +12,23 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from 'lucide-react';
-import React from 'react';
+} from "lucide-react";
+import React from "react";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -36,8 +36,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>;
@@ -88,10 +88,16 @@ export function DataTable<TData, TValue>({
       : getPaginationRowModel(),
     onSortingChange: manualSorting ? onSortingChange : setInternalSorting,
     getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
-    manualPagination,
     manualSorting,
-    pageCount: manualPagination ? pageCount : undefined,
-    onPaginationChange: manualPagination ? onPaginationChange : undefined,
+    // Only set pagination-related options when actually in manual mode.
+    // react-table merges options as `{ ...defaultOptions, ...options }`, so
+    // explicitly passing `onPaginationChange: undefined` here for client-side
+    // callers would overwrite the library's internal pagination state
+    // updater with a no-op, silently breaking next/previous/page-size
+    // navigation for every existing (non-manual) table.
+    ...(manualPagination
+      ? { manualPagination, pageCount, onPaginationChange }
+      : {}),
     state: {
       sorting,
       ...(manualPagination && pagination ? { pagination } : {}),
@@ -103,16 +109,16 @@ export function DataTable<TData, TValue>({
       <div className="rounded-md border overflow-x-auto bg-card">
         <Table>
           <TableHeader className="">
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => {
+                {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="h-12 px-4">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -122,19 +128,19 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={cn('p-4', { 'px-4 py-2': denseCell })}
+                      className={cn("p-4", { "px-4 py-2": denseCell })}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -172,7 +178,7 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={value => {
+            onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
@@ -180,7 +186,7 @@ export function DataTablePagination<TData>({
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map(pageSize => (
+              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -189,7 +195,7 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>
         <div className="flex items-center space-x-2">
