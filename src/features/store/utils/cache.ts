@@ -1,6 +1,7 @@
+import { revalidateTag } from 'next/cache';
+
 import { getGlobalTag, getIdTag } from '@/lib/cache';
 import { dateFormat } from '@/lib/helpers/formatters';
-import { revalidateTag } from 'next/cache';
 
 export const getStoresGlobalTag = () => {
   return getGlobalTag('stores');

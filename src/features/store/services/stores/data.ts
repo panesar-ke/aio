@@ -1,17 +1,18 @@
 'use cache';
 
-import { unstable_cacheTag as cacheTag } from 'next/cache';
 import { and, eq, lte, or, sql } from 'drizzle-orm';
+import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { notFound } from 'next/navigation';
+
+import db from '@/drizzle/db';
+import { stockMovements, stores } from '@/drizzle/schema';
+import { sqlInList } from '@/features/store/services/stock-balance/utils';
 import {
   getProductStockBalanceTags,
   getStoresGlobalTag,
   getStoresIdTag,
 } from '@/features/store/utils/cache';
-import db from '@/drizzle/db';
-import { stockMovements, stores } from '@/drizzle/schema';
-import { sqlInList } from '@/features/store/services/stock-balance/utils';
 import { dateFormat } from '@/lib/helpers/formatters';
-import { notFound } from 'next/navigation';
 
 export const getStores = async (q?: string) => {
   cacheTag(getStoresGlobalTag());
