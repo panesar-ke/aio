@@ -1,61 +1,62 @@
 'use client';
-import {
-  type BaseSyntheticEvent,
-  useMemo,
-  useState,
-  useCallback,
-  useTransition,
-} from 'react';
+import type { ColumnDef } from '@tanstack/react-table';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useFieldArray } from 'react-hook-form';
-import type { ColumnDef } from '@tanstack/react-table';
 import {
   CircleCheckBigIcon,
   CircleXIcon,
   HourglassIcon,
   MailCheckIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  type BaseSyntheticEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+
 import type {
+  Order,
   OrderFormValues,
   PendingOrder,
-  Requisition,
-  Order,
 } from '@/features/procurement/utils/procurement.types';
-import { orderSchema } from '@/features/procurement/utils/schemas';
 import type { Option } from '@/types/index.types';
-import { Form } from '@/components/ui/form';
 
+import { DataTable } from '@/components/custom/datatable';
+import { ButtonLoader } from '@/components/custom/loaders';
+import { ToastContent } from '@/components/custom/toast';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Form } from '@/components/ui/form';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
 } from '@/components/ui/sheet';
-
-import { Checkbox } from '@/components/ui/checkbox';
-import { DataTable } from '@/components/custom/datatable';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { OrderFormHeader } from '@/features/procurement/components/purchase-order/order-form-header';
 import { OrderDetails } from '@/features/procurement/components/purchase-order/order-details';
+import {
+  buildOrderFormDefaultValues,
+  getOrderFormSeedKey,
+  type OrderFormRequisitionData,
+} from '@/features/procurement/components/purchase-order/order-form-defaults';
+import { OrderFormHeader } from '@/features/procurement/components/purchase-order/order-form-header';
 import { OrderSummary } from '@/features/procurement/components/purchase-order/order-summary';
 import {
   createOrder,
   deletePendingRequests,
 } from '@/features/procurement/services/purchase-orders/actions';
-import { ToastContent } from '@/components/custom/toast';
-
-type RequisitionData = {
-  documentDate: Date;
-  details: Requisition['mrqDetails'];
-};
+import { orderSchema } from '@/features/procurement/utils/schemas';
 
 interface OrderFormProps {
   orderNo: number;
@@ -64,7 +65,7 @@ interface OrderFormProps {
   services: Array<Option>;
   products: Array<Option>;
   projects: Array<Option>;
-  requisitionData?: RequisitionData | null;
+  requisitionData?: OrderFormRequisitionData | null;
   order?: Order;
 }
 
@@ -81,62 +82,38 @@ export function OrderForm({
   const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_SEND'>(
     'SUBMIT'
   );
+  const defaultValues = useMemo(
+    () =>
+      buildOrderFormDefaultValues({
+        order,
+        orderNo,
+        requisitionData,
+      }),
+    [order, orderNo, requisitionData]
+  );
+  const seedKey = useMemo(
+    () =>
+      getOrderFormSeedKey({
+        order,
+        orderNo,
+        requisitionData,
+      }),
+    [order, orderNo, requisitionData]
+  );
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
-    defaultValues: {
-      details:
-        order?.ordersDetails.map(
-          ({
-            id,
-            requestId,
-            projectId,
-            itemId,
-            serviceId,
-            qty,
-            rate,
-            discountType,
-            discount,
-          }) => ({
-            id,
-            requestId: requestId?.toString() || '',
-            projectId,
-            type: itemId ? 'item' : ('service' as const),
-            itemOrServiceId: itemId || serviceId || undefined,
-            qty: +qty,
-            rate: parseFloat(rate),
-            discountType: discountType || 'NONE',
-            discount: discount ? parseFloat(discount) : 0,
-          })
-        ) ||
-        requisitionData?.details.map(detail => ({
-          id: detail.id,
-          requestId: detail.requestId.toString(),
-          projectId: detail.projectId,
-          type: detail.itemId ? 'item' : ('service' as const),
-          itemOrServiceId: detail.itemId || detail.serviceId || undefined,
-          qty: +detail.qty,
-          rate: detail.itemId
-            ? +(detail.product?.buyingPrice ?? 0)
-            : +(detail.service?.serviceFee ?? 0),
-          discountType: 'NONE',
-          discount: 0,
-        })) ||
-        [],
-      documentDate: order?.documentDate
-        ? new Date(order?.documentDate)
-        : requisitionData?.documentDate
-        ? new Date(requisitionData?.documentDate)
-        : new Date(),
-      displayOdometerDetails: false,
-      vehicle: undefined,
-      documentNo: orderNo,
-      vendor: order?.vendor.id || '',
-      invoiceNo: order?.billNo || '',
-      vatType: order?.vatType || 'NONE',
-      vat: order?.vatId ? order.vatId.toString() : '',
-      invoiceDate: order?.billDate ? new Date(order?.billDate) : undefined,
-    },
+    defaultValues,
   });
+  const lastSeedKey = useRef(seedKey);
+
+  useEffect(() => {
+    if (lastSeedKey.current === seedKey) {
+      return;
+    }
+
+    form.reset(defaultValues);
+    lastSeedKey.current = seedKey;
+  }, [defaultValues, form, seedKey]);
 
   const { append } = useFieldArray({
     control: form.control,

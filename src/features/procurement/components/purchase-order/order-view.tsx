@@ -1,13 +1,16 @@
 'use client';
+import { FileScanIcon, MailIcon, PrinterIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import toast from 'react-hot-toast';
-import { FileScanIcon, MailIcon, PrinterIcon } from 'lucide-react';
-import type { Order } from '@/features/procurement/utils/procurement.types';
-import { Button } from '@/components/ui/button';
-import { ButtonLoader } from '@/components/custom/loaders';
 
-import { dateFormat, numberFormat, titleCase } from '@/lib/helpers/formatters';
+import type { Order } from '@/features/procurement/utils/procurement.types';
+
+import { ButtonLoader } from '@/components/custom/loaders';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -16,17 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   generateOrderFile,
   sendOrderEmail,
 } from '@/features/procurement/services/purchase-orders/actions';
 import { formatOrderForFileGeneration } from '@/features/procurement/utils/formatters';
-import { ToastContent } from '@/components/custom/toast';
+import { dateFormat, numberFormat, titleCase } from '@/lib/helpers/formatters';
 
 export function OrderView({ order }: { order: Order }) {
+  const router = useRouter();
   const [isLoading, startTransition] = useTransition();
   const [selectedAction, setSelectedAction] = useState<'GENERATE' | 'EMAIL'>();
+  const [fileUrl, setFileUrl] = useState(order.fileUrl);
 
   function handleGenerate() {
     setSelectedAction('GENERATE');
@@ -46,6 +50,9 @@ export function OrderView({ order }: { order: Order }) {
         ));
         return;
       }
+
+      setFileUrl(res.data);
+      router.refresh();
     });
   }
 
@@ -59,7 +66,7 @@ export function OrderView({ order }: { order: Order }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        {!order.fileUrl ? (
+        {!fileUrl ? (
           <Button size="lg" onClick={handleGenerate} disabled={isLoading}>
             {!isLoading ? (
               <>
@@ -75,7 +82,7 @@ export function OrderView({ order }: { order: Order }) {
           </Button>
         ) : (
           <Button size="lg" asChild disabled={isLoading}>
-            <a href={order.fileUrl} target="_blank">
+            <a href={fileUrl} target="_blank">
               <PrinterIcon />
               <span>Print</span>
             </a>

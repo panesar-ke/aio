@@ -1,7 +1,6 @@
 'use server';
 
 import { and, eq, inArray } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
 
 import type {
   MaterialTransferFormValues,
@@ -25,6 +24,7 @@ import { getProductBalance } from '@/features/store/services/stores/data';
 import { revalidateTransfersTag } from '@/features/store/utils/cache';
 import { materialTransferFormSchema } from '@/features/store/utils/schema';
 import { validateFields } from '@/lib/action-validator';
+import { redirectActionResult } from '@/lib/actions/results';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { getCurrentUser } from '@/lib/session';
 
@@ -163,5 +163,8 @@ export const createTransfer = async (values: unknown) => {
       error instanceof Error ? error.message : 'Failed to create transfer';
     return { error: true, message: errorMessage };
   }
-  redirect(`/store/transfers`);
+  return redirectActionResult(
+    '/store/transfers',
+    'Transfer created successfully.'
+  );
 };

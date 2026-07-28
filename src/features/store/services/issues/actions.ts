@@ -1,7 +1,6 @@
 'use server';
 
 import { and, eq, inArray } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
 
 import type {
   MaterialIssueFormValues,
@@ -25,6 +24,7 @@ import { getProductBalance } from '@/features/store/services/stores/data';
 import { revalidateMaterialsIssues } from '@/features/store/utils/cache';
 import { materialIssueFormSchema } from '@/features/store/utils/schema';
 import { validateFields } from '@/lib/action-validator';
+import { redirectActionResult } from '@/lib/actions/results';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { getCurrentUser } from '@/lib/session';
 
@@ -147,7 +147,10 @@ export const createIssue = async (values: unknown) => {
       error instanceof Error ? error.message : 'Failed to create transfer';
     return { error: true, message: errorMessage };
   }
-  redirect(`/store/issues`);
+  return redirectActionResult(
+    '/store/issues',
+    'Material issue created successfully.'
+  );
 };
 
 export const updateIssue = async (issueId: string, values: unknown) => {
@@ -224,7 +227,10 @@ export const updateIssue = async (issueId: string, values: unknown) => {
       error instanceof Error ? error.message : 'Failed to update transfer';
     return { error: true, message: errorMessage };
   }
-  redirect(`/store/issues`);
+  return redirectActionResult(
+    '/store/issues',
+    'Material issue updated successfully.'
+  );
 };
 
 export const deleteIssue = async (issueId: string) => {
