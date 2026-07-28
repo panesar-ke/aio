@@ -1,12 +1,12 @@
 'use cache';
 
-import { and, eq, lte, or, sql } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import { cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import db from '@/drizzle/db';
-import { stockMovements, stores } from '@/drizzle/schema';
-import { sqlInList } from '@/features/store/services/stock-balance/utils';
+import { stockBalanceSnapshots, stockMovements, stores } from '@/drizzle/schema';
+import { signedQtySum } from '@/features/store/services/stock-balance/sign-convention';
 import {
   getProductStockBalanceTags,
   getStoresGlobalTag,
@@ -45,48 +45,38 @@ export const getProductBalance = async (
     getProductStockBalanceTags(productId, storeId, asOf),
   );
 
-  const movementIn = [
-    'GRN',
-    'TRANSFER_IN',
-    'CONVERSION_IN',
-    'OPENING_BAL',
-  ] as const;
-
-  const movementOut = ['ISSUE', 'TRANSFER', 'CONVERSION_OUT'] as const;
-
   const formattedDate = dateFormat(asOf);
 
-  const result = await db
-    .select({
-      balance: sql<number>`
-      COALESCE(
-        SUM(
-          CASE
-            WHEN ${stockMovements.transactionType} IN ${sqlInList(movementIn)}
-              THEN COALESCE(${stockMovements.qty},0)
-            WHEN ${stockMovements.transactionType} IN ${sqlInList(movementOut)}
-              THEN -COALESCE(${stockMovements.qty},0)
-            ELSE 0
-          END
-        ), 0
-      )::float
-    `,
-    })
-    .from(stockMovements)
-    .where(
-      and(
-        eq(stockMovements.itemId, productId),
-        eq(stockMovements.storeId, storeId),
-        lte(stockMovements.transactionDate, formattedDate),
-        eq(stockMovements.isDeleted, false),
-      ),
+  const result = await db.execute<{ balance: number }>(sql`
+    WITH snap AS (
+      SELECT ${stockBalanceSnapshots.snapshotDate} AS snapshot_date,
+             ${stockBalanceSnapshots.closingBalance} AS closing_balance
+      FROM ${stockBalanceSnapshots}
+      WHERE ${stockBalanceSnapshots.itemId} = ${productId}
+        AND ${stockBalanceSnapshots.storeId} = ${storeId}
+        AND ${stockBalanceSnapshots.snapshotDate} <= ${formattedDate}
+      ORDER BY ${stockBalanceSnapshots.snapshotDate} DESC
+      LIMIT 1
     )
-    .then(d => {
-      const value = Number(d[0]?.balance);
-      return Number.isFinite(value) ? value : 0;
-    });
+    SELECT
+      (
+        COALESCE((SELECT closing_balance FROM snap), 0)
+        + COALESCE(
+            (
+              SELECT ${signedQtySum(stockMovements)}
+              FROM ${stockMovements}
+              WHERE ${stockMovements.itemId} = ${productId}
+                AND ${stockMovements.storeId} = ${storeId}
+                AND ${stockMovements.isDeleted} = false
+                AND ${stockMovements.transactionDate} > COALESCE((SELECT snapshot_date FROM snap), '1900-01-01')
+                AND ${stockMovements.transactionDate} <= ${formattedDate}
+            ), 0
+          )
+      )::float AS balance
+  `);
 
-  return result;
+  const value = Number(result.rows[0]?.balance);
+  return Number.isFinite(value) ? value : 0;
 };
 
 export async function getMainStore() {
