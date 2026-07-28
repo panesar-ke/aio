@@ -5,15 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import db from "@/drizzle/db";
 import { stockBalanceSnapshots, stockMovements } from "@/drizzle/schema";
 import { env } from "@/env/server";
-import { sqlInList } from "@/features/store/services/stock-balance/utils";
-
-const movementIn = [
-  "GRN",
-  "TRANSFER_IN",
-  "CONVERSION_IN",
-  "OPENING_BAL",
-] as const;
-const movementOut = ["ISSUE", "TRANSFER", "CONVERSION_OUT"] as const;
+import { signedQtySum } from "@/features/store/services/stock-balance/sign-convention";
 
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get("authorization");
@@ -39,15 +31,7 @@ export async function GET(request: NextRequest) {
       SELECT
         sm.item_id,
         sm.store_id,
-        SUM(
-          CASE
-            WHEN sm.transaction_type IN ${sqlInList(movementIn)}
-              THEN sm.qty
-            WHEN sm.transaction_type IN ${sqlInList(movementOut)}
-              THEN -sm.qty
-            ELSE 0
-          END
-        ) AS net_change
+        ${signedQtySum({ transactionType: sql`sm.transaction_type`, qty: sql`sm.qty` })} AS net_change
       FROM ${stockMovements} sm
       LEFT JOIN last_snapshot ls
         ON ls.item_id = sm.item_id AND ls.store_id = sm.store_id
