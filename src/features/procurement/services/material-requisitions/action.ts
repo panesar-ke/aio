@@ -123,7 +123,7 @@ export async function createRequisition({
     });
 
     revalidateMaterialRequisitions(reference);
-    revalidateTag(getMaterialRequisitionNoGlobalTag());
+    revalidateTag(getMaterialRequisitionNoGlobalTag(), 'max');
   } catch (error) {
     console.error('Error creating requisition:', error);
     return {
@@ -191,7 +191,7 @@ export async function generateRequisitionAction(
       .where(eq(mrqHeaders.reference, requisitionId));
 
     revalidateMaterialRequisitions(requisitionId);
-    revalidateTag(getMaterialRequisitionNoGlobalTag());
+    revalidateTag(getMaterialRequisitionNoGlobalTag(), 'max');
 
     return {
       success: true,
@@ -239,7 +239,7 @@ export const deleteRequisition = async (requisitionId: string) => {
     });
 
     revalidateMaterialRequisitions(requisitionId);
-    revalidateTag(getMaterialRequisitionNoGlobalTag());
+    revalidateTag(getMaterialRequisitionNoGlobalTag(), 'max');
   } catch (error) {
     console.error('Error deleting requisition:', error);
     return {

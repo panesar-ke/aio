@@ -28,7 +28,13 @@ import { dateFormat, numberFormat } from "@/lib/helpers/formatters";
 
 import { useExpenseFilters } from "../../hooks/expenses/use-filters";
 import { deleteExpense } from "../../services/expenses/actions";
-import { getFinancialYearRanges } from "@/lib/helpers/dates";
+
+type ExpensePageProps = {
+  defaultDateRange: {
+    from: string;
+    to: string;
+  };
+};
 
 type Expense = {
   id: string;
@@ -59,7 +65,7 @@ export const expenseQueries = (params?: ExpensesSearchParamsSchema) =>
     queryFn: () => fetchExpenses(params),
   });
 
-export function ExpensePage() {
+export function ExpensePage({ defaultDateRange }: ExpensePageProps) {
   const { filters, onHandleSearch, onDateChange, onReset } =
     useExpenseFilters();
 
@@ -75,18 +81,16 @@ export function ExpensePage() {
         <DatePicker
           onDateChange={(date) => {
             onDateChange({
-              from: date.from || getFinancialYearRanges().currentYear.from,
-              to: date.to || getFinancialYearRanges().currentYear.to,
+              from: date.from || new Date(defaultDateRange.from),
+              to: date.to || new Date(defaultDateRange.to),
             });
           }}
           onReset={onReset}
           initialDateRange={{
             from: filters.from
               ? new Date(filters.from)
-              : getFinancialYearRanges().currentYear.from,
-            to: filters.to
-              ? new Date(filters.to)
-              : getFinancialYearRanges().currentYear.to,
+              : new Date(defaultDateRange.from),
+            to: filters.to ? new Date(filters.to) : new Date(defaultDateRange.to),
           }}
         />
       </div>

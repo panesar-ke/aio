@@ -10,8 +10,7 @@ export const metadata: Metadata = {
   title: 'Stores',
 };
 
-export default async function StoresPage({ searchParams }: SearchParams) {
-  const { search } = await searchParams;
+export default function StoresPage({ searchParams }: SearchParams) {
   return (
     <div className="space-y-6">
       <PageHeader
@@ -24,13 +23,18 @@ export default async function StoresPage({ searchParams }: SearchParams) {
         errorMessage="Problem getting stores"
         loaderType="tableOnly"
       >
-        <SuspendedStoresTable search={search} />
+        <SuspendedStoresTable searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-const SuspendedStoresTable = async ({ search }: { search?: string }) => {
+const SuspendedStoresTable = async ({
+  searchParams,
+}: {
+  searchParams: SearchParams['searchParams'];
+}) => {
+  const { search } = await searchParams;
   const stores = await getStores(search);
   return <StoresDatatable stores={stores} />;
 };

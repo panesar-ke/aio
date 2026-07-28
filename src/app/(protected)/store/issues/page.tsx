@@ -10,10 +10,9 @@ export const metadata: Metadata = {
   title: 'Material Issues',
 };
 
-export default async function MaterialIssuesPage({
+export default function MaterialIssuesPage({
   searchParams,
 }: SearchParams) {
-  const { search } = await searchParams;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -26,13 +25,18 @@ export default async function MaterialIssuesPage({
         loaderType="tableOnly"
         errorMessage="There was a problem rendering list of material issues"
       >
-        <SuspendedMaterialIssues search={search} />
+        <SuspendedMaterialIssues searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function SuspendedMaterialIssues({ search }: { search?: string }) {
+async function SuspendedMaterialIssues({
+  searchParams,
+}: {
+  searchParams: SearchParams['searchParams'];
+}) {
+  const { search } = await searchParams;
   const issues = await getMaterialIssues(search);
   return <MaterialIssuesDatatable data={issues} />;
 }

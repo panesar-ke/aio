@@ -13,12 +13,11 @@ export const metadata: Metadata = {
   title: 'Products',
 };
 
-export default async function ProductsPage({
+export default function ProductsPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { search } = await searchParams;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -38,14 +37,19 @@ export default async function ProductsPage({
             />
           }
         >
-          <SuspendedProducts q={search} />
+          <SuspendedProducts searchParams={searchParams} />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
 }
 
-async function SuspendedProducts({ q }: { q?: string }) {
-  const products = await getProducts(q);
+async function SuspendedProducts({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { search } = await searchParams;
+  const products = await getProducts(search);
   return <ProductsDataTable products={products} />;
 }

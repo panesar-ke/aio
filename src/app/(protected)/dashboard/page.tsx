@@ -1,5 +1,6 @@
 import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import db from '@/drizzle/db';
 import { getCurrentUser } from '@/lib/session';
 
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  await connection();
   const redirectPath = await getRedirectPage();
 
   if (redirectPath) {

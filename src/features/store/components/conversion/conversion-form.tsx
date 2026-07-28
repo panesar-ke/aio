@@ -32,13 +32,17 @@ import { createConversion } from '@/features/store/services/conversions/action';
 export function ConversionForm({
   products,
   mainStore,
+  defaultConversionDate,
 }: {
   products: Array<Option>;
   mainStore: Option;
+  defaultConversionDate?: string;
 }) {
   const form = useForm<ConversionFormValues>({
     defaultValues: {
-      conversionDate: new Date(),
+      conversionDate: defaultConversionDate
+        ? new Date(defaultConversionDate)
+        : new Date(),
       finalProduct: '',
       convertedQty: 0,
       convertingItems: [],

@@ -1,15 +1,15 @@
 import {
   and,
+  count,
+  countDistinct,
+  desc,
   eq,
   gte,
   lte,
-  sum,
-  count,
-  desc,
-  countDistinct,
   sql,
+  sum,
 } from 'drizzle-orm';
-import { subDays } from 'date-fns';
+
 import db from '@/drizzle/db';
 import {
   ordersDetails,
@@ -18,6 +18,7 @@ import {
   products,
   vendors,
 } from '@/drizzle/schema';
+import { getRollingThirtyDayWindow } from '@/features/procurement/services/date-windows';
 import { dateFormat } from '@/lib/helpers/formatters';
 
 export interface DashboardStats {
@@ -57,13 +58,10 @@ export interface DateRangeStats {
   };
 }
 
-const today = new Date();
-const last30DaysStart = subDays(today, 30);
-const previous30DaysStart = subDays(today, 60);
-const previous30DaysEnd = subDays(today, 30);
-
-export const getRevenueStats = async () => {
+export const getRevenueStats = async (referenceDate: Date) => {
   try {
+    const range = getRollingThirtyDayWindow(referenceDate);
+
     const last30DaysRevenue = await db
       .select({
         total: sum(ordersDetails.amountInclusive),
@@ -72,11 +70,8 @@ export const getRevenueStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            last30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+          gte(ordersHeader.billDate, range.last30DaysStart),
+          lte(ordersHeader.billDate, range.today),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -89,14 +84,8 @@ export const getRevenueStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            previous30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(
-            ordersHeader.billDate,
-            previous30DaysEnd.toISOString().split('T')[0]
-          ),
+          gte(ordersHeader.billDate, range.previous30DaysStart),
+          lte(ordersHeader.billDate, range.previous30DaysEnd),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -131,8 +120,10 @@ export const getRevenueStats = async () => {
   }
 };
 
-const getOrderStats = async () => {
+const getOrderStats = async (referenceDate: Date) => {
   try {
+    const range = getRollingThirtyDayWindow(referenceDate);
+
     const last30DaysOrders = await db
       .select({
         total: count(),
@@ -140,11 +131,8 @@ const getOrderStats = async () => {
       .from(ordersHeader)
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            last30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+          gte(ordersHeader.billDate, range.last30DaysStart),
+          lte(ordersHeader.billDate, range.today),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -156,14 +144,8 @@ const getOrderStats = async () => {
       .from(ordersHeader)
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            previous30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(
-            ordersHeader.billDate,
-            previous30DaysEnd.toISOString().split('T')[0]
-          ),
+          gte(ordersHeader.billDate, range.previous30DaysStart),
+          lte(ordersHeader.billDate, range.previous30DaysEnd),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -198,8 +180,10 @@ const getOrderStats = async () => {
   }
 };
 
-const getDiscountedAmountStats = async () => {
+const getDiscountedAmountStats = async (referenceDate: Date) => {
   try {
+    const range = getRollingThirtyDayWindow(referenceDate);
+
     const last30DaysDiscounted = await db
       .select({
         total: sum(ordersDetails.discountedAmount),
@@ -208,11 +192,8 @@ const getDiscountedAmountStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            last30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+          gte(ordersHeader.billDate, range.last30DaysStart),
+          lte(ordersHeader.billDate, range.today),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -225,14 +206,8 @@ const getDiscountedAmountStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            previous30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(
-            ordersHeader.billDate,
-            previous30DaysEnd.toISOString().split('T')[0]
-          ),
+          gte(ordersHeader.billDate, range.previous30DaysStart),
+          lte(ordersHeader.billDate, range.previous30DaysEnd),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -267,8 +242,10 @@ const getDiscountedAmountStats = async () => {
   }
 };
 
-const getAverageOrderStats = async () => {
+const getAverageOrderStats = async (referenceDate: Date) => {
   try {
+    const range = getRollingThirtyDayWindow(referenceDate);
+
     const last30DaysData = await db
       .select({
         totalAmount: sum(ordersDetails.amountInclusive),
@@ -278,11 +255,8 @@ const getAverageOrderStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            last30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+          gte(ordersHeader.billDate, range.last30DaysStart),
+          lte(ordersHeader.billDate, range.today),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -296,14 +270,8 @@ const getAverageOrderStats = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(
-            ordersHeader.billDate,
-            previous30DaysStart.toISOString().split('T')[0]
-          ),
-          lte(
-            ordersHeader.billDate,
-            previous30DaysEnd.toISOString().split('T')[0]
-          ),
+          gte(ordersHeader.billDate, range.previous30DaysStart),
+          lte(ordersHeader.billDate, range.previous30DaysEnd),
           eq(ordersHeader.isDeleted, false)
         )
       );
@@ -348,14 +316,16 @@ const getAverageOrderStats = async () => {
   }
 };
 
-export const getDashboardStats = async (): Promise<DashboardStats> => {
+export const getDashboardStats = async (
+  referenceDate: Date,
+): Promise<DashboardStats> => {
   try {
     const [revenueStats, orderStats, discountedAmountStats, averageOrderStats] =
       await Promise.all([
-        getRevenueStats(),
-        getOrderStats(),
-        getDiscountedAmountStats(),
-        getAverageOrderStats(),
+        getRevenueStats(referenceDate),
+        getOrderStats(referenceDate),
+        getDiscountedAmountStats(referenceDate),
+        getAverageOrderStats(referenceDate),
       ]);
 
     return {
@@ -363,7 +333,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       orders: orderStats,
       discountedAmount: discountedAmountStats,
       averageOrder: averageOrderStats,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: referenceDate.toISOString(),
     };
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -392,12 +362,13 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         percentageChange: 0,
         trend: 'stable' as const,
       },
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: referenceDate.toISOString(),
     };
   }
 };
 
-export const getTopVendorsDetails = async () => {
+export const getTopVendorsDetails = async (referenceDate: Date) => {
+  const range = getRollingThirtyDayWindow(referenceDate);
   const topVendorDetails = await db
     .select({
       vendorName: vendors.vendorName,
@@ -409,8 +380,8 @@ export const getTopVendorsDetails = async () => {
     .innerJoin(vendors, eq(ordersHeader.vendorId, vendors.id))
     .where(
       and(
-        gte(ordersHeader.billDate, last30DaysStart.toISOString().split('T')[0]),
-        lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+        gte(ordersHeader.billDate, range.last30DaysStart),
+        lte(ordersHeader.billDate, range.today),
         eq(ordersHeader.isDeleted, false)
       )
     )
@@ -421,7 +392,8 @@ export const getTopVendorsDetails = async () => {
   return topVendorDetails;
 };
 
-export const getSpendingByProductCategory = async () => {
+export const getSpendingByProductCategory = async (referenceDate: Date) => {
+  const range = getRollingThirtyDayWindow(referenceDate);
   const spendingByProductCategory = await db
     .select({
       productCategory: productCategories.categoryName,
@@ -433,8 +405,8 @@ export const getSpendingByProductCategory = async () => {
     .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(
       and(
-        gte(ordersHeader.billDate, last30DaysStart.toISOString().split('T')[0]),
-        lte(ordersHeader.billDate, today.toISOString().split('T')[0]),
+        gte(ordersHeader.billDate, range.last30DaysStart),
+        lte(ordersHeader.billDate, range.today),
         eq(ordersHeader.isDeleted, false)
       )
     )
@@ -445,9 +417,10 @@ export const getSpendingByProductCategory = async () => {
   );
 };
 
-export const getPurchasesByDate = async () => {
+export const getPurchasesByDate = async (referenceDate: Date) => {
   try {
-    const last30Days = subDays(new Date(), 30);
+    const range = getRollingThirtyDayWindow(referenceDate);
+    const startDate = new Date(range.last30DaysStart);
 
     const purchasesByDate = await db
       .select({
@@ -459,8 +432,8 @@ export const getPurchasesByDate = async () => {
       .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
       .where(
         and(
-          gte(ordersHeader.billDate, last30Days.toISOString().split('T')[0]),
-          lte(ordersHeader.billDate, new Date().toISOString().split('T')[0]),
+          gte(ordersHeader.billDate, range.last30DaysStart),
+          lte(ordersHeader.billDate, range.today),
           eq(ordersHeader.isDeleted, false)
         )
       )
@@ -474,7 +447,6 @@ export const getPurchasesByDate = async () => {
     }));
 
     const completeResult = [];
-    const startDate = last30Days;
 
     for (let i = 0; i < 30; i++) {
       const currentDate = new Date(startDate);

@@ -137,7 +137,7 @@ export const upsertLicenseDetails = async (values: unknown) =>
         return { error: true, message: 'License key already exists.' };
       }
 
-      revalidateTag(`licenses-${id}`);
+      revalidateTag(`licenses-${id}`, 'max');
 
       return {
         error: false,
@@ -207,7 +207,7 @@ export const renewLicense = async (values: unknown) =>
         })
         .returning({ id: itLicenseRenewals.id });
 
-      revalidateTag(`licenses-${data.licenseId}`);
+      revalidateTag(`licenses-${data.licenseId}`, 'max');
 
       return {
         error: false,

@@ -2,7 +2,7 @@
 import type { SQL } from "drizzle-orm";
 
 import { and, desc, eq, ilike, max, or, sql } from "drizzle-orm";
-import { unstable_cacheTag as cacheTag } from "next/cache";
+import { cacheTag } from "next/cache";
 
 import db from "@/drizzle/db";
 import { materialIssuesHeader, stores } from "@/drizzle/schema";

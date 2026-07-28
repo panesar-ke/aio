@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Auto Orders',
 };
 
-export default async function AutoOrdersPage() {
+export default function AutoOrdersPage() {
   return (
     <div className="space-y-6">
       <PageHeader

@@ -176,7 +176,7 @@ export const createOrder = async ({
   }
   revalidatePurchaseOrders(reference);
   revalidateMaterialRequisitions();
-  revalidateTag(getVendorStatsGlobalTag());
+  revalidateTag(getVendorStatsGlobalTag(), 'max');
 
   redirect(`/procurement/purchase-order/${reference}/details`);
 };
@@ -301,7 +301,7 @@ export const deleteOrder = async (orderId: string) => {
 
     revalidatePurchaseOrders(orderId);
     revalidateMaterialRequisitions();
-    revalidateTag(getVendorStatsGlobalTag());
+    revalidateTag(getVendorStatsGlobalTag(), 'max');
 
     return { error: false, message: 'Order deleted successfully' };
   } catch (error) {
@@ -337,8 +337,8 @@ export const deletePendingRequests = async (requestIds: Array<string>) => {
       .delete(mrqDetails)
       .where(inArray(mrqDetails.requestId, formattedRequisitionIds));
 
-    revalidateTag(getMaterialRequisitionGlobalTag());
-    revalidateTag(getPendingRequestsGlobalTag());
+    revalidateTag(getMaterialRequisitionGlobalTag(), 'max');
+    revalidateTag(getPendingRequestsGlobalTag(), 'max');
 
     return {
       error: false,

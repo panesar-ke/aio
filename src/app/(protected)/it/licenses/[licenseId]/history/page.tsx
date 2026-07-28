@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 
 import { desc, eq } from 'drizzle-orm';
-import { unstable_cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { AuthedPageLoader } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
 import { BackButton } from '@/components/ui/back-button';
 import db from '@/drizzle/db';
@@ -18,7 +20,7 @@ export const metadata: Metadata = {
 
 async function getLicense(id: string) {
   'use cache';
-  unstable_cacheTag(`licenses-${id}`);
+  cacheTag(`licenses-${id}`);
 
   const license = await db.query.itLicenses.findFirst({
     where: eq(itLicenses.id, id),
@@ -49,26 +51,40 @@ async function getLicense(id: string) {
   return { normalizedRenewals, licenseName: license.name };
 }
 
-export default async function LicenseHistoryPage({
+export default function LicenseHistoryPage({
   params,
 }: {
   params: Promise<{ licenseId: string }>;
 }) {
-  const { licenseId } = await params;
-  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
-
-  const { normalizedRenewals, licenseName } = await getLicense(licenseId);
-
   return (
     <div className="space-y-6">
       <BackButton variant="link" href="/it/licenses">
         Back to Licenses
       </BackButton>
+      <ErrorBoundaryWithSuspense loader={<AuthedPageLoader />}>
+        <LicenseHistoryContent params={params} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function LicenseHistoryContent({
+  params,
+}: {
+  params: Promise<{ licenseId: string }>;
+}) {
+  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+  const { licenseId } = await params;
+
+  const { normalizedRenewals, licenseName } = await getLicense(licenseId);
+
+  return (
+    <>
       <PageHeader
         title="License Renewal History"
         description={`Renewal history for ${licenseName}`}
       />
       <LicenseRenewalHistory renewals={normalizedRenewals} />
-    </div>
+    </>
   );
 }

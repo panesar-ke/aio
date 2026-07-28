@@ -12,10 +12,7 @@ export const metadata: Metadata = {
   title: 'Users',
 };
 
-export default async function Users({ searchParams }: SearchParams) {
-  await requirePermission('admin:admin', { mode: 'page' });
-
-  const { search } = await searchParams;
+export default function Users({ searchParams }: SearchParams) {
   return (
     <div className="space-y-6">
       <PageHeader
@@ -28,13 +25,20 @@ export default async function Users({ searchParams }: SearchParams) {
         errorMessage="An error occurred while loading users"
         loader={<DatatableSkeleton />}
       >
-        <SuspensedUsers q={search} />
+        <SuspendedUsers searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function SuspensedUsers({ q }: { q?: string }) {
+async function SuspendedUsers({
+  searchParams,
+}: {
+  searchParams: SearchParams['searchParams'];
+}) {
+  await requirePermission('admin:admin', { mode: 'page' });
+  const { search } = await searchParams;
+  const q = typeof search === 'string' ? search : undefined;
   const users = await getUsers(q);
   return <UsersDatatable users={users} />;
 }

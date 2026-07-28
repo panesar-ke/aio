@@ -73,7 +73,17 @@ export function RequisitionView({ requisition }: { requisition: Requisition }) {
 }
 
 function RequisitionDetails({ mrq }: { mrq: Requisition }) {
-  let totalGross = 0;
+  const rows = mrq.mrqDetails.map((item, i) => {
+    const buyingPrice = item.itemId
+      ? numberFormat(item.product?.buyingPrice || 0)
+      : numberFormat(item.service?.serviceFee || 0);
+    const gross =
+      parseFloat(buyingPrice.replace(/[^0-9.-]+/g, '')) * Number(item.qty);
+
+    return { item, i, buyingPrice, gross };
+  });
+  const totalGross = rows.reduce((sum, row) => sum + row.gross, 0);
+
   return (
     <div id="pdfContent" className="p-4">
       <header className="flex items-center pl-2">
@@ -112,24 +122,15 @@ function RequisitionDetails({ mrq }: { mrq: Requisition }) {
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-black">
-            {mrq.mrqDetails.map((item, i) => {
-              const buyingPrice = item.itemId
-                ? numberFormat(item.product?.buyingPrice || 0)
-                : numberFormat(item.service?.serviceFee || 0);
-              const gross =
-                parseFloat(buyingPrice.replace(/[^0-9.-]+/g, '')) *
-                Number(item.qty);
-              totalGross += gross;
-              return (
-                <Row
-                  key={item.id}
-                  item={item}
-                  i={i}
-                  buyingPrice={buyingPrice}
-                  gross={gross}
-                />
-              );
-            })}
+            {rows.map(({ item, i, buyingPrice, gross }) => (
+              <Row
+                key={item.id}
+                item={item}
+                i={i}
+                buyingPrice={buyingPrice}
+                gross={gross}
+              />
+            ))}
             <TableRow className="text-lg">
               <TableCell colSpan={5} className="text-center font-semibold">
                 TOTAL

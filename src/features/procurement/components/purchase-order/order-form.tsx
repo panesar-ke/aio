@@ -1,5 +1,11 @@
 'use client';
-import { useMemo, useState, useCallback, useRef, useTransition } from 'react';
+import {
+  type BaseSyntheticEvent,
+  useMemo,
+  useState,
+  useCallback,
+  useTransition,
+} from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -75,8 +81,6 @@ export function OrderForm({
   const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_SEND'>(
     'SUBMIT'
   );
-  const submitTypeRef = useRef<'SUBMIT' | 'SUBMIT_SEND'>('SUBMIT');
-  const formRef = useRef<HTMLFormElement>(null);
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
@@ -141,10 +145,24 @@ export function OrderForm({
 
   const isPending = form.formState.isSubmitting;
 
-  const handleFormSubmit = async (data: OrderFormValues) => {
+  const handleFormSubmit = async (
+    data: OrderFormValues,
+    event?: BaseSyntheticEvent
+  ) => {
+    const submitter =
+      event?.nativeEvent instanceof SubmitEvent
+        ? event.nativeEvent.submitter
+        : null;
+    const nextSubmitType =
+      submitter instanceof HTMLButtonElement &&
+      submitter.value === 'SUBMIT_SEND'
+        ? 'SUBMIT_SEND'
+        : 'SUBMIT';
+
+    setSubmitType(nextSubmitType);
     const res = await createOrder({
       values: data,
-      submitType: submitTypeRef.current,
+      submitType: nextSubmitType,
       id: order?.reference,
     });
     if (res.error) {
@@ -180,11 +198,7 @@ export function OrderForm({
   return (
     <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="space-y-6"
-          ref={formRef}
-        >
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
           <OrderFormHeader form={form} vendors={vendors} />
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -208,15 +222,11 @@ export function OrderForm({
             <OrderSummary form={form} />
             <div className="flex items-center gap-2">
               <Button
-                type="button"
+                type="submit"
+                value="SUBMIT"
                 size="lg"
                 disabled={isPending}
                 className="min-w-32"
-                onClick={() => {
-                  submitTypeRef.current = 'SUBMIT';
-                  setSubmitType('SUBMIT');
-                  formRef.current?.requestSubmit();
-                }}
               >
                 {isPending && submitType === 'SUBMIT' ? (
                   <ButtonLoader loadingText="Processing..." />
@@ -228,13 +238,9 @@ export function OrderForm({
                 )}
               </Button>
               <Button
-                type="button"
+                type="submit"
+                value="SUBMIT_SEND"
                 variant="tertiary"
-                onClick={() => {
-                  submitTypeRef.current = 'SUBMIT_SEND';
-                  setSubmitType('SUBMIT_SEND');
-                  formRef.current?.requestSubmit();
-                }}
                 size="lg"
                 disabled={isPending}
                 className="min-w-32"

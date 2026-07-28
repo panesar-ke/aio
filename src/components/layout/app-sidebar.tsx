@@ -42,14 +42,11 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCurrentUser } from "@/lib/session";
-import { generateRandomString } from "@/lib/utils";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const user = await getCurrentUser();
   const permissions = await getCurrentUserPermissions();
   const navItems = NAV_ITEMS.filter((item) =>
     item.permissions.some((permission) => permissions.has(permission)),
@@ -75,8 +72,8 @@ export function SidebarSkeleton() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {Array.from({ length: 5 }).map(() => (
-            <SidebarMenuItem key={generateRandomString(5)}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <SidebarMenuItem key={index}>
               <SidebarMenuButton>
                 <Skeleton className="size-4" />
                 <Skeleton className="w-56 h-4" />

@@ -32,9 +32,15 @@ type Props = {
   stores: Array<Option>;
   products: Array<Option>;
   transfer?: NonNullable<Awaited<ReturnType<typeof getTransfer>>>;
+  defaultTransferDate?: string;
 };
 
-export function TransferForm({ stores, products, transfer }: Props) {
+export function TransferForm({
+  stores,
+  products,
+  transfer,
+  defaultTransferDate,
+}: Props) {
   const form = useForm<MaterialTransferFormValues>({
     defaultValues: {
       fromStoreId: transfer?.fromStoreId || '',
@@ -49,7 +55,9 @@ export function TransferForm({ stores, products, transfer }: Props) {
           })
         ) || [],
       toStoreId: transfer?.toStoreId || '',
-      transferDate: transfer?.transferDate || new Date(),
+      transferDate:
+        transfer?.transferDate ||
+        (defaultTransferDate ? new Date(defaultTransferDate) : new Date()),
     },
     resolver: zodResolver(materialTransferFormSchema),
   });

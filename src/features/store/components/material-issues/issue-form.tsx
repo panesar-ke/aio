@@ -36,9 +36,16 @@ type Props = {
   products: Array<Option>;
   issueNo: number;
   issue?: NonNullable<Awaited<ReturnType<typeof getMaterialIssue>>>;
+  defaultIssueDate?: string;
 };
 
-export function IssueMaterialForm({ products, stores, issueNo, issue }: Props) {
+export function IssueMaterialForm({
+  products,
+  stores,
+  issueNo,
+  issue,
+  defaultIssueDate,
+}: Props) {
   const form = useForm<MaterialIssueFormValues>({
     defaultValues: {
       issueNo,
@@ -50,7 +57,11 @@ export function IssueMaterialForm({ products, stores, issueNo, issue }: Props) {
           ...item,
           issuedQty: item.issuedQty,
         })) || [],
-      issueDate: issue ? new Date(issue.issueDate) : new Date(),
+      issueDate: issue
+        ? new Date(issue.issueDate)
+        : defaultIssueDate
+          ? new Date(defaultIssueDate)
+          : new Date(),
       fromStoreId: issue?.storeId || '',
     },
     resolver: zodResolver(materialIssueFormSchema),

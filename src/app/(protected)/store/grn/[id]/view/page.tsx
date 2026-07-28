@@ -8,12 +8,11 @@ export const metadata: Metadata = {
   title: 'View GRN Details',
 };
 
-export default async function ViewGrnPage({
+export default function ViewGrnPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -24,13 +23,18 @@ export default async function ViewGrnPage({
         errorMessage="An error occurred while fetching GRN details."
         loaderType="full"
       >
-        <SuspendedGrnView id={id} />
+        <SuspendedGrnView params={params} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-const SuspendedGrnView = async ({ id }: { id: string }) => {
+const SuspendedGrnView = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
   const grn = await getGrn(id);
 
   return <GrnView grn={grn} />;

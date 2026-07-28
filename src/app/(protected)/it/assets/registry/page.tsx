@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { AuthedPageLoader } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
 import { BackButton } from '@/components/ui/back-button';
 import { AssetPage } from '@/features/it/assets/components/asset-page';
 import {
+
   getAssetFormDependencies,
   getAssignableAssets,
   getAssignableUsers,
@@ -14,15 +17,7 @@ export const metadata: Metadata = {
   title: 'IT Asset Registry',
 };
 
-export default async function ITAssetRegistryPage() {
-  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
-
-  const [{ categories, departments }, users, assets] = await Promise.all([
-    getAssetFormDependencies(),
-    getAssignableUsers(),
-    getAssignableAssets(),
-  ]);
-
+export default function ITAssetRegistryPage() {
   return (
     <div className="space-y-6">
       <BackButton variant="link">Go Back</BackButton>
@@ -32,12 +27,28 @@ export default async function ITAssetRegistryPage() {
         path="/it/assets/registry/new"
         buttonText="Create Asset"
       />
-      <AssetPage
-        categories={categories}
-        departments={departments}
-        assignableUsers={users}
-        assignableAssets={assets}
-      />
+      <ErrorBoundaryWithSuspense loader={<AuthedPageLoader />}>
+        <ITAssetRegistryContent />
+      </ErrorBoundaryWithSuspense>
     </div>
+  );
+}
+
+async function ITAssetRegistryContent() {
+  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+
+  const [{ categories, departments }, users, assets] = await Promise.all([
+    getAssetFormDependencies(),
+    getAssignableUsers(),
+    getAssignableAssets(),
+  ]);
+
+  return (
+    <AssetPage
+      categories={categories}
+      departments={departments}
+      assignableUsers={users}
+      assignableAssets={assets}
+    />
   );
 }

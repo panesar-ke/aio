@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import {
   getSelectableProducts,
@@ -15,7 +17,20 @@ export const metadata: Metadata = {
 
 type Params = Promise<{ requisitionId: string }>;
 
-export default async function EditPage({ params }: { params: Params }) {
+export default function EditPage({ params }: { params: Params }) {
+  return (
+    <div className="space-y-6">
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the requisition"
+        loader={<FormLoader />}
+      >
+        <EditRequisitionContent params={params} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function EditRequisitionContent({ params }: { params: Params }) {
   const { requisitionId } = await params;
   const [projects, products, services, requisition] = await Promise.all([
     getSelectableProjects(),
@@ -25,7 +40,7 @@ export default async function EditPage({ params }: { params: Params }) {
   ]);
 
   return (
-    <div className="space-y-6">
+    <>
       <FormHeader title="Edit Requisition" />
       <RequisitionForm
         requisitionNo={requisition.id}
@@ -35,6 +50,6 @@ export default async function EditPage({ params }: { params: Params }) {
         services={services}
         requisition={requisition}
       />
-    </div>
+    </>
   );
 }

@@ -1,54 +1,49 @@
 'use cache';
 
-import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { eq, gte, count, sum, lte, and, desc, sql, or, asc } from 'drizzle-orm';
-import { subYears, subDays } from 'date-fns';
+import { subYears } from 'date-fns';
+import { and, asc, count, desc, eq, gte, lte, or, sql, sum } from 'drizzle-orm';
+import { cacheTag } from 'next/cache';
+import { notFound } from 'next/navigation';
+
 import db from '@/drizzle/db';
 import { ordersDetails, ordersHeader, vendors } from '@/drizzle/schema';
+import { getRollingThirtyDayWindow } from '@/features/procurement/services/date-windows';
 import {
   getPurchaseOrdersGlobalTag,
   getVendorIdTag,
   getVendorsGlobalTag,
   getVendorStatsGlobalTag,
 } from '@/features/procurement/utils/cache';
-import { notFound } from 'next/navigation';
-
-const today = new Date();
-const last30DaysStart = subDays(today, 30);
-const previous30DaysStart = subDays(today, 60);
-const previous30DaysEnd = last30DaysStart;
 
 const getTotalVendors = async () => {
   return await db.$count(vendors);
 };
 
-const getActiveVendorsYear = async () => {
+const getActiveVendorsYear = async (referenceDate: Date) => {
+  const today = getRollingThirtyDayWindow(referenceDate).today;
   return await db
     .select({
       value: count(vendors.id),
     })
     .from(vendors)
     .innerJoin(ordersHeader, eq(vendors.id, ordersHeader.vendorId))
-    .where(
-      gte(ordersHeader.documentDate, subYears(new Date(), 1).toDateString()),
-    )
+    .where(gte(ordersHeader.documentDate, subYears(new Date(today), 1).toDateString()))
     .then(res => res[0]?.value ?? 0);
 };
 
-const revenueValues = async () => {
+const revenueValues = async (referenceDate: Date) => {
+  const range = getRollingThirtyDayWindow(referenceDate);
+
   const currentPeriodRevenue = await db
     .select({
       total: sum(ordersDetails.amountInclusive),
     })
     .from(ordersHeader)
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
-    .where(
-      and(
-        gte(
-          ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0],
-        ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+      .where(
+        and(
+          gte(ordersHeader.documentDate, range.last30DaysStart),
+          lte(ordersHeader.documentDate, range.today),
       ),
     )
     .then(res => Number(res[0]?.total) || 0);
@@ -59,16 +54,10 @@ const revenueValues = async () => {
     })
     .from(ordersHeader)
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
-    .where(
-      and(
-        gte(
-          ordersHeader.documentDate,
-          previous30DaysStart.toISOString().split('T')[0],
-        ),
-        lte(
-          ordersHeader.documentDate,
-          previous30DaysEnd.toISOString().split('T')[0],
-        ),
+      .where(
+        and(
+          gte(ordersHeader.documentDate, range.previous30DaysStart),
+          lte(ordersHeader.documentDate, range.previous30DaysEnd),
       ),
     )
     .then(res => Number(res[0]?.total) || 0);
@@ -91,7 +80,8 @@ const revenueValues = async () => {
   };
 };
 
-const topVendorStats = async () => {
+const topVendorStats = async (referenceDate: Date) => {
+  const range = getRollingThirtyDayWindow(referenceDate);
   const result = await db
     .select({
       vendorId: vendors.id,
@@ -103,11 +93,8 @@ const topVendorStats = async () => {
     .innerJoin(ordersDetails, eq(ordersHeader.id, ordersDetails.headerId))
     .where(
       and(
-        gte(
-          ordersHeader.documentDate,
-          last30DaysStart.toISOString().split('T')[0],
-        ),
-        lte(ordersHeader.documentDate, today.toISOString().split('T')[0]),
+        gte(ordersHeader.documentDate, range.last30DaysStart),
+        lte(ordersHeader.documentDate, range.today),
       ),
     )
     .groupBy(vendors.id)
@@ -122,13 +109,13 @@ const topVendorStats = async () => {
     : null;
 };
 
-export const getVendorStats = async () => {
+export const getVendorStats = async (referenceDate: Date) => {
   cacheTag(getVendorStatsGlobalTag());
   const [totalVendors, activeVendors, revenue, topVendor] = await Promise.all([
     getTotalVendors(),
-    getActiveVendorsYear(),
-    revenueValues(),
-    topVendorStats(),
+    getActiveVendorsYear(referenceDate),
+    revenueValues(referenceDate),
+    topVendorStats(referenceDate),
   ]);
 
   return {

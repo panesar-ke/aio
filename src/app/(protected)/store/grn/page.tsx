@@ -10,10 +10,9 @@ export const metadata: Metadata = {
   title: 'Goods received note',
 };
 
-export default async function GoodsReceivedNotePage({
+export default function GoodsReceivedNotePage({
   searchParams,
 }: SearchParams) {
-  const { search } = await searchParams;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -26,13 +25,18 @@ export default async function GoodsReceivedNotePage({
         errorMessage="An error occurred while fetching GRNs."
         loaderType="tableOnly"
       >
-        <SuspendedGrnsTable search={search} />
+        <SuspendedGrnsTable searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-const SuspendedGrnsTable = async ({ search }: { search?: string }) => {
+const SuspendedGrnsTable = async ({
+  searchParams,
+}: {
+  searchParams: SearchParams['searchParams'];
+}) => {
+  const { search } = await searchParams;
   const grns = await getGrns(search);
   return <GrnsDatatable grns={grns} />;
 };

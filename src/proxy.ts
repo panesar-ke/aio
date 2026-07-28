@@ -26,7 +26,7 @@ const aj = arcjet({
   ],
 });
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   if (path.startsWith('/api/inngest') || path.startsWith('/api/cron')) {

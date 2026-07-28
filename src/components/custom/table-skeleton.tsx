@@ -7,7 +7,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateRandomString } from '@/lib/utils';
 
 interface TableSkeletonProps {
   rowCount: number;
@@ -20,7 +19,7 @@ export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
       <TableHeader>
         <TableRow>
           {columnWidths.map((_, index) => (
-            <TableHead key={`th-${generateRandomString(5)}`}>
+            <TableHead key={`th-${index}`}>
               <Skeleton
                 className={`h-4 ${columnWidths[index]}`}
                 aria-hidden="true"
@@ -30,10 +29,10 @@ export function TableSkeleton({ rowCount, columnWidths }: TableSkeletonProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {Array.from({ length: rowCount }).map(() => (
-          <TableRow key={`row-${generateRandomString(5)}`}>
+        {Array.from({ length: rowCount }).map((_, rowIndex) => (
+          <TableRow key={`row-${rowIndex}`}>
             {columnWidths.map((width, colIndex) => (
-              <TableCell key={`row-${generateRandomString(5)}-col-${colIndex}`}>
+              <TableCell key={`row-${rowIndex}-col-${colIndex}`}>
                 <Skeleton className={`h-4 ${width}`} aria-hidden="true" />
               </TableCell>
             ))}

@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import { ProductsForm } from '@/features/procurement/components/products/products-form';
 import {
@@ -15,7 +17,20 @@ export const metadata: Metadata = {
 
 type Param = Promise<{ productId: string }>;
 
-export default async function EditProductPage({ params }: { params: Param }) {
+export default function EditProductPage({ params }: { params: Param }) {
+  return (
+    <div className="space-y-6">
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the product"
+        loader={<FormLoader />}
+      >
+        <EditProductContent params={params} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function EditProductContent({ params }: { params: Param }) {
   const { productId } = await params;
   const [categories, units, product] = await Promise.all([
     getCategories(),
@@ -28,12 +43,12 @@ export default async function EditProductPage({ params }: { params: Param }) {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <FormHeader
         title="Edit Product"
         description={`Edit ${titleCase(product.productName)} details`}
       />
       <ProductsForm categories={categories} units={units} product={product} />
-    </div>
+    </>
   );
 }

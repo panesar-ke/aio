@@ -7,8 +7,6 @@ import { stockBalanceSnapshots, stockMovements } from "@/drizzle/schema";
 import { env } from "@/env/server";
 import { sqlInList } from "@/features/store/services/stock-balance/utils";
 
-export const dynamic = "force-dynamic";
-
 const movementIn = [
   "GRN",
   "TRANSFER_IN",
@@ -71,7 +69,7 @@ export async function GET(request: NextRequest) {
     DO UPDATE SET closing_balance = EXCLUDED.closing_balance
   `);
 
-  revalidateTag("stock-balance");
+  revalidateTag("stock-balance", 'max');
 
   return NextResponse.json({ snapshotsWritten: result.rowCount });
 }

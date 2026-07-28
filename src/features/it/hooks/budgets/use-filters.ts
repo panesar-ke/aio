@@ -1,16 +1,10 @@
 import { parseAsString, useQueryStates } from 'nuqs';
 
-import { getFinancialYearStart } from '@/lib/helpers/dates';
-
-export const budgetsParsers = {
-  search: parseAsString.withDefault(''),
-  financialYearStart: parseAsString.withDefault(
-    getFinancialYearStart().toString(),
-  ),
-};
-
-export function useBudgetFilters() {
-  const [filters, setFilters] = useQueryStates(budgetsParsers);
+export function useBudgetFilters(defaultFinancialYearStart: string) {
+  const [filters, setFilters] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    financialYearStart: parseAsString.withDefault(defaultFinancialYearStart),
+  });
 
   function onHandleSearch(value: string) {
     setFilters({ search: value });
@@ -23,7 +17,7 @@ export function useBudgetFilters() {
   function onReset() {
     setFilters({
       search: '',
-      financialYearStart: getFinancialYearStart().toString(),
+      financialYearStart: defaultFinancialYearStart,
     });
   }
 

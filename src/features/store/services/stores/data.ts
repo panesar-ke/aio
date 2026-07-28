@@ -1,7 +1,7 @@
 'use cache';
 
 import { and, eq, lte, or, sql } from 'drizzle-orm';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
+import { cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import db from '@/drizzle/db';

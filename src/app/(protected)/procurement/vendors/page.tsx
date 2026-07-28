@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import {
+
   TrendingUp,
   TrendingDown,
   Minus,
@@ -8,6 +9,7 @@ import {
   Calendar,
   AwardIcon,
 } from 'lucide-react';
+import { connection } from 'next/server';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
 import type { SearchParams } from '@/types/index.types';
@@ -26,9 +28,7 @@ export const metadata: Metadata = {
   title: 'Vendors',
 };
 
-export default async function VendorsPage({ searchParams }: SearchParams) {
-  const { search } = await searchParams;
-
+export default function VendorsPage({ searchParams }: SearchParams) {
   return (
     <div className="space-y-6">
       <PageHeader
@@ -49,19 +49,25 @@ export default async function VendorsPage({ searchParams }: SearchParams) {
         errorMessage="An error occurred while loading vendors"
         loader={<DatatableSkeleton />}
       >
-        <SuspensedVendors search={search} />
+        <SuspensedVendors searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function SuspensedVendors({ search }: { search?: string }) {
+async function SuspensedVendors({
+  searchParams,
+}: {
+  searchParams: SearchParams['searchParams'];
+}) {
+  const { search } = await searchParams;
   const vendors = await getVendors(search);
   return <VendorsDatatable vendors={vendors} />;
 }
 
 async function VendorStats() {
-  const vendorStats = await getVendorStats();
+  await connection();
+  const vendorStats = await getVendorStats(new Date());
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -177,9 +183,9 @@ function VendorStat({
 export function VendorStatsLoading() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map(() => (
+      {Array.from({ length: 4 }).map((_, index) => (
         <div
-          key={crypto.randomUUID()}
+          key={`vendor-stat-skeleton-${index}`}
           className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
         >
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">

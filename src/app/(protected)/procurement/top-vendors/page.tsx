@@ -18,24 +18,20 @@ type SearchParams = Promise<{
   top: string;
 }>;
 
-export default async function TopVendorsPage({
+export default function TopVendorsPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const params = await searchParams;
-
   return (
     <div className="space-y-6">
       <TopVendorForm />
-      {!isEmptyObject(params) && (
-        <ErrorBoundaryWithSuspense
-          errorMessage="Error loading top vendors"
-          loaderType="tableOnly"
-        >
-          <SuspendedTopVendor searchParams={params} />
-        </ErrorBoundaryWithSuspense>
-      )}
+      <ErrorBoundaryWithSuspense
+        errorMessage="Error loading top vendors"
+        loaderType="tableOnly"
+      >
+        <SuspendedTopVendor searchParams={searchParams} />
+      </ErrorBoundaryWithSuspense>
     </div>
   );
 }
@@ -43,9 +39,15 @@ export default async function TopVendorsPage({
 async function SuspendedTopVendor({
   searchParams,
 }: {
-  searchParams: Partial<TopVendorFormValues>;
+  searchParams: SearchParams;
 }) {
-  const results = await getTopVendors(searchParams);
+  const params = await searchParams;
+
+  if (isEmptyObject(params)) {
+    return null;
+  }
+
+  const results = await getTopVendors(params);
 
   if (results.error !== null) {
     return <ErrorNotification message={results.error} />;

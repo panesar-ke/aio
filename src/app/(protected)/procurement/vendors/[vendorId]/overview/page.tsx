@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorNotification } from '@/components/custom/error-components';
 import {
+
   getVendor,
   getVendorOrders,
 } from '@/features/procurement/services/vendors/data';
@@ -44,26 +45,26 @@ function OverviewHeaderLoading() {
   );
 }
 
-export default async function VendorOverviewPage({
+export default function VendorOverviewPage({
   params,
 }: {
   params: Params;
 }) {
-  const { vendorId } = await params;
   return (
     <div className="space-y-6">
       <ErrorBoundary
         fallback={<ErrorNotification message="Error fetching vendor details" />}
       >
         <Suspense fallback={<OverviewHeaderLoading />}>
-          <OverviewHeader vendorId={vendorId} />
+          <OverviewHeader params={params} />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
 }
 
-async function OverviewHeader({ vendorId }: { vendorId: string }) {
+async function OverviewHeader({ params }: { params: Params }) {
+  const { vendorId } = await params;
   const [vendor, orders] = await Promise.all([
     getVendor(vendorId),
     getVendorOrders(vendorId),

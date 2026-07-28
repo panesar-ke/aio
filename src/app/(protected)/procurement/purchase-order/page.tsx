@@ -14,12 +14,11 @@ export const metadata: Metadata = {
   description: 'Manage your purchase orders efficiently.',
 };
 
-export default async function OrdersPage({
+export default function OrdersPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { search } = await searchParams;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -39,14 +38,19 @@ export default async function OrdersPage({
             />
           }
         >
-          <SuspendedOrders q={search} />
+          <SuspendedOrders searchParams={searchParams} />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
 }
 
-async function SuspendedOrders({ q }: { q?: string }) {
-  const orders = await getPurchaseOrders(q);
+async function SuspendedOrders({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { search } = await searchParams;
+  const orders = await getPurchaseOrders(search);
   return <OrdersTable orders={orders} />;
 }

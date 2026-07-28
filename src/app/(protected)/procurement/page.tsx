@@ -1,6 +1,8 @@
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
+import { connection } from 'next/server';
 import {
+
   getDashboardStats,
   getPurchasesByDate,
   getRevenueStats,
@@ -62,8 +64,10 @@ export default async function ProcurementDashboardPage() {
 }
 
 async function DashboardStats() {
+  await connection();
+  const referenceDate = new Date();
   const { revenue, orders, discountedAmount, averageOrder, lastUpdated } =
-    await getDashboardStats();
+    await getDashboardStats(referenceDate);
   return (
     <DashboardStatsGrid
       dashboardStats={{
@@ -78,20 +82,26 @@ async function DashboardStats() {
 }
 
 async function PurchasesByServiceItemByDate() {
-  const data = await getPurchasesByDate();
+  await connection();
+  const data = await getPurchasesByDate(new Date());
   return <OrderAreaChart data={data} />;
 }
 
 async function TopVendors() {
+  await connection();
+  const referenceDate = new Date();
   const [topVendors, { last30Days }] = await Promise.all([
-    getTopVendorsDetails(),
-    getRevenueStats(),
+    getTopVendorsDetails(referenceDate),
+    getRevenueStats(referenceDate),
   ]);
   return <TopVendorsChart totalOrders={last30Days} topVendors={topVendors} />;
 }
 
 async function SpendingByProductCategory() {
-  const spendingByProductCategory = await getSpendingByProductCategory();
+  await connection();
+  const spendingByProductCategory = await getSpendingByProductCategory(
+    new Date(),
+  );
   return (
     <PurchaseByCategory spendingByProductCategory={spendingByProductCategory} />
   );
