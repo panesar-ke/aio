@@ -1,25 +1,45 @@
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import { getSelectableProducts } from '@/features/procurement/services/material-requisitions/data';
 import { ConversionForm } from '@/features/store/components/conversion/conversion-form';
 import { getMainStore } from '@/features/store/services/stores/data';
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 
 export const metadata: Metadata = {
   title: 'Material Conversion',
 };
 
-export default async function ConversionPage() {
-  const [products, mainStore] = await Promise.all([
-    getSelectableProducts(),
-    getMainStore(),
-  ]);
+export default function ConversionPage() {
   return (
     <div className="space-y-6">
       <FormHeader
         title="Material Conversion"
         description="Convert materials to smaller components."
       />
-      <ConversionForm products={products} mainStore={mainStore} />
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the conversion form"
+        loader={<FormLoader />}
+      >
+        <ConversionContent />
+      </ErrorBoundaryWithSuspense>
     </div>
+  );
+}
+
+async function ConversionContent() {
+  await connection();
+  const [products, mainStore] = await Promise.all([
+    getSelectableProducts(),
+    getMainStore(),
+  ]);
+
+  return (
+    <ConversionForm
+      defaultConversionDate={new Date().toISOString()}
+      products={products}
+      mainStore={mainStore}
+    />
   );
 }

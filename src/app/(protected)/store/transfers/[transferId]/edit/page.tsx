@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
 import { getSelectableProducts } from '@/features/procurement/services/material-requisitions/data';
 import { getStores } from '@/features/store/services/stores/data';
@@ -11,7 +13,24 @@ export const metadata: Metadata = {
   title: 'Edit Material Transfer',
 };
 
-export default async function EditTransferPage({
+export default function EditTransferPage({
+  params,
+}: {
+  params: Promise<{ transferId: string }>;
+}) {
+  return (
+    <div className="space-y-6">
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the transfer"
+        loader={<FormLoader />}
+      >
+        <EditTransferContent params={params} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function EditTransferContent({
   params,
 }: {
   params: Promise<{ transferId: string }>;
@@ -26,7 +45,7 @@ export default async function EditTransferPage({
   if (!transfer) notFound();
 
   return (
-    <div className="space-y-6">
+    <>
       <PageHeader
         title={`Edit  Material Transfer`}
         description="Fill out the form below to edit the material transfer."
@@ -41,6 +60,6 @@ export default async function EditTransferPage({
         products={products}
         transfer={transfer}
       />
-    </div>
+    </>
   );
 }

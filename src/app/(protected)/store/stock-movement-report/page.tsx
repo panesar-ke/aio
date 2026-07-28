@@ -26,7 +26,28 @@ type SearchParams = Promise<{
   search?: string;
 }>;
 
-export default async function StockMovementReportPage({
+export default function StockMovementReportPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Stock Movement Report"
+        description="View opening balance, period movements and closing balance by product and store."
+      />
+      <ErrorBoundaryWithSuspense
+        errorMessage="There was a problem generating the stock movement report"
+        loaderType="full"
+      >
+        <StockMovementReportContent searchParams={searchParams} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function StockMovementReportContent({
   searchParams,
 }: {
   searchParams: SearchParams;
@@ -38,9 +59,10 @@ export default async function StockMovementReportPage({
   const params = await searchParams;
   const [stores, mainStore] = await Promise.all([getStores(), getMainStore()]);
 
+  const referenceDate = new Date();
   const storeId = params.storeId || mainStore.value;
-  const from = params.from || dateFormat(startOfMonth(new Date()));
-  const to = params.to || dateFormat(endOfMonth(new Date()));
+  const from = params.from || dateFormat(startOfMonth(referenceDate));
+  const to = params.to || dateFormat(endOfMonth(referenceDate));
   const page = Math.max(1, Number(params.page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(params.pageSize) || 10));
   const sortDir = params.sortDir === "desc" ? "desc" : "asc";
@@ -51,11 +73,7 @@ export default async function StockMovementReportPage({
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Stock Movement Report"
-        description="View opening balance, period movements and closing balance by product and store."
-      />
+    <>
       <StockMovementReportForm
         stores={storeOptions}
         defaultValues={{ storeId, from, to }}
@@ -74,7 +92,7 @@ export default async function StockMovementReportPage({
           search={search}
         />
       </ErrorBoundaryWithSuspense>
-    </div>
+    </>
   );
 }
 

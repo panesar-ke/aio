@@ -4,7 +4,6 @@ import {
   type ReactNode,
   createContext,
   useContext,
-  useEffect,
   useState,
 } from 'react';
 
@@ -28,11 +27,6 @@ const ModalContext = createContext<ModalContextType>({
 export const ModalProvider = ({ children }: ModalProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showingModal, setShowingModal] = useState<ReactNode>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(function () {
-    setIsMounted(true);
-  }, []);
 
   const setOpen = async (modal: ReactNode) => {
     if (modal) {
@@ -44,8 +38,6 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   const setClose = () => {
     setIsOpen(false);
   };
-
-  if (!isMounted) return null;
 
   return (
     <ModalContext.Provider value={{ setClose, setOpen, isOpen }}>

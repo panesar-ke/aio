@@ -1,6 +1,6 @@
 "use client";
 import { format, isEqual, startOfDay, subDays } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/reui-btn";
-import { cn, generateRandomId } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getFinancialYearRanges } from "@/lib/helpers/dates";
 
 type DateRangePickerProps = {
@@ -19,6 +19,13 @@ type DateRangePickerProps = {
   onReset?: () => void;
   className?: string;
 };
+
+function normalizeDateRange(selected: DateRange | undefined) {
+  return {
+    from: selected?.from || undefined,
+    to: selected?.to || undefined,
+  } satisfies DateRange;
+}
 
 export function DatePicker({
   onDateChange,
@@ -50,62 +57,62 @@ export function DatePicker({
 
   const [month, setMonth] = useState(today);
   const defaultPreset = presets[2];
-  const [date, setDate] = useState<DateRange | undefined>(
+  const [appliedDate, setAppliedDate] = useState<DateRange | undefined>(
     initialDateRange || defaultPreset.range,
-  ); // Default: Last 7 days
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(
-    defaultPreset.label,
   );
-
+  const [draftDate, setDraftDate] = useState<DateRange | undefined>(
+    initialDateRange || defaultPreset.range,
+  );
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-  useEffect(() => {
-    setDate(initialDateRange || undefined);
-  }, [initialDateRange]);
+  const date = isPopoverOpen ? draftDate : (initialDateRange ?? appliedDate);
+  const selectedPreset = useMemo(() => {
+    const currentDate = date;
+    const matchedPreset = presets.find(
+      (preset) =>
+        isEqual(
+          startOfDay(preset.range.from),
+          startOfDay(currentDate?.from || new Date(0)),
+        ) &&
+        isEqual(
+          startOfDay(preset.range.to),
+          startOfDay(currentDate?.to || new Date(0)),
+        ),
+    );
+    return matchedPreset?.label || null;
+  }, [date, presets]);
 
   const handleApply = () => {
-    if (date) {
-      setDate(date);
-      onDateChange?.(date);
+    if (draftDate) {
+      setAppliedDate(draftDate);
+      onDateChange?.(draftDate);
     }
 
     setIsPopoverOpen(false);
   };
 
   const handleReset = () => {
-    setDate(undefined);
-    setSelectedPreset(null);
+    setDraftDate(undefined);
+    setAppliedDate(undefined);
     setIsPopoverOpen(false);
     onReset?.();
   };
 
   const handleSelect = (selected: DateRange | undefined) => {
-    setDate({
-      from: selected?.from || undefined,
-      to: selected?.to || undefined,
-    });
-    setSelectedPreset(null); // Clear preset when manually selecting a range
+    setDraftDate(normalizeDateRange(selected));
+  };
+  const handleOpenChange = (open: boolean) => {
+    setIsPopoverOpen(open);
+    if (!open) {
+      return;
+    }
+
+    const nextDate = initialDateRange ?? appliedDate;
+    setDraftDate(nextDate);
+    setMonth(nextDate?.from || today);
   };
 
-  // Update `selectedPreset` whenever `date` changes
-  useEffect(() => {
-    const matchedPreset = presets.find(
-      (preset) =>
-        isEqual(
-          startOfDay(preset.range.from),
-          startOfDay(date?.from || new Date(0)),
-        ) &&
-        isEqual(
-          startOfDay(preset.range.to),
-          startOfDay(date?.to || new Date(0)),
-        ),
-    );
-    setSelectedPreset(matchedPreset?.label || null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date]);
-
   return (
-    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+    <Popover open={isPopoverOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -135,9 +142,9 @@ export function DatePicker({
           <div className="relative border-border max-sm:order-1 max-sm:border-t sm:w-32">
             <div className="h-full border-border sm:border-e py-2">
               <div className="flex flex-col px-2 gap-0.5">
-                {presets.map((preset, index) => (
+                {presets.map((preset) => (
                   <Button
-                    key={generateRandomId(`preset-${index}`)}
+                    key={preset.label}
                     type="button"
                     variant="ghost"
                     className={cn(
@@ -145,12 +152,8 @@ export function DatePicker({
                       selectedPreset === preset.label && "bg-accent",
                     )}
                     onClick={() => {
-                      setDate(preset.range);
-
-                      // Update the calendar to show the starting month of the selected range
+                      setDraftDate(preset.range);
                       setMonth(preset.range.from || today);
-
-                      setSelectedPreset(preset.label); // Explicitly set the active preset
                     }}
                   >
                     {preset.label}

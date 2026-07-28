@@ -1,27 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
-import { HandCoinsIcon, PlusIcon, WalletIcon } from "lucide-react";
-import Link from "next/link";
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { HandCoinsIcon, WalletIcon } from 'lucide-react';
+import Link from 'next/link';
 
-import { ErrorFallback } from "@/components/custom/error-components";
-import PageHeader from "@/components/custom/page-header";
-import { buttonVariants } from "@/components/ui/button";
-import { BudgetTracker } from "@/features/it/components/dashboard/budget-tracker";
-import { CategoryBreakdown } from "@/features/it/components/dashboard/category-breakdown";
-import { DashboardSkeleton } from "@/features/it/components/dashboard/dashboard-skeleton";
-import { KpiCards } from "@/features/it/components/dashboard/kpi-cards";
-import { MonthlyOverviewChart } from "@/features/it/components/dashboard/monthly-overview-chart";
-import { PeriodSelect } from "@/features/it/components/dashboard/period-select";
-import { RecentExpenses } from "@/features/it/components/dashboard/recent-expenses";
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import PageHeader from '@/components/custom/page-header';
+import { buttonVariants } from '@/components/ui/button';
+import { BudgetTracker } from '@/features/it/components/dashboard/budget-tracker';
+import { CategoryBreakdown } from '@/features/it/components/dashboard/category-breakdown';
+import { DashboardSkeleton } from '@/features/it/components/dashboard/dashboard-skeleton';
+import { KpiCards } from '@/features/it/components/dashboard/kpi-cards';
+import { MonthlyOverviewChart } from '@/features/it/components/dashboard/monthly-overview-chart';
+import { PeriodSelect } from '@/features/it/components/dashboard/period-select';
+import { RecentExpenses } from '@/features/it/components/dashboard/recent-expenses';
 import {
   buildDashboardKpis,
   getCategoryRollup,
   getMonthlyOverview,
   getRecentExpenses,
   getTotalSpent,
-} from "@/features/it/services/dashboard/data";
+} from '@/features/it/services/dashboard/data';
 import {
   DASHBOARD_PERIOD_LABELS,
   type DashboardPeriod,
@@ -29,34 +27,25 @@ import {
   getDashboardComparisonPeriodRange,
   getDashboardPeriodRange,
   isDashboardPeriod,
-} from "@/lib/helpers/dates";
-import { requireAnyPermission } from "@/lib/permissions/guards";
-import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+} from '@/lib/helpers/dates';
+import { requireAnyPermission } from '@/lib/permissions/guards';
 
 export const metadata: Metadata = {
-  title: "IT Expenses & Budgeting",
+  title: 'IT Expenses & Budgeting',
 };
 
 type SearchParams = Promise<{ period?: string }>;
 
-export default async function ITExpensesBudgetingPage({
+export default function ITExpensesBudgetingPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAnyPermission(["it:admin", "it:standard"], { mode: "page" });
-
-  const { period: periodParam } = await searchParams;
-  const period: DashboardPeriod =
-    periodParam && isDashboardPeriod(periodParam)
-      ? periodParam
-      : DEFAULT_DASHBOARD_PERIOD;
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Expenses & Budgeting Overview"
-        description={DASHBOARD_PERIOD_LABELS[period]}
+        description="Track IT spend, budgets, and recent expenses"
         content={
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             <PeriodSelect />
@@ -78,13 +67,24 @@ export default async function ITExpensesBudgetingPage({
         }
       />
       <ErrorBoundaryWithSuspense loader={<DashboardSkeleton />}>
-        <DashboardContent period={period} />
+        <DashboardContent searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function DashboardContent({ period }: { period: DashboardPeriod }) {
+async function DashboardContent({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+
+  const { period: periodParam } = await searchParams;
+  const period: DashboardPeriod =
+    periodParam && isDashboardPeriod(periodParam)
+      ? periodParam
+      : DEFAULT_DASHBOARD_PERIOD;
   const referenceDate = new Date();
   const range = getDashboardPeriodRange(period, referenceDate);
   const comparisonRange = getDashboardComparisonPeriodRange(

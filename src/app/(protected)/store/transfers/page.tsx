@@ -7,7 +7,7 @@ import { TransfersDatatable } from '@/features/store/components/transfers/transf
 export const metadata: Metadata = {
   title: 'Transfers',
 };
-export default async function TransfersPage() {
+export default function TransfersPage() {
   return (
     <div className="space-y-6">
       <PageHeader

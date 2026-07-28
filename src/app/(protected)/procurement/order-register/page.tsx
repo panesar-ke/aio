@@ -1,15 +1,13 @@
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import type {
   OrderRegister,
   OrderRegisterFormValues,
   OrderRegisterWithValues,
 } from '@/features/procurement/utils/procurement.types';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import { OrderRegisterParamsForm } from '@/features/procurement/components/order-register/params-form';
 import { getActiveVendors } from '@/features/procurement/services/purchase-orders/data';
 import { orderRegisterReport } from '@/features/procurement/services/reports/data';
-import { dateFormat, titleCase } from '@/lib/helpers/formatters';
 import { isEmptyObject } from '@/lib/utils';
 import { ErrorNotification } from '@/components/custom/error-components';
 import { ReportLoader } from '@/components/custom/loaders';
@@ -29,45 +27,49 @@ type SearchParams = Promise<{
   vendorId: string;
 }>;
 
-export default async function OrderRegisterPage({
+export default function OrderRegisterPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const vendors = await getActiveVendors();
-  const params = await searchParams;
-  const { from, to, vendorId } = params;
-
-  const vendorName =
-    vendorId === 'all'
-      ? 'All Vendors'
-      : vendors.find(v => v.value === vendorId)?.label || 'Unknown Vendor';
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Order Register"
-        description={
-          from &&
-          `Order register for ${titleCase(vendorName)} between ${dateFormat(
-            from,
-            'long'
-          )} and ${dateFormat(to, 'long')}`
-        }
+        description="Review purchase orders across a selected date range."
       />
+      <ErrorBoundaryWithSuspense
+        errorMessage="Error loading order register data"
+        loader={<ReportLoader />}
+      >
+        <OrderRegisterContent searchParams={searchParams} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function OrderRegisterContent({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const [vendors, params] = await Promise.all([
+    getActiveVendors(),
+    searchParams,
+  ]);
+
+  return (
+    <>
       <OrderRegisterParamsForm vendors={vendors} />
       {!isEmptyObject(params) && (
-        <ErrorBoundary
-          fallback={
-            <ErrorNotification message="Error loading order register data" />
-          }
+        <ErrorBoundaryWithSuspense
+          errorMessage="Error loading order register data"
+          loader={<ReportLoader type="tableOnly" />}
         >
-          <Suspense fallback={<ReportLoader type="tableOnly" />}>
-            <SuspendedOrderRegister searchParams={params} />
-          </Suspense>
-        </ErrorBoundary>
+          <SuspendedOrderRegister searchParams={params} />
+        </ErrorBoundaryWithSuspense>
       )}
-    </div>
+    </>
   );
 }
 

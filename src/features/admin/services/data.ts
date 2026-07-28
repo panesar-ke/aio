@@ -1,17 +1,17 @@
-'use cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache';
-import { and, asc, eq, sql } from 'drizzle-orm';
+"use cache";
+import { cacheTag } from "next/cache";
+import { and, asc, eq, sql } from "drizzle-orm";
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
   getUsersGlobalTag,
   getUserTag,
-} from '@/features/admin/utils/cache';
-import db from '@/drizzle/db';
+} from "@/features/admin/utils/cache";
+import db from "@/drizzle/db";
 
-import type { User } from '@/types/index.types';
-import { forms, userRights } from '@/drizzle/schema';
-import { notFound } from 'next/navigation';
+import type { User } from "@/types/index.types";
+import { forms, userRights } from "@/drizzle/schema";
+import { notFound } from "next/navigation";
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -64,11 +64,11 @@ export const getUser = async (userId: string) => {
 
 export const getUserForms = async (
   userId: string,
-  userType: User['userType'],
+  userType: User["userType"],
 ) => {
   cacheTag(getUserFormsGlobalTag(userId));
 
-  if (userType === 'STANDARD USER') {
+  if (userType === "STANDARD USER") {
     return db
       .select({
         id: forms.id,

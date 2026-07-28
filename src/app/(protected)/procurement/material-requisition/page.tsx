@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'Material Requisition',
 };
 
-export default async function MaterialRequisitionPage() {
+export default function MaterialRequisitionPage() {
   return (
     <div className="space-y-6">
       <PageHeader

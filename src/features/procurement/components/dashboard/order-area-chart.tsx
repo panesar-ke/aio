@@ -39,6 +39,17 @@ export function OrderAreaChart({
 }: {
   data: Awaited<ReturnType<typeof getPurchasesByDate>>;
 }) {
+  const formatTooltipDate = (value: unknown) => {
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      return '';
+    }
+
+    return new Date(value).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   // const [timeRange, setTimeRange] = React.useState('90d');
 
   // const filteredData = chartData.filter(item => {
@@ -116,12 +127,7 @@ export function OrderAreaChart({
               cursor={false}
               content={
                 <ChartTooltipContent
-                  labelFormatter={value => {
-                    return new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    });
-                  }}
+                  labelFormatter={value => formatTooltipDate(value)}
                   indicator="dot"
                 />
               }

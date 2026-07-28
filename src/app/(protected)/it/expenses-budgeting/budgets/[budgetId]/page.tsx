@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import Link from 'next/link';
 
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { BudgetDetail } from '@/features/it/components/budgets/budget-detail';
@@ -18,14 +19,21 @@ export const metadata: Metadata = {
 
 type Params = Promise<{ budgetId: string }>;
 
-export default async function BudgetDetailPage({
+export default function BudgetDetailPage({
   params,
 }: {
   params: Params;
 }) {
-  const { budgetId } = await params;
+  return (
+    <ErrorBoundaryWithSuspense errorMessage="Failed to load the budget details">
+      <BudgetDetailContent params={params} />
+    </ErrorBoundaryWithSuspense>
+  );
+}
 
+async function BudgetDetailContent({ params }: { params: Params }) {
   await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });
+  const { budgetId } = await params;
 
   const budget = await getBudgetById(budgetId);
   const actuals = await getBudgetActualsByMonth(

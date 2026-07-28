@@ -11,8 +11,6 @@ import { env } from '@/env/server';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { sendSubscriptionReminderEmail } from '@/lib/resend';
 
-export const dynamic = 'force-dynamic';
-
 const REMINDER_OFFSETS_DAYS = [30, 14, 7, 3] as const;
 
 function utcDateOnly(date: Date): Date {

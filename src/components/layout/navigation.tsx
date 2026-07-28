@@ -32,7 +32,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { generateRandomString } from '@/lib/utils';
 
 interface FormattedArray {
   title: string;
@@ -84,7 +83,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
     icon: isIconKey(module) ? icons[module] : ShieldCheck,
     items: items.map(item => ({
       ...item,
-      id: `${item.id}${generateRandomString(5)}`,
+      id: String(item.id),
     })),
   }));
   return (

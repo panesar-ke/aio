@@ -1,33 +1,50 @@
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import { TransferForm } from '@/features/store/components/transfers/transfer-form';
 import { getSelectableProducts } from '@/features/procurement/services/material-requisitions/data';
 import { getStores } from '@/features/store/services/stores/data';
 import { transformOptions } from '@/lib/helpers/formatters';
+import { connection } from 'next/server';
 
 export const metadata = {
   title: 'Create New Transfer',
 };
 
-export default async function NewTransferPage() {
-  const [products, stores] = await Promise.all([
-    getSelectableProducts(),
-    getStores(),
-  ]);
+export default function NewTransferPage() {
   return (
     <div className="space-y-6">
       <FormHeader
         title="Create New Transfer"
         description="Fill in the details to create a new transfer."
       />
-      <TransferForm
-        stores={transformOptions(
-          stores.map(store => ({
-            id: store.id,
-            name: store.storeName.toUpperCase(),
-          }))
-        )}
-        products={products}
-      />
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the transfer form"
+        loader={<FormLoader />}
+      >
+        <NewTransferContent />
+      </ErrorBoundaryWithSuspense>
     </div>
+  );
+}
+
+async function NewTransferContent() {
+  await connection();
+  const [products, stores] = await Promise.all([
+    getSelectableProducts(),
+    getStores(),
+  ]);
+
+  return (
+    <TransferForm
+      defaultTransferDate={new Date().toISOString()}
+      stores={transformOptions(
+        stores.map(store => ({
+          id: store.id,
+          name: store.storeName.toUpperCase(),
+        }))
+      )}
+      products={products}
+    />
   );
 }

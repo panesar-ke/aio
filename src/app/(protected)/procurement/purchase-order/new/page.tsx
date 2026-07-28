@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import { OrderForm } from '@/features/procurement/components/purchase-order/order-form';
 import {
@@ -20,7 +22,28 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<{ requisition?: string }>;
 
-export default async function NewOrderPage({
+export default function NewOrderPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  return (
+    <div className="space-y-6">
+      <FormHeader
+        title="Create a New Purchase Order"
+        description="Fill in the details below to create a new purchase order."
+      />
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the purchase order form"
+        loader={<FormLoader />}
+      >
+        <NewPurchaseOrderContent searchParams={searchParams} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function NewPurchaseOrderContent({
   searchParams,
 }: {
   searchParams: SearchParams;
@@ -43,28 +66,23 @@ export default async function NewOrderPage({
     getPendingRequests(),
     requisition ? getRequisition(requisition) : Promise.resolve(null),
   ]);
+
   return (
-    <div className="space-y-6">
-      <FormHeader
-        title="Create a New Purchase Order"
-        description="Fill in the details below to create a new purchase order."
-      />
-      <OrderForm
-        orderNo={orderNo}
-        pendingOrders={pendingOrders}
-        vendors={vendors}
-        services={services}
-        products={products}
-        projects={projects}
-        requisitionData={
-          requisitionData
-            ? {
-                documentDate: new Date(requisitionData.documentDate),
-                details: requisitionData.mrqDetails,
-              }
-            : null
-        }
-      />
-    </div>
+    <OrderForm
+      orderNo={orderNo}
+      pendingOrders={pendingOrders}
+      vendors={vendors}
+      services={services}
+      products={products}
+      projects={projects}
+      requisitionData={
+        requisitionData
+          ? {
+              documentDate: new Date(requisitionData.documentDate),
+              details: requisitionData.mrqDetails,
+            }
+          : null
+      }
+    />
   );
 }

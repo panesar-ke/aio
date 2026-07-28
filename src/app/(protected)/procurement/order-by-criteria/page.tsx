@@ -1,5 +1,4 @@
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { ErrorNotification } from '@/components/custom/error-components';
 import PageHeader from '@/components/custom/page-header';
 import { OrderByCriteriaParamsForm } from '@/features/procurement/components/order-by-criteria/form';
@@ -32,40 +31,55 @@ type SearchParams = Promise<{
   option: string;
 }>;
 
-export default async function OrderByCriteriaPage({
+export default function OrderByCriteriaPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const params = await searchParams;
-  const [projects, products, services] = await Promise.all([
-    getSelectableProjects(),
-    getSelectableProducts(),
-    getSelectableServices(),
-  ]);
   return (
     <div className="space-y-6">
       <PageHeader
         title="Order by Criteria"
         description="View and manage orders based on specific criteria."
       />
+      <ErrorBoundaryWithSuspense
+        errorMessage="Error loading order-by-criteria data"
+        loader={<ReportLoader />}
+      >
+        <OrderByCriteriaContent searchParams={searchParams} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function OrderByCriteriaContent({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const [projects, products, services, params] = await Promise.all([
+    getSelectableProjects(),
+    getSelectableProducts(),
+    getSelectableServices(),
+    searchParams,
+  ]);
+
+  return (
+    <>
       <OrderByCriteriaParamsForm
         products={products}
         projects={projects}
         services={services}
       />
       {!isEmptyObject(params) && (
-        <ErrorBoundary
-          fallback={
-            <ErrorNotification message="Error loading order register data" />
-          }
+        <ErrorBoundaryWithSuspense
+          errorMessage="Error loading order register data"
+          loader={<ReportLoader type="tableOnly" />}
         >
-          <Suspense fallback={<ReportLoader type="tableOnly" />}>
-            <SuspendedOrderByCriteria searchParams={params} />
-          </Suspense>
-        </ErrorBoundary>
+          <SuspendedOrderByCriteria searchParams={params} />
+        </ErrorBoundaryWithSuspense>
       )}
-    </div>
+    </>
   );
 }
 

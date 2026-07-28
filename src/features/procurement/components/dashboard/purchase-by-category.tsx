@@ -74,8 +74,12 @@ export function PurchaseByCategory({
             />
             <Pie data={chartData} dataKey="spending" />
             <ChartLegend
-              content={<ChartLegendContent nameKey="category" />}
-              className="-translate-y-2 flex-wrap gap-2  *:justify-center capitalize"
+              content={
+                <ChartLegendContent
+                  nameKey="category"
+                  className="-translate-y-2 flex-wrap gap-2 *:justify-center capitalize"
+                />
+              }
             />
           </PieChart>
         </ChartContainer>

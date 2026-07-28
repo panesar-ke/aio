@@ -13,12 +13,11 @@ export const metadata: Metadata = {
   title: 'Services',
 };
 
-export default async function ServicesPage({
+export default function ServicesPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { search } = await searchParams;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -38,14 +37,19 @@ export default async function ServicesPage({
             />
           }
         >
-          <SuspendedServices q={search} />
+          <SuspendedServices searchParams={searchParams} />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
 }
 
-async function SuspendedServices({ q }: { q?: string }) {
-  const services = await getServices(q);
+async function SuspendedServices({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { search } = await searchParams;
+  const services = await getServices(search);
   return <ServicesDataTable services={services} />;
 }

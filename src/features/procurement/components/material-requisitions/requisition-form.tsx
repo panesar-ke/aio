@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { type BaseSyntheticEvent, useMemo, useRef, useState } from 'react';
 import { createId } from '@paralleldrive/cuid2';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,10 +44,6 @@ interface RequisitionFormProps {
   requisition?: Requisition;
 }
 
-const generateUniqueRequestId = () => {
-  return Date.now() * 1000 + Math.floor(Math.random() * 1000);
-};
-
 export function RequisitionForm({
   products,
   projects,
@@ -58,8 +54,54 @@ export function RequisitionForm({
   const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_GENERATE'>(
     'SUBMIT'
   );
-  const submitTypeRef = useRef<'SUBMIT' | 'SUBMIT_GENERATE'>('SUBMIT');
-  const formRef = useRef<HTMLFormElement>(null);
+  const initialRequestId = useMemo(() => {
+    const existingRequestIds =
+      requisition?.mrqDetails
+        .map(detail => detail.requestId)
+        .filter((requestId): requestId is number => requestId != null) ?? [];
+
+    return Math.max(requisitionNo * 1000, ...existingRequestIds);
+  }, [requisition, requisitionNo]);
+  const defaultDetails = useMemo<MaterialRequisitionFormValues['details']>(() => {
+    if (requisition?.mrqDetails.length) {
+      let nextRequestId = initialRequestId;
+
+      return requisition.mrqDetails.map(
+        ({ id, itemId, projectId, qty, remarks, requestId, serviceId }) => ({
+          id: id.toString(),
+          projectId,
+          type: itemId ? ('item' as const) : ('service' as const),
+          itemOrServiceId: itemId || serviceId || '',
+          qty: Number(qty) || 0,
+          remarks: remarks || '',
+          requestId: requestId ?? nextRequestId++,
+        })
+      );
+    }
+
+    return [
+      {
+        id: createId(),
+        type: 'item' as const,
+        projectId: '',
+        itemOrServiceId: '',
+        qty: 0,
+        remarks: '',
+        requestId: initialRequestId,
+      },
+    ];
+  }, [initialRequestId, requisition]);
+  const nextRequestIdRef = useRef(
+    Math.max(
+      ...defaultDetails.map(detail => detail.requestId),
+      initialRequestId
+    ) + 1
+  );
+  const getNextRequestId = () => {
+    const requestId = nextRequestIdRef.current;
+    nextRequestIdRef.current += 1;
+    return requestId;
+  };
   const form = useForm<MaterialRequisitionFormValues>({
     resolver: zodResolver(materialRequisitionFormSchema),
     defaultValues: {
@@ -67,36 +109,31 @@ export function RequisitionForm({
       documentDate: requisition?.documentDate
         ? new Date(requisition.documentDate)
         : new Date(),
-      details: requisition?.mrqDetails.map(
-        ({ id, itemId, projectId, qty, remarks, requestId, serviceId }) => ({
-          id: id.toString(),
-          projectId: projectId,
-          type: itemId ? 'item' : 'service',
-          itemOrServiceId: itemId || serviceId || '',
-          qty: Number(qty) || 0,
-          remarks: remarks || '',
-          requestId: requestId || Date.now(),
-        })
-      ) || [
-        {
-          id: createId(),
-          type: 'item',
-          projectId: '',
-          qty: 0,
-          remarks: '',
-          requestId: generateUniqueRequestId(),
-        },
-      ],
+      details: defaultDetails,
     },
   });
   const { clearErrors, errors, onError } = useError();
 
   const isPending = form.formState.isSubmitting;
-  async function onSubmit(data: MaterialRequisitionFormValues) {
+  async function onSubmit(
+    data: MaterialRequisitionFormValues,
+    event?: BaseSyntheticEvent
+  ) {
     clearErrors();
+    const submitter =
+      event?.nativeEvent instanceof SubmitEvent
+        ? event.nativeEvent.submitter
+        : null;
+    const nextSubmitType =
+      submitter instanceof HTMLButtonElement &&
+      submitter.value === 'SUBMIT_GENERATE'
+        ? 'SUBMIT_GENERATE'
+        : 'SUBMIT';
+
+    setSubmitType(nextSubmitType);
     const res = await createRequisition({
       values: data,
-      submitType: submitTypeRef.current,
+      submitType: nextSubmitType,
       id: requisition?.reference,
     });
     if (res.error) {
@@ -109,11 +146,7 @@ export function RequisitionForm({
     <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm">
       {errors && <CustomAlert description={errors} variant="error" />}
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4"
-          ref={formRef}
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -153,18 +186,15 @@ export function RequisitionForm({
             projects={projects}
             services={services}
             isPending={isPending}
+            getNextRequestId={getNextRequestId}
           />
           <div className="flex items-center gap-2 justify-end">
             <Button
-              type="button"
+              type="submit"
+              value="SUBMIT"
               size="lg"
               disabled={isPending}
               className="min-w-32"
-              onClick={() => {
-                submitTypeRef.current = 'SUBMIT';
-                setSubmitType('SUBMIT');
-                formRef.current?.requestSubmit();
-              }}
             >
               {isPending && submitType === 'SUBMIT' ? (
                 <ButtonLoader loadingText="Processing..." />
@@ -176,13 +206,9 @@ export function RequisitionForm({
               )}
             </Button>
             <Button
-              type="button"
+              type="submit"
+              value="SUBMIT_GENERATE"
               variant="tertiary"
-              onClick={() => {
-                submitTypeRef.current = 'SUBMIT_GENERATE';
-                setSubmitType('SUBMIT_GENERATE');
-                formRef.current?.requestSubmit();
-              }}
               size="lg"
               disabled={isPending}
               className="min-w-32"
@@ -220,12 +246,14 @@ function RequisitionDetails({
   form,
   services,
   isPending,
+  getNextRequestId,
 }: {
   products: Array<Option>;
   projects: Array<Option>;
   services: Array<Option>;
   form: UseFormReturn<MaterialRequisitionFormValues>;
   isPending: boolean;
+  getNextRequestId: () => number;
 }) {
   const {
     products: queryProducts,
@@ -443,7 +471,7 @@ function RequisitionDetails({
               itemOrServiceId: '',
               qty: 0,
               remarks: '',
-              requestId: generateUniqueRequestId(),
+              requestId: getNextRequestId(),
             })
           }
           disabled={isPending}

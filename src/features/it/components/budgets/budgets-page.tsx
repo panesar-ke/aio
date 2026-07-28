@@ -68,11 +68,13 @@ export const budgetQueries = (params?: BudgetQueryParams) =>
 
 export function BudgetsPage({
   financialYearOptions,
+  defaultFinancialYearStart,
 }: {
   financialYearOptions: Array<Option>;
+  defaultFinancialYearStart: string;
 }) {
   const { filters, onHandleSearch, onFinancialYearChange, onReset } =
-    useBudgetFilters();
+    useBudgetFilters(defaultFinancialYearStart);
   const { setOpen } = useModal();
 
   function handleImport() {
@@ -127,14 +129,23 @@ export function BudgetsPage({
         </div>
       </div>
       <ErrorBoundaryWithSuspense errorMessage="Failed to fetch budgets. Please try again.">
-        <BudgetTable onReset={onReset} />
+        <BudgetTable
+          defaultFinancialYearStart={defaultFinancialYearStart}
+          onReset={onReset}
+        />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-function BudgetTable({ onReset }: { onReset: () => void }) {
-  const { filters } = useBudgetFilters();
+function BudgetTable({
+  defaultFinancialYearStart,
+  onReset,
+}: {
+  defaultFinancialYearStart: string;
+  onReset: () => void;
+}) {
+  const { filters } = useBudgetFilters(defaultFinancialYearStart);
   const { data } = useSuspenseQuery(budgetQueries(filters));
   const queryClient = useQueryClient();
   const router = useRouter();

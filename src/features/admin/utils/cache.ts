@@ -10,8 +10,8 @@ export function getUserTag(userId: string) {
 }
 
 export function revalidateUserTags(userId: string) {
-  revalidateTag(getUsersGlobalTag());
-  revalidateTag(getUserTag(userId));
+  revalidateTag(getUsersGlobalTag(), 'max');
+  revalidateTag(getUserTag(userId), 'max');
 }
 
 export function getFormsGlobalTag() {

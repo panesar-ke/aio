@@ -30,6 +30,17 @@ export function AssignmentTrendChart({
 }: {
   data: ITAssetsDashboardStats['trends']['assignmentActivity'];
 }) {
+  const formatTooltipDate = (value: unknown) => {
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      return '';
+    }
+
+    return new Date(value).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -56,12 +67,7 @@ export function AssignmentTrendChart({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={value =>
-                    new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  }
+                  labelFormatter={value => formatTooltipDate(value)}
                 />
               }
             />

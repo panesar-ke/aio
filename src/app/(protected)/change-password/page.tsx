@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Change Password',
 };
 
-export default async function ChangePasswordPage() {
+export default function ChangePasswordPage() {
   return (
     <div className="space-y-4">
       <PageHeader

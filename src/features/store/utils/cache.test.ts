@@ -16,6 +16,6 @@ describe('stock movement cache invalidation', () => {
   it('invalidates stock-balance after an issue mutation', () => {
     revalidateMaterialsIssues('issue-1');
 
-    expect(revalidateTag).toHaveBeenCalledWith('stock-balance');
+    expect(revalidateTag).toHaveBeenCalledWith('stock-balance', 'max');
   });
 });

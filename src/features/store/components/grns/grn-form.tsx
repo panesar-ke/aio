@@ -43,6 +43,7 @@ type Props = {
   stores: Array<Option>;
   pendingOrders: Array<Option>;
   grnNo: number;
+  defaultReceiptDate?: string;
 };
 
 type OrderDetails = {
@@ -58,10 +59,17 @@ type OrderDetails = {
   }>;
 };
 
-export function GrnForm({ pendingOrders, grnNo, stores }: Props) {
+export function GrnForm({
+  pendingOrders,
+  grnNo,
+  stores,
+  defaultReceiptDate,
+}: Props) {
   const form = useForm<GrnFormValues>({
     defaultValues: {
-      receiptDate: new Date(),
+      receiptDate: defaultReceiptDate
+        ? new Date(defaultReceiptDate)
+        : new Date(),
       orderId: '',
       invoiceNo: '',
       vendorName: '',

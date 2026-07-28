@@ -15,23 +15,22 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-export default async function DetailsPage({ params }: { params: Params }) {
-  const { requisitionId } = await params;
-
+export default function DetailsPage({ params }: { params: Params }) {
   return (
     <ErrorBoundary fallback={<div>Error loading requisition details</div>}>
       <Suspense fallback={<p>Loading requisition details...</p>}>
-        <SuspendedRequisitionView requisitionId={requisitionId} />
+        <SuspendedRequisitionView params={params} />
       </Suspense>
     </ErrorBoundary>
   );
 }
 
 async function SuspendedRequisitionView({
-  requisitionId,
+  params,
 }: {
-  requisitionId: string;
+  params: Params;
 }) {
+  const { requisitionId } = await params;
   const requisition = await getRequisition(requisitionId);
 
   return (

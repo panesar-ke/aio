@@ -30,6 +30,7 @@ type ExpenseFormProps = {
   subCategories: Array<{ id: string; name: string; categoryId: string }>;
   assets?: Array<{ id: string; name: string }>;
   licenses?: Array<{ id: string; name: string }>;
+  defaultExpenseDate?: string;
   vendors: Array<Option>;
   initialValues?: ExpenseFormSchemaValues;
 };
@@ -41,6 +42,7 @@ export function ExpenseForm({
   initialValues,
   licenses,
   assets,
+  defaultExpenseDate,
 }: ExpenseFormProps) {
   const isEdit = Boolean(initialValues?.id);
   const queryClient = useQueryClient();
@@ -53,7 +55,7 @@ export function ExpenseForm({
         categoryId: '',
         subCategoryId: '',
         vendorId: '',
-        expenseDate: dateFormat(new Date()),
+        expenseDate: defaultExpenseDate ?? '',
         title: '',
         referenceNo: '',
         description: undefined,

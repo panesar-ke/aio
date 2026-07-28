@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
 import { OrderForm } from '@/features/procurement/components/purchase-order/order-form';
 import {
@@ -19,7 +21,20 @@ export const metadata: Metadata = {
 
 type Params = Promise<{ orderId: string }>;
 
-export default async function NewOrderPage({ params }: { params: Params }) {
+export default function NewOrderPage({ params }: { params: Params }) {
+  return (
+    <div className="space-y-6">
+      <ErrorBoundaryWithSuspense
+        errorMessage="Failed to load the purchase order"
+        loader={<FormLoader />}
+      >
+        <EditPurchaseOrderContent params={params} />
+      </ErrorBoundaryWithSuspense>
+    </div>
+  );
+}
+
+async function EditPurchaseOrderContent({ params }: { params: Params }) {
   const { orderId } = await params;
   const [projects, products, services, vendors, pendingOrders, order] =
     await Promise.all([
@@ -30,8 +45,9 @@ export default async function NewOrderPage({ params }: { params: Params }) {
       getPendingRequests(),
       getPurchaseOrder(orderId),
     ]);
+
   return (
-    <div className="space-y-6">
+    <>
       <FormHeader
         title={`Edit Purchase Order ${order.id}`}
         description="Fill in the details below to create a new purchase order."
@@ -45,6 +61,6 @@ export default async function NewOrderPage({ params }: { params: Params }) {
         projects={projects}
         order={order}
       />
-    </div>
+    </>
   );
 }

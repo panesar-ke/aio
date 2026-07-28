@@ -12,8 +12,7 @@ type Params = Promise<{ orderId: string }>;
 export const metadata: Metadata = {
   title: 'Purchase Order Details',
 };
-export default async function OrderDetailsPage({ params }: { params: Params }) {
-  const { orderId } = await params;
+export default function OrderDetailsPage({ params }: { params: Params }) {
   return (
     <div className="space-y-6">
       <PageHeader title="View order details" />
@@ -23,14 +22,15 @@ export default async function OrderDetailsPage({ params }: { params: Params }) {
         }
       >
         <Suspense fallback={<LoadingSpinner />}>
-          <SuspendedComponent orderId={orderId} />
+          <SuspendedComponent params={params} />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
 }
 
-async function SuspendedComponent({ orderId }: { orderId: string }) {
+async function SuspendedComponent({ params }: { params: Params }) {
+  const { orderId } = await params;
   const order = await getPurchaseOrder(orderId);
   return <OrderView order={order} />;
 }
