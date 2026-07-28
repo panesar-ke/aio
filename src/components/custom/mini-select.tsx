@@ -22,6 +22,27 @@ interface BasicSelectProps {
   withForm?: boolean;
 }
 
+export function getMiniSelectRootProps({
+  disabled,
+  onChange,
+  defaultValue,
+  value,
+}: Pick<BasicSelectProps, 'defaultValue' | 'disabled' | 'onChange' | 'value'>) {
+  if (value !== undefined) {
+    return {
+      disabled,
+      onValueChange: onChange,
+      value,
+    };
+  }
+
+  return {
+    defaultValue,
+    disabled,
+    onValueChange: onChange,
+  };
+}
+
 export function MiniSelect({
   options,
   defaultValue,
@@ -35,9 +56,12 @@ export function MiniSelect({
 }: BasicSelectProps) {
   return (
     <Select
-      onValueChange={onChange}
-      defaultValue={defaultValue}
-      disabled={disabled}
+      {...getMiniSelectRootProps({
+        defaultValue,
+        disabled,
+        onChange,
+        value,
+      })}
     >
       {withForm ? (
         <FormControl>
@@ -47,7 +71,6 @@ export function MiniSelect({
               hasError && 'border border-destructive',
               className,
             )}
-            value={value}
           >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
@@ -59,7 +82,6 @@ export function MiniSelect({
             hasError && 'border border-destructive',
             className,
           )}
-          value={value}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

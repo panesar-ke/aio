@@ -1,14 +1,25 @@
 'use client';
 
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import toast from 'react-hot-toast';
-import axios, { isAxiosError } from 'axios';
-import { createId } from '@paralleldrive/cuid2';
-import { Trash2Icon } from 'lucide-react';
+import type { Route } from 'next';
 import type { UseFormReturn } from 'react-hook-form';
-import type { Option } from '@/types/index.types';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createId } from '@paralleldrive/cuid2';
+import axios, { isAxiosError } from 'axios';
+import { Trash2Icon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
+import type { getMaterialIssue } from '@/features/store/services/issues/data';
 import type { MaterialIssueFormValues } from '@/features/store/utils/store.types';
+import type { Option } from '@/types/index.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -17,19 +28,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { materialIssueFormSchema } from '@/features/store/utils/schema';
 import { Input } from '@/components/ui/input';
-import { MiniSelect } from '@/components/custom/mini-select';
-import { Button } from '@/components/ui/button';
-import { SearchSelect } from '@/components/custom/search-select';
 import {
   createIssue,
   updateIssue,
 } from '@/features/store/services/issues/actions';
-import { ToastContent } from '@/components/custom/toast';
+import { materialIssueFormSchema } from '@/features/store/utils/schema';
 import { dateFormat } from '@/lib/helpers/formatters';
-import { FormActions } from '@/components/custom/form-actions';
-import type { getMaterialIssue } from '@/features/store/services/issues/data';
 
 type Props = {
   stores: Array<Option>;
@@ -46,6 +51,7 @@ export function IssueMaterialForm({
   issue,
   defaultIssueDate,
 }: Props) {
+  const router = useRouter();
   const form = useForm<MaterialIssueFormValues>({
     defaultValues: {
       issueNo,
@@ -84,6 +90,9 @@ export function IssueMaterialForm({
       return;
     }
     form.reset();
+    if ('redirectTo' in res && res.redirectTo) {
+      router.push(res.redirectTo as Route);
+    }
   }
 
   return (

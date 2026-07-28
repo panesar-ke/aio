@@ -1,21 +1,18 @@
 'use server';
 
-import { redirect } from 'next/navigation';
 import { count, eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+
 import type { StoreFormValues } from '@/features/store/utils/store.types';
-import { validateFields } from '@/lib/action-validator';
-import { storeFormSchema } from '@/features/store/utils/schema';
+import type { ActionResult } from '@/lib/actions/types';
+
 import db from '@/drizzle/db';
 import { stockMovements, stores } from '@/drizzle/schema';
-import { revalidateStoresTag } from '@/features/store/utils/cache';
 import { getStore } from '@/features/store/services/stores/data';
-
-type ActionResult =
-  | {
-      error: boolean;
-      message: string;
-    }
-  | never;
+import { revalidateStoresTag } from '@/features/store/utils/cache';
+import { storeFormSchema } from '@/features/store/utils/schema';
+import { validateFields } from '@/lib/action-validator';
+import { redirectActionResult } from '@/lib/actions/results';
 
 const validateStoreData = (values: StoreFormValues) => {
   const { error, data } = validateFields<StoreFormValues>(
@@ -71,7 +68,7 @@ export const createStore = async (
     return handleDatabaseError(error, 'create');
   }
 
-  return redirect('/store/stores');
+  return redirectActionResult('/store/stores', 'Store created successfully.');
 };
 
 export const updateStore = async (
@@ -103,7 +100,7 @@ export const updateStore = async (
     return handleDatabaseError(error, 'update');
   }
 
-  return redirect('/store/stores');
+  return redirectActionResult('/store/stores', 'Store updated successfully.');
 };
 
 export const deleteStore = async (id: string): Promise<ActionResult> => {

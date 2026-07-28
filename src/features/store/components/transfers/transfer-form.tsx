@@ -1,14 +1,25 @@
 'use client';
 
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import type { Route } from 'next';
+import type { UseFormReturn } from 'react-hook-form';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createId } from '@paralleldrive/cuid2';
 import axios, { isAxiosError } from 'axios';
-import toast from 'react-hot-toast';
 import { Trash2Icon } from 'lucide-react';
-import type { UseFormReturn } from 'react-hook-form';
-import type { Option } from '@/types/index.types';
+import { useRouter } from 'next/navigation';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
+import type { getTransfer } from '@/features/store/services/transfers/data';
 import type { MaterialTransferFormValues } from '@/features/store/utils/store.types';
+import type { Option } from '@/types/index.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -17,16 +28,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { materialTransferFormSchema } from '@/features/store/utils/schema';
 import { Input } from '@/components/ui/input';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { MiniSelect } from '@/components/custom/mini-select';
-import { FormActions } from '@/components/custom/form-actions';
-import { SearchSelect } from '@/components/custom/search-select';
-import { Button } from '@/components/ui/button';
 import { createTransfer } from '@/features/store/services/transfers/actions';
-import { ToastContent } from '@/components/custom/toast';
-import type { getTransfer } from '@/features/store/services/transfers/data';
+import { materialTransferFormSchema } from '@/features/store/utils/schema';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 type Props = {
   stores: Array<Option>;
@@ -41,6 +46,7 @@ export function TransferForm({
   transfer,
   defaultTransferDate,
 }: Props) {
+  const router = useRouter();
   const form = useForm<MaterialTransferFormValues>({
     defaultValues: {
       fromStoreId: transfer?.fromStoreId || '',
@@ -75,6 +81,9 @@ export function TransferForm({
       return;
     }
     form.reset();
+    if ('redirectTo' in res && res.redirectTo) {
+      router.push(res.redirectTo as Route);
+    }
   }
   return (
     <Form {...form}>

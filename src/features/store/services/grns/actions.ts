@@ -1,6 +1,5 @@
 'use server';
 import { and, eq, inArray } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
 
 import type {
   GrnFormValues,
@@ -24,6 +23,7 @@ import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock
 import { revalidateGrnsTag } from '@/features/store/utils/cache';
 import { grnFormSchema } from '@/features/store/utils/schema';
 import { validateFields } from '@/lib/action-validator';
+import { redirectActionResult } from '@/lib/actions/results';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { getCurrentUser } from '@/lib/session';
 
@@ -132,7 +132,7 @@ export const createGrn = async (values: GrnFormValues) => {
     console.error(error);
     return { error: true, message: 'Failed to create GRN' };
   }
-  return redirect('/store/grn');
+  return redirectActionResult('/store/grn', 'GRN created successfully.');
 };
 
 export const deleteGrn = async (id: string) => {

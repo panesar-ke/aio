@@ -1,13 +1,19 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import type { Route } from 'next';
+
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+
 import type {
   Store,
   StoreFormValues,
 } from '@/features/store/utils/store.types';
-import { storeFormSchema } from '@/features/store/utils/schema';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { ToastContent } from '@/components/custom/toast';
 import {
   Form,
   FormControl,
@@ -18,14 +24,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FormActions } from '@/components/custom/form-actions';
 import {
   createStore,
   updateStore,
 } from '@/features/store/services/stores/actions';
-import { ToastContent } from '@/components/custom/toast';
+import { storeFormSchema } from '@/features/store/utils/schema';
 
 export function StoreForm({ store }: { store?: Store }) {
+  const router = useRouter();
   const form = useForm<StoreFormValues>({
     defaultValues: store ?? {
       description: '',
@@ -45,6 +51,9 @@ export function StoreForm({ store }: { store?: Store }) {
       return;
     }
     form.reset();
+    if ('redirectTo' in res && res.redirectTo) {
+      router.push(res.redirectTo as Route);
+    }
   }
 
   return (

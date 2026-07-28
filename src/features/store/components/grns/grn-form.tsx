@@ -1,13 +1,24 @@
 'use client';
 
-import { useFieldArray, useForm } from 'react-hook-form';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TrashIcon } from 'lucide-react';
+import type { Route } from 'next';
 import type { UseFormReturn } from 'react-hook-form';
-import type { Option } from '@/types/index.types';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
+import { TrashIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useFieldArray, useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import type { GrnFormValues } from '@/features/store/utils/store.types';
+import type { Option } from '@/types/index.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { SearchSelect } from '@/components/custom/search-select';
+// import { MiniSelect } from '@/components/custom/mini-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -17,14 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { grnFormSchema } from '@/features/store/utils/schema';
 import { Label } from '@/components/ui/label';
-import { SearchSelect } from '@/components/custom/search-select';
-// import { MiniSelect } from '@/components/custom/mini-select';
-import { ToastContent } from '@/components/custom/toast';
-import { apiErrorHandler } from '@/lib/utils';
-import { dateFormat } from '@/lib/helpers/formatters';
-
 import {
   Table,
   TableBody,
@@ -33,10 +37,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { FormActions } from '@/components/custom/form-actions';
 import { createGrn } from '@/features/store/services/grns/actions';
-import { MiniSelect } from '@/components/custom/mini-select';
+import { grnFormSchema } from '@/features/store/utils/schema';
+import { dateFormat } from '@/lib/helpers/formatters';
+import { apiErrorHandler } from '@/lib/utils';
 
 type Props = {
   //   vendors: Array<Option>;
@@ -65,6 +69,7 @@ export function GrnForm({
   stores,
   defaultReceiptDate,
 }: Props) {
+  const router = useRouter();
   const form = useForm<GrnFormValues>({
     defaultValues: {
       receiptDate: defaultReceiptDate
@@ -92,6 +97,9 @@ export function GrnForm({
       return;
     }
     form.reset();
+    if ('redirectTo' in res && res.redirectTo) {
+      router.push(res.redirectTo as Route);
+    }
   }
 
   async function handleOrderChange(orderId: string) {
