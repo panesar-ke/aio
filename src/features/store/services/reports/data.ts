@@ -10,17 +10,10 @@ import type {
 
 import db from "@/drizzle/db";
 import { products, stockMovements } from "@/drizzle/schema";
+import { signedQtySum } from "@/features/store/services/stock-balance/sign-convention";
 import { sqlInList } from "@/features/store/services/stock-balance/utils";
 import { stockMovementReportSchema } from "@/features/store/utils/schema";
 import { validateFields } from "@/lib/action-validator";
-
-const movementIn = [
-  "GRN",
-  "TRANSFER_IN",
-  "CONVERSION_IN",
-  "OPENING_BAL",
-] as const;
-const movementOut = ["ISSUE", "TRANSFER", "CONVERSION_OUT"] as const;
 
 export const getStockMovementReport = async (values: unknown) => {
   const { data, error } = validateFields<StockMovementReportFormValues>(
@@ -102,13 +95,7 @@ export const getStockMovementReport = async (values: unknown) => {
     opening_deltas AS (
       SELECT
         sm.item_id,
-        SUM(
-          CASE
-            WHEN sm.transaction_type IN ${sqlInList(movementIn)} THEN sm.qty
-            WHEN sm.transaction_type IN ${sqlInList(movementOut)} THEN -sm.qty
-            ELSE 0
-          END
-        ) AS delta
+        ${signedQtySum({ transactionType: sql`sm.transaction_type`, qty: sql`sm.qty` })} AS delta
       FROM stock_movements sm
       LEFT JOIN nearest_snapshot ns ON ns.item_id = sm.item_id
       WHERE sm.store_id = ${storeId}
