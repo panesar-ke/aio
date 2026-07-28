@@ -12,10 +12,7 @@ import { sql } from 'drizzle-orm';
 
 import db from '@/drizzle/db';
 import { stockBalanceSnapshots, stockMovements } from '@/drizzle/schema';
-import { sqlInList } from '@/features/store/services/stock-balance/utils';
-
-const movementIn = ['GRN', 'TRANSFER_IN', 'CONVERSION_IN', 'OPENING_BAL'] as const;
-const movementOut = ['ISSUE', 'TRANSFER', 'CONVERSION_OUT'] as const;
+import { signedQtySum } from '@/features/store/services/stock-balance/sign-convention';
 
 async function main() {
   const result = await db.execute(sql`
@@ -24,15 +21,7 @@ async function main() {
       ${stockMovements.itemId},
       ${stockMovements.storeId},
       CURRENT_DATE - INTERVAL '1 day',
-      SUM(
-        CASE
-          WHEN ${stockMovements.transactionType} IN ${sqlInList(movementIn)}
-            THEN ${stockMovements.qty}
-          WHEN ${stockMovements.transactionType} IN ${sqlInList(movementOut)}
-            THEN -${stockMovements.qty}
-          ELSE 0
-        END
-      )
+      ${signedQtySum(stockMovements)}
     FROM ${stockMovements}
     WHERE ${stockMovements.isDeleted} = false
       AND ${stockMovements.storeId} IS NOT NULL
