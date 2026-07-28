@@ -82,14 +82,52 @@ export function getOrderFormSeedKey({
   orderNo: number;
   requisitionData?: OrderFormRequisitionData | null;
 }) {
-  if (order?.reference) {
-    return `order:${order.reference}`;
+  if (order) {
+    const normalizedOrder = {
+      orderNo,
+      reference: order.reference ?? '',
+      documentDate: order.documentDate
+        ? new Date(order.documentDate).toISOString()
+        : '',
+      vendor: order.vendor?.id || '',
+      invoiceNo: order.billNo || '',
+      vatType: order.vatType || 'NONE',
+      vat: order.vatId ? order.vatId.toString() : '',
+      invoiceDate: order.billDate ? new Date(order.billDate).toISOString() : '',
+      details: (order.ordersDetails || []).map(d => ({
+        id: d.id,
+        requestId: d.requestId?.toString() || '',
+        projectId: d.projectId,
+        type: d.itemId ? 'item' : ('service' as const),
+        itemOrServiceId: d.itemId || d.serviceId || '',
+        qty: +d.qty,
+        rate: parseFloat(d.rate),
+        discountType: d.discountType || 'NONE',
+        discount: d.discount ? parseFloat(d.discount) : 0,
+      })),
+    };
+    return `order:${JSON.stringify(normalizedOrder)}`;
   }
 
   if (requisitionData) {
-    return `requisition:${requisitionData.documentDate.toISOString()}:${requisitionData.details
-      .map(detail => detail.id)
-      .join(',')}`;
+    const normalizedRequisition = {
+      orderNo,
+      documentDate: requisitionData.documentDate
+        ? new Date(requisitionData.documentDate).toISOString()
+        : '',
+      details: (requisitionData.details || []).map(detail => ({
+        id: detail.id,
+        requestId: detail.requestId.toString(),
+        projectId: detail.projectId,
+        type: detail.itemId ? 'item' : ('service' as const),
+        itemOrServiceId: detail.itemId || detail.serviceId || '',
+        qty: +detail.qty,
+        rate: detail.itemId
+          ? +(detail.product?.buyingPrice ?? 0)
+          : +(detail.service?.serviceFee ?? 0),
+      })),
+    };
+    return `requisition:${JSON.stringify(normalizedRequisition)}`;
   }
 
   return `new:${orderNo}`;

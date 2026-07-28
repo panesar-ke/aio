@@ -1,16 +1,16 @@
-'use client';
-import { FileScanIcon, MailIcon, PrinterIcon } from 'lucide-react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
-import toast from 'react-hot-toast';
+"use client";
+import { FileScanIcon, MailIcon, PrinterIcon } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
+import toast from "react-hot-toast";
 
-import type { Order } from '@/features/procurement/utils/procurement.types';
+import type { Order } from "@/features/procurement/utils/procurement.types";
 
-import { ButtonLoader } from '@/components/custom/loaders';
-import { ToastContent } from '@/components/custom/toast';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ButtonLoader } from "@/components/custom/loaders";
+import { ToastContent } from "@/components/custom/toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -18,26 +18,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   generateOrderFile,
   sendOrderEmail,
-} from '@/features/procurement/services/purchase-orders/actions';
-import { formatOrderForFileGeneration } from '@/features/procurement/utils/formatters';
-import { dateFormat, numberFormat, titleCase } from '@/lib/helpers/formatters';
+} from "@/features/procurement/services/purchase-orders/actions";
+import { formatOrderForFileGeneration } from "@/features/procurement/utils/formatters";
+import { dateFormat, numberFormat, titleCase } from "@/lib/helpers/formatters";
 
 export function OrderView({ order }: { order: Order }) {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
-  const [selectedAction, setSelectedAction] = useState<'GENERATE' | 'EMAIL'>();
+  const [selectedAction, setSelectedAction] = useState<"GENERATE" | "EMAIL">();
   const [fileUrl, setFileUrl] = useState(order.fileUrl);
 
   function handleGenerate() {
-    setSelectedAction('GENERATE');
+    setSelectedAction("GENERATE");
     startTransition(async () => {
       const res = await generateOrderFile(
         formatOrderForFileGeneration(order),
-        order.reference
+        order.reference,
       );
 
       if (res.error) {
@@ -57,7 +57,7 @@ export function OrderView({ order }: { order: Order }) {
   }
 
   function handleEmailSending() {
-    setSelectedAction('EMAIL');
+    setSelectedAction("EMAIL");
     startTransition(async () => {
       await sendOrderEmail(order.reference);
     });
@@ -75,14 +75,14 @@ export function OrderView({ order }: { order: Order }) {
               </>
             ) : (
               isLoading &&
-              selectedAction === 'GENERATE' && (
+              selectedAction === "GENERATE" && (
                 <ButtonLoader loadingText="Generating..." />
               )
             )}
           </Button>
         ) : (
           <Button size="lg" asChild disabled={isLoading}>
-            <a href={fileUrl} target="_blank">
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
               <PrinterIcon />
               <span>Print</span>
             </a>
@@ -94,7 +94,7 @@ export function OrderView({ order }: { order: Order }) {
           onClick={handleEmailSending}
           disabled={isLoading}
         >
-          {isLoading && selectedAction === 'EMAIL' ? (
+          {isLoading && selectedAction === "EMAIL" ? (
             <ButtonLoader loadingText="Sending..." />
           ) : (
             <>
@@ -133,7 +133,7 @@ function OrderPrint({ order }: { order: Order }) {
         amountExclTotal: 0,
         vatTotal: 0,
         amountInclTotal: 0,
-      }
+      },
     );
   }, [order.ordersDetails]);
 
@@ -156,9 +156,9 @@ function OrderPrint({ order }: { order: Order }) {
             <strong>LPO No:</strong> <span className="ml-4">{order.id}</span>
           </div>
           <div className="text-lg">
-            <strong>Date:</strong>{' '}
+            <strong>Date:</strong>{" "}
             <span className="ml-4">
-              {dateFormat(new Date(order.documentDate), 'long')}
+              {dateFormat(new Date(order.documentDate), "long")}
             </span>
           </div>
         </div>
@@ -197,23 +197,23 @@ function OrderPrint({ order }: { order: Order }) {
             </p>
             <p>
               <strong className="capitalize mr-2">Address:</strong>
-              {order.vendor.address || 'n/a'}
+              {order.vendor.address || "n/a"}
             </p>
             <p>
               <strong className="mr-2">PIN:</strong>
-              {order.vendor.kraPin || 'n/a'}
+              {order.vendor.kraPin || "n/a"}
             </p>
             <p>
               <strong className="capitalize mr-2">cell:</strong>
-              {order.vendor.contact || 'n/a'}
+              {order.vendor.contact || "n/a"}
             </p>
             <p>
               <strong className="capitalize mr-2">Email:</strong>
-              {order.vendor.email || 'n/a'}
+              {order.vendor.email || "n/a"}
             </p>
             <p>
               <strong className="capitalize mr-2">contact person:</strong>
-              {order.vendor.contactPerson || 'n/a'}
+              {order.vendor.contactPerson || "n/a"}
             </p>
           </div>
         </div>
@@ -224,14 +224,14 @@ function OrderPrint({ order }: { order: Order }) {
           amountExcl={amountExclTotal || 0}
           vat={vatTotal || 0}
           amountIncl={amountInclTotal || 0}
-          userName={order.user.name || 'n/a'}
+          userName={order.user.name || "n/a"}
         />
       </div>
     </div>
   );
 }
 
-function OrderRowPrint({ details }: { details: Order['ordersDetails'] }) {
+function OrderRowPrint({ details }: { details: Order["ordersDetails"] }) {
   return (
     <div className="col-span-full">
       <Table className="mt-5 border border-black">
@@ -245,7 +245,7 @@ function OrderRowPrint({ details }: { details: Order['ordersDetails'] }) {
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-black">
-          {details.map(detail => (
+          {details.map((detail) => (
             <TableRow className="text-lg [&>*]:p-2 " key={detail.id}>
               <TableCell className="uppercase">
                 {detail.itemId
@@ -253,7 +253,7 @@ function OrderRowPrint({ details }: { details: Order['ordersDetails'] }) {
                   : detail?.service?.serviceName}
               </TableCell>
               <TableCell className="uppercase">
-                {detail.itemId ? detail?.product?.uom?.abbreviation : 'DEF'}
+                {detail.itemId ? detail?.product?.uom?.abbreviation : "DEF"}
               </TableCell>
               <TableCell className="w-24 text-center">
                 {numberFormat(detail.qty)}
@@ -314,7 +314,7 @@ function OrderSummary({
             <div className="flex items-center justify-between">
               <div className="uppercase text-lg font-bold">Discount</div>
               <div>
-                {discounted > 0 ? `Ksh: ;${numberFormat(discounted)}` : '-'}
+                {discounted > 0 ? `Ksh: ;${numberFormat(discounted)}` : "-"}
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -330,7 +330,7 @@ function OrderSummary({
             </div>
             <div className="flex items-center justify-between">
               <div className="uppercase text-lg font-bold">Vat</div>
-              <div>{vat > 0 ? `Ksh: ${numberFormat(vat)}` : '-'}</div>
+              <div>{vat > 0 ? `Ksh: ${numberFormat(vat)}` : "-"}</div>
             </div>
             <div className="flex items-center justify-between">
               <div className="uppercase font-bold text-lg">Amount Incl</div>
@@ -345,7 +345,7 @@ function OrderSummary({
           <strong>Prepared:</strong> {titleCase(userName)}
         </p>
         <p>
-          <strong>Date:</strong> {dateFormat(new Date(), 'long')}
+          <strong>Date:</strong> {dateFormat(new Date(), "long")}
         </p>
       </div>
     </div>
