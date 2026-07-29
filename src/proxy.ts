@@ -1,26 +1,26 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from "next/server";
 
-import arcjet, { detectBot, shield, slidingWindow } from '@arcjet/next';
-import { NextResponse } from 'next/server';
+import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/next";
+import { NextResponse } from "next/server";
 
-const publicRoutes = ['/login', '/forgot-password', '/api/inngest'];
+const publicRoutes = ["/login", "/forgot-password", "/api/inngest"];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
   rules: [
-    shield({ mode: 'LIVE' }),
+    shield({ mode: "LIVE" }),
     detectBot({
-      mode: 'LIVE',
+      mode: "LIVE",
       allow: [
-        'CATEGORY:SEARCH_ENGINE',
-        'CATEGORY:MONITOR',
-        'CATEGORY:PREVIEW',
-        'CATEGORY:VERCEL',
+        "CATEGORY:SEARCH_ENGINE",
+        "CATEGORY:MONITOR",
+        "CATEGORY:PREVIEW",
+        "CATEGORY:VERCEL",
       ],
     }),
     slidingWindow({
-      mode: 'LIVE',
-      interval: '1m',
+      mode: "LIVE",
+      interval: "1m",
       max: 100,
     }),
   ],
@@ -29,9 +29,19 @@ const aj = arcjet({
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  if (path.startsWith('/api/inngest') || path.startsWith('/api/cron')) {
+  if (path.startsWith("/api/inngest") || path.startsWith("/api/cron")) {
     return NextResponse.next();
   }
+
+  const isPrefetch = req.headers.get("next-router-prefetch") === "1";
+
+  if (!isPrefetch) {
+    const decision = await aj.protect(req);
+    if (decision.isDenied()) {
+      return new Response(null, { status: 403 });
+    }
+  }
+
   const decision = await aj.protect(req);
 
   if (decision.isDenied()) {
@@ -40,15 +50,15 @@ export default async function proxy(req: NextRequest) {
 
   const isPublicRoute = publicRoutes.includes(path);
 
-  const sessionCookie = req.cookies.get('session');
+  const sessionCookie = req.cookies.get("session");
   const hasSession = sessionCookie?.value;
 
   if (!isPublicRoute && !hasSession) {
-    return NextResponse.redirect(new URL('/login', req.nextUrl));
+    return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
   if (isPublicRoute && hasSession) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   return NextResponse.next();
@@ -56,7 +66,7 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
   ],
 };
