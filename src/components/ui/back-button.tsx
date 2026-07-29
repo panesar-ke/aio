@@ -38,7 +38,7 @@ export function BackButton({
         )}
         asChild
       >
-        <Link href={href}>
+        <Link href={href} prefetch={false}>
           <ArrowLeftIcon className="arrow shrink-0" />
           {children}
         </Link>

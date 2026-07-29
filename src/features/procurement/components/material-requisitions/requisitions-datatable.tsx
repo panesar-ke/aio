@@ -95,6 +95,7 @@ export function RequisitionsDataTable({
                 <DropdownMenuItem asChild>
                   <Link
                     href={`/procurement/material-requisition/${reference}/edit`}
+                    prefetch={false}
                   >
                     <EditAction />
                   </Link>
@@ -102,6 +103,7 @@ export function RequisitionsDataTable({
                 <DropdownMenuItem asChild>
                   <Link
                     href={`/procurement/purchase-order/new?requisition=${reference}`}
+                    prefetch={false}
                   >
                     <AutomateAction text="Generate LPO" />
                   </Link>
@@ -111,6 +113,7 @@ export function RequisitionsDataTable({
             <DropdownMenuItem asChild>
               <Link
                 href={`/procurement/material-requisition/${reference}/details`}
+                prefetch={false}
               >
                 <ViewDetailsAction />
               </Link>

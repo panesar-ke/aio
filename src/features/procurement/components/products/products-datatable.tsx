@@ -80,7 +80,7 @@ export function ProductsDataTable({
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/products/${id}/edit`}>
+              <Link href={`/procurement/products/${id}/edit`} prefetch={false}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>

@@ -163,6 +163,7 @@ function BudgetTable({
       cell: ({ row }) => (
         <Link
           href={`/it/expenses-budgeting/budgets/${row.original.id}`}
+          prefetch={false}
           className="font-medium hover:underline"
         >
           {row.original.subCategory.toUpperCase()}
@@ -202,6 +203,7 @@ function BudgetTable({
             <DropdownMenuItem asChild>
               <Link
                 href={`/it/expenses-budgeting/budgets/${row.original.id}/edit`}
+                prefetch={false}
               >
                 <EditAction />
               </Link>

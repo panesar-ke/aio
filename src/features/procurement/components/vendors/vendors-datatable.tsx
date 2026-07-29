@@ -90,12 +90,15 @@ export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/vendors/${id}/edit`}>
+              <Link href={`/procurement/vendors/${id}/edit`} prefetch={false}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/vendors/${id}/overview`}>
+              <Link
+                href={`/procurement/vendors/${id}/overview`}
+                prefetch={false}
+              >
                 <ViewDetailsAction text="Vendor Overview" />
               </Link>
             </DropdownMenuItem>

@@ -110,6 +110,7 @@ export function Navigation({ forms }: { forms: Array<Form> }) {
                       >
                         <Link
                           href={`/${subItem.url}` as Route}
+                          prefetch={false}
                           className="capitalize"
                         >
                           {subItem.title}

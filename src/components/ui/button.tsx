@@ -75,7 +75,9 @@ function ButtonLink({
   }) {
   return (
     <Button variant={variant} size={size} asChild {...props}>
-      <Link href={path}>{props.children}</Link>
+      <Link href={path} prefetch={false}>
+        {props.children}
+      </Link>
     </Button>
   );
 }

@@ -23,6 +23,7 @@ export function BudgetTracker({
         <CardTitle>Budget Tracker</CardTitle>
         <Link
           href="/it/expenses-budgeting/budgets"
+          prefetch={false}
           className="text-sm text-primary hover:underline"
         >
           View all

@@ -17,6 +17,7 @@ export function RecentExpenses({
         <CardTitle>Recent Transactions</CardTitle>
         <Link
           href="/it/expenses-budgeting/expenses"
+          prefetch={false}
           className="text-sm text-primary hover:underline"
         >
           View all

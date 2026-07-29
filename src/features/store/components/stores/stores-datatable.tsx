@@ -42,7 +42,7 @@ export function StoresDatatable({ stores }: { stores: Array<Store> }) {
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/store/stores/${id}/edit`}>
+              <Link href={`/store/stores/${id}/edit`} prefetch={false}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>

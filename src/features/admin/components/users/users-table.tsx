@@ -98,12 +98,15 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/admin/users/${id}/edit`}>
+              <Link href={`/admin/users/${id}/edit`} prefetch={false}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/admin/users/${id}/reset-password`}>
+              <Link
+                href={`/admin/users/${id}/reset-password`}
+                prefetch={false}
+              >
                 <Undo2Icon className="size-3 text-muted-foreground" />
                 <span className="text-xs">Reset Password</span>
               </Link>

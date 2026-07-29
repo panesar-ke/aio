@@ -233,7 +233,7 @@ function NavItems({ items }: { items: Array<NavItem> }) {
           {item.items.map((item, index) => (
             <SidebarMenuItem key={index}>
               <SidebarMenuButton asChild>
-                <Link href={item.href}>
+                <Link href={item.href} prefetch={false}>
                   <item.icon className="size-4" />
                   <span className="text-[12px] font-medium">{item.label}</span>
                 </Link>

@@ -319,7 +319,10 @@ function AssetTable({
             <CustomDropdownTrigger />
             <CustomDropdownContent>
               <DropdownMenuItem asChild>
-                <Link href={`/it/assets/registry/${row.original.id}/edit`}>
+                <Link
+                  href={`/it/assets/registry/${row.original.id}/edit`}
+                  prefetch={false}
+                >
                   <EditAction />
                 </Link>
               </DropdownMenuItem>
@@ -425,7 +428,10 @@ function AssetTable({
                 </ActionButton>
               </PermissionGate>
               <DropdownMenuItem asChild>
-                <Link href={`/it/assets/registry/${row.original.id}/history`}>
+                <Link
+                  href={`/it/assets/registry/${row.original.id}/history`}
+                  prefetch={false}
+                >
                   <ViewDetailsAction text="History" />
                 </Link>
               </DropdownMenuItem>

@@ -255,6 +255,7 @@ function AssignmentsTable() {
             <DropdownMenuItem asChild>
               <Link
                 href={`/it/assets/registry/${row.original.assetId}/history`}
+                prefetch={false}
               >
                 <ViewDetailsAction text="Asset History" />
               </Link>

@@ -83,12 +83,18 @@ export function OrdersTable({ orders }: { orders: Array<OrderTableRow> }) {
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/purchase-order/${reference}/edit`}>
+              <Link
+                href={`/procurement/purchase-order/${reference}/edit`}
+                prefetch={false}
+              >
                 <EditAction />
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/purchase-order/${reference}/details`}>
+              <Link
+                href={`/procurement/purchase-order/${reference}/details`}
+                prefetch={false}
+              >
                 <ViewDetailsAction />
               </Link>
             </DropdownMenuItem>
