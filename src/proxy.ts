@@ -1,41 +1,58 @@
-import type { NextRequest } from "next/server";
+import arcjet, { detectBot, shield, slidingWindow } from '@arcjet/next';
+import { type NextRequest, NextResponse } from 'next/server';
 
-import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/next";
-import { NextResponse } from "next/server";
+import type { SessionPayload } from '@/types/index.types';
 
-const publicRoutes = ["/login", "/forgot-password", "/api/inngest"];
+import { decrypt } from '@/lib/session';
+
+const publicRoutes = ['/login', '/forgot-password', '/api/inngest'];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
-  characteristics: ["sessionId"],
+  characteristics: ['sessionId'],
   rules: [
-    shield({ mode: "LIVE" }),
+    shield({ mode: 'LIVE' }),
     detectBot({
-      mode: "LIVE",
+      mode: 'LIVE',
       allow: [
-        "CATEGORY:SEARCH_ENGINE",
-        "CATEGORY:MONITOR",
-        "CATEGORY:PREVIEW",
-        "CATEGORY:VERCEL",
+        'CATEGORY:SEARCH_ENGINE',
+        'CATEGORY:MONITOR',
+        'CATEGORY:PREVIEW',
+        'CATEGORY:VERCEL',
       ],
     }),
     slidingWindow({
-      mode: "LIVE",
-      interval: "1m",
+      mode: 'LIVE',
+      interval: '1m',
       max: 100,
     }),
   ],
 });
 
+async function getValidatedSession(
+  sessionCookie: string | undefined
+): Promise<SessionPayload | null> {
+  if (!sessionCookie) {
+    return null;
+  }
+
+  try {
+    return (await decrypt(sessionCookie)) as SessionPayload;
+  } catch {
+    return null;
+  }
+}
+
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  if (path.startsWith("/api/inngest") || path.startsWith("/api/cron")) {
+  if (path.startsWith('/api/inngest') || path.startsWith('/api/cron')) {
     return NextResponse.next();
   }
 
-  const sessionCookie = req.cookies.get("session");
-  const sessionId = sessionCookie?.value ?? "anonymous";
+  const sessionCookie = req.cookies.get('session')?.value;
+  const session = await getValidatedSession(sessionCookie);
+  const sessionId = session?.sessionId ?? 'anonymous';
 
   const decision = await aj.protect(req, { sessionId });
 
@@ -44,15 +61,14 @@ export default async function proxy(req: NextRequest) {
   }
 
   const isPublicRoute = publicRoutes.includes(path);
-
-  const hasSession = sessionCookie?.value;
+  const hasSession = Boolean(session);
 
   if (!isPublicRoute && !hasSession) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+    return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
 
   if (isPublicRoute && hasSession) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
   }
 
   return NextResponse.next();
@@ -60,7 +76,7 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
   ],
 };
