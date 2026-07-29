@@ -14,6 +14,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --card-radius: var(--card-radius);
   --color-background: var(--background);
+  --color-neutral: var(--neutral);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -61,10 +62,44 @@
 }
 
 :root {
+  --color-neutral-50: oklch(99% 0.006 95);
+  --color-neutral-100: oklch(97.96% 0.0278 98.06); /* exact brand cream FDF9E4 */
+  --color-neutral-150: oklch(96% 0.024 90);
+  --color-neutral-200: oklch(93% 0.022 85);
+  --color-neutral-300: oklch(87% 0.024 80);
+  --color-neutral-400: oklch(74% 0.028 75);
+  --color-neutral-500: oklch(58% 0.032 68);
+  --color-neutral-600: oklch(46% 0.040 63);
+  --color-neutral-700: oklch(37% 0.046 60);
+  --color-neutral-800: oklch(32% 0.050 58);
+  --color-neutral-900: oklch(28.89% 0.0514 57.64); /* exact brand espresso 3E240F */
+  --color-neutral-950: oklch(19% 0.038 55);
+
+  /* Secondary — forest green, used for accents and positive/success states */
+  --color-secondary-100: oklch(91% 0.032 119.44);
+  --color-secondary-200: oklch(82% 0.048 119.44);
+  --color-secondary-300: oklch(69% 0.062 119.44);
+  --color-secondary-400: oklch(54% 0.072 119.44);
+  --color-secondary-500: oklch(42% 0.076 119.44);
+  --color-secondary-600: oklch(36% 0.076 119.44);
+  --color-secondary-700: oklch(33% 0.075 119.44);
+  --color-secondary-800: oklch(32% 0.0745 119.44);
+  --color-secondary-900: oklch(31.33% 0.0740 119.44); /* exact brand forest green 2D3600 */
+
+  /* Gold — intentional addition: a warm metallic accent for premium/rating marks,
+     not one of the three brand hexes but consistent with a luxury furniture identity. */
+  --color-gold-100: oklch(93% 0.05 85);
+  --color-gold-300: oklch(82% 0.09 85);
+  --color-gold-500: oklch(72% 0.13 85);
+  --color-gold-700: oklch(55% 0.12 85);
+  --color-gold-900: oklch(38% 0.09 85);
+  
+
   --radius: 0.625rem;
   --card-radius: 1.125rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0 49);
+  --neutral: oklch(99% 0.006 95);
   --primary: oklch(28.894% 0.051 57.64);
   --primary-foreground: oklch(97.9644% 0.028 98.0566);
   --card: oklch(1 0 0);
@@ -80,7 +115,7 @@
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.97 0.01 248);
+  --border: oklch(87% 0.024 80);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.704 0.04 256.788);
   --chart-1: oklch(0.646 0.222 41.116);
@@ -88,14 +123,22 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar: #e9f3e9;
+  --sidebar-foreground: var(--color-secondary-900);
+  --sidebar-primary: var(--color-secondary-300);
+  --sidebar-primary-foreground: var(--color-neutral-50);
+  --sidebar-accent: oklch(32% 0.024 128);
+  --sidebar-accent-foreground: var(--color-neutral-100);
+  --sidebar-border: oklch(32% 0.024 128);
+  --sidebar-ring: var(--color-secondary-400);
+  /* --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.129 0.042 264.695);
   --sidebar-primary: oklch(0.208 0.042 265.755);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
   --sidebar-accent: oklch(0.968 0.007 247.896);
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --sidebar-ring: oklch(0.704 0.04 256.788); */
   --link: oklch(0.49 0.22 264);
   --success-card: oklch(0.85 0.2 150);
   --success: oklch(0.95 0.05 163);
@@ -134,4 +177,26 @@
   input[readonly] {
     @apply bg-muted! text-muted-foreground! cursor-not-allowed!;
   }
+
+  [data-sidebar="content"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-sidebar="content"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-sidebar="content"]::-webkit-scrollbar-thumb {
+  background-color: #A8B89A;
+  border-radius: 10px;
+}
+
+[data-sidebar="content"]::-webkit-scrollbar-thumb:hover {
+  background-color: #8FA080;
+}
+
+[data-sidebar="content"] {
+  scrollbar-width: thin;
+  scrollbar-color: #A8B89A transparent;
+}
 }

@@ -1,20 +1,16 @@
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { PermissionProvider } from '@/components/auth/permission-provider';
-import { AppSidebar, SidebarSkeleton } from '@/components/layout/app-sidebar';
-import { AppNavbar } from '@/components/layout/navbar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { getCurrentUserPermissions } from '@/lib/permissions/service';
+import { PermissionProvider } from "@/components/auth/permission-provider";
+import { AppSidebar, SidebarSkeleton } from "@/components/layout/app-sidebar";
+import { AppNavbar } from "@/components/layout/navbar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getCurrentUserPermissions } from "@/lib/permissions/service";
 
-import { getCurrentUser } from '@/lib/session';
+import { getCurrentUser } from "@/lib/session";
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <ErrorBoundary
@@ -45,7 +41,7 @@ async function ProtectedLayoutContent({
       <AppSidebar />
       <SidebarInset>
         <AppNavbar />
-        <div className="flex flex-1 flex-col gap-4 bg-slate-50">
+        <div className="flex flex-1 flex-col gap-4 bg-neutral">
           <div className="flex flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
             {children}
           </div>
