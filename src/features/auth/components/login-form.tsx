@@ -82,6 +82,7 @@ export function LoginForm() {
                   <FormLabel>Password</FormLabel>
                   <Link
                     href="/login"
+                    prefetch={false}
                     className="text-link text-sm transition-all hover:underline"
                   >
                     Forgot Password?

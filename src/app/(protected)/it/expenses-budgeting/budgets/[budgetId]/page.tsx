@@ -61,12 +61,14 @@ async function BudgetDetailContent({ params }: { params: Params }) {
           <div className="flex gap-2">
             <Link
               href="/it/expenses-budgeting/budgets"
+              prefetch={false}
               className={buttonVariants({ variant: 'outline' })}
             >
               Back to Budgets
             </Link>
             <Link
               href={`/it/expenses-budgeting/budgets/${budget.id}/edit`}
+              prefetch={false}
               className={buttonVariants({ variant: 'default' })}
             >
               Edit Budget

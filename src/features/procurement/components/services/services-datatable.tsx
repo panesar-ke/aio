@@ -56,7 +56,7 @@ export function ServicesDataTable({ services }: { services: Array<Service> }) {
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/procurement/services/${id}/edit`}>
+              <Link href={`/procurement/services/${id}/edit`} prefetch={false}>
                 <EditAction />
               </Link>
             </DropdownMenuItem>

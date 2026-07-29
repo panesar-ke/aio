@@ -26,7 +26,10 @@ export default function JobTrackerCNC({
           <div className="flex items-center gap-x-2">
             <NewJobTrackerButton />
             <Button variant="tertiary" asChild>
-              <Link href="/production/job-tracker-cnc/reports">
+              <Link
+                href="/production/job-tracker-cnc/reports"
+                prefetch={false}
+              >
                 <FileIcon />
                 Generate Report
               </Link>

@@ -78,7 +78,10 @@ export function MaterialIssuesDatatable({
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/store/issues/${row.original.id}/edit`}>
+              <Link
+                href={`/store/issues/${row.original.id}/edit`}
+                prefetch={false}
+              >
                 <EditAction />
               </Link>
             </DropdownMenuItem>

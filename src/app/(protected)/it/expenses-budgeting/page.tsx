@@ -51,6 +51,7 @@ export default function ITExpensesBudgetingPage({
             <PeriodSelect />
             <Link
               href="/it/expenses-budgeting/budgets"
+              prefetch={false}
               className={buttonVariants({ variant: "tertiary" })}
             >
               <WalletIcon />
@@ -58,6 +59,7 @@ export default function ITExpensesBudgetingPage({
             </Link>
             <Link
               href="/it/expenses-budgeting/expenses"
+              prefetch={false}
               className={buttonVariants({ variant: "pdfExport" })}
             >
               <HandCoinsIcon />

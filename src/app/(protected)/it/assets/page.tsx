@@ -23,12 +23,17 @@ export default function ITAssetsPage() {
         description="Operational and cost analytics for IT assets and assignments"
         content={
           <div className="flex gap-4 items-center">
-            <Link href="/it/assets/registry" className={buttonVariants()}>
+            <Link
+              href="/it/assets/registry"
+              prefetch={false}
+              className={buttonVariants()}
+            >
               <ComputerIcon />
               Registry
             </Link>
             <Link
               href="/it/assets/assignments"
+              prefetch={false}
               className={buttonVariants({ variant: 'pdfExport' })}
             >
               <ClipboardListIcon />

@@ -19,7 +19,9 @@ export default function EditUser({
   return (
     <div className="space-y-6">
       <Button variant="secondary" size="sm" asChild>
-        <Link href="/admin/users">&larr; Back to users</Link>
+        <Link href="/admin/users" prefetch={false}>
+          &larr; Back to users
+        </Link>
       </Button>
       <ErrorBoundaryWithSuspense
         errorMessage="An error occurred while loading the user"

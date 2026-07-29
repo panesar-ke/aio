@@ -149,6 +149,7 @@ function ExpenseTable() {
             <DropdownMenuItem asChild>
               <Link
                 href={`/it/expenses-budgeting/expenses/${row.original.id}/edit`}
+                prefetch={false}
               >
                 <EditAction />
               </Link>

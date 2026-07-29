@@ -90,7 +90,7 @@ export function GrnsDatatable({ grns }: { grns: Array<GrnTableRow> }) {
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/store/grn/${id}/view`}>
+              <Link href={`/store/grn/${id}/view`} prefetch={false}>
                 <ViewDetailsAction text="View Details" />
               </Link>
             </DropdownMenuItem>

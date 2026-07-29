@@ -33,7 +33,11 @@ export default function PageHeader({
       </div>
       {path && (
         <Button size="lg" asChild className="sm:w-max">
-          <Link href={path} className="flex items-center gap-x-2">
+          <Link
+            href={path}
+            prefetch={false}
+            className="flex items-center gap-x-2"
+          >
             {<Icon />}
             <span>{buttonText || 'Create New'}</span>
           </Link>

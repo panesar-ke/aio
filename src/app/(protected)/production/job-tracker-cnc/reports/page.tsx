@@ -13,7 +13,9 @@ export default function CncTrackerReport() {
   return (
     <div className="space-y-6">
       <Button variant="outline" asChild>
-        <Link href="/production/job-tracker-cnc">&larr; Go Back</Link>
+        <Link href="/production/job-tracker-cnc" prefetch={false}>
+          &larr; Go Back
+        </Link>
       </Button>
       <PageHeader
         title="Tracker Report"

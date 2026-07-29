@@ -208,7 +208,7 @@ function LicenseTable({ vendors }: { vendors: Array<Option> }) {
               <span className="text-xs">Renew License</span>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/it/licenses/${id}/history`}>
+              <Link href={`/it/licenses/${id}/history`} prefetch={false}>
                 <ViewDetailsAction text="Renewal History" />
               </Link>
             </DropdownMenuItem>

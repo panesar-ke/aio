@@ -56,6 +56,7 @@ function HeaderNavItem({
         {!asButton ? (
           <Link
             href={linkPath as Route}
+            prefetch={false}
             className="size-8 rounded-full border grid place-content-center"
           >
             <Icon className="size-4 text-muted-foreground" />

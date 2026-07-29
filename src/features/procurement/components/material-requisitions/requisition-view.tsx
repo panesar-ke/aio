@@ -60,6 +60,7 @@ export function RequisitionView({ requisition }: { requisition: Requisition }) {
           <Button variant="tertiary" size="lg" disabled={pending} asChild>
             <Link
               href={`/procurement/purchase-order/new?requisition=${requisition.reference}`}
+              prefetch={false}
             >
               <SparkleIcon />
               Generate LPO
