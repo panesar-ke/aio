@@ -7,6 +7,7 @@ const publicRoutes = ["/login", "/forgot-password", "/api/inngest"];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
+  characteristics: ["sessionId"],
   rules: [
     shield({ mode: "LIVE" }),
     detectBot({
@@ -33,16 +34,10 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const isPrefetch = req.headers.get("next-router-prefetch") === "1";
+  const sessionCookie = req.cookies.get("session");
+  const sessionId = sessionCookie?.value ?? "anonymous";
 
-  if (!isPrefetch) {
-    const decision = await aj.protect(req);
-    if (decision.isDenied()) {
-      return new Response(null, { status: 403 });
-    }
-  }
-
-  const decision = await aj.protect(req);
+  const decision = await aj.protect(req, { sessionId });
 
   if (decision.isDenied()) {
     return new Response(null, { status: 403 });
@@ -50,7 +45,6 @@ export default async function proxy(req: NextRequest) {
 
   const isPublicRoute = publicRoutes.includes(path);
 
-  const sessionCookie = req.cookies.get("session");
   const hasSession = sessionCookie?.value;
 
   if (!isPublicRoute && !hasSession) {
