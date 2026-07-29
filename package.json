@@ -21,8 +21,8 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@arcjet/inspect": "1.0.0-beta.10",
-    "@arcjet/next": "1.0.0-beta.10",
+    "@arcjet/inspect": "1.9.1",
+    "@arcjet/next": "1.9.1",
     "@dicebear/collection": "^9.4.2",
     "@dicebear/core": "^9.4.3",
     "@hookform/resolvers": "^5.5.7",
@@ -56,6 +56,7 @@
     "@tanstack/react-form": "^1.33.2",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-query-devtools": "^5.101.4",
+    "@tanstack/react-store": "^0.11.0",
     "@tanstack/react-table": "^8.21.3",
     "africastalking": "^0.7.9",
     "axios": "^1.18.1",
@@ -68,7 +69,7 @@
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "export-to-csv": "^1.4.0",
     "inngest": "^3.54.2",
