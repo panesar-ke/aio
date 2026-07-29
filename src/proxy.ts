@@ -33,8 +33,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const isPrefetch =
-    req.headers.get("priority") === "i" && req.headers.get("next-url") !== null;
+  const isPrefetch = req.headers.get("next-router-prefetch") === "1";
 
   if (!isPrefetch) {
     const decision = await aj.protect(req);
