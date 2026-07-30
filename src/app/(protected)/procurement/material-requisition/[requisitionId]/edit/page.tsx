@@ -19,7 +19,7 @@ type Params = Promise<{ requisitionId: string }>;
 
 export default function EditPage({ params }: { params: Params }) {
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-0 flex-1 flex-col space-y-6">
       <ErrorBoundaryWithSuspense
         errorMessage="Failed to load the requisition"
         loader={<FormLoader />}
