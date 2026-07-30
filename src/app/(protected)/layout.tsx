@@ -41,8 +41,8 @@ async function ProtectedLayoutContent({
       <AppSidebar />
       <SidebarInset>
         <AppNavbar />
-        <div className="flex flex-1 flex-col gap-4 bg-neutral">
-          <div className="flex flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 bg-neutral">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
             {children}
           </div>
         </div>
@@ -64,8 +64,8 @@ function ProtectedLayoutFallback() {
             <Skeleton className="size-8 rounded-full" />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 bg-slate-50">
-          <div className="flex flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 bg-slate-50">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-64 w-full" />
           </div>
