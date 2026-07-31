@@ -1,5 +1,6 @@
-import { type Option } from '@/types/index.types';
 import { queryOptions } from '@tanstack/react-query';
+
+import { type Option } from '@/types/index.types';
 
 const fetchProducts = async (): Promise<Array<Option>> => {
   const response = await fetch('/api/products');
@@ -32,26 +33,30 @@ const fetchVendors = async (): Promise<Array<Option>> => {
   return response.json();
 };
 
-export const productsQueryOptions = () =>
+export const productsQueryOptions = (initialData?: Array<Option>) =>
   queryOptions({
     queryKey: ['products'],
     queryFn: fetchProducts,
+    initialData,
   });
 
-export const servicesQueryOptions = () =>
+export const servicesQueryOptions = (initialData?: Array<Option>) =>
   queryOptions({
     queryKey: ['services'],
     queryFn: fetchServices,
+    initialData,
   });
 
-export const projectsQueryOptions = () =>
+export const projectsQueryOptions = (initialData?: Array<Option>) =>
   queryOptions({
     queryKey: ['projects'],
     queryFn: fetchProjects,
+    initialData,
   });
 
-export const vendorsQueryOptions = () =>
+export const vendorsQueryOptions = (initialData?: Array<Option>) =>
   queryOptions({
     queryKey: ['vendors'],
     queryFn: fetchVendors,
+    initialData,
   });

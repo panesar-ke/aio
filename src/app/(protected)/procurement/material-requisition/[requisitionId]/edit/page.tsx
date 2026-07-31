@@ -1,25 +1,27 @@
-import type { Metadata } from 'next';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { FormLoader } from '@/components/custom/loaders';
-import FormHeader from '@/components/custom/form-header';
+import type { Metadata } from "next";
+
+import { notFound } from "next/navigation";
+
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import { FormLoader } from "@/components/custom/loaders";
+import { RequisitionForm } from "@/features/procurement/components/material-requisitions/requisition-form";
 import {
+  getRequisition,
   getSelectableProducts,
   getSelectableProjects,
   getSelectableServices,
-  getRequisition,
-} from '@/features/procurement/services/material-requisitions/data';
-import { RequisitionForm } from '@/features/procurement/components/material-requisitions/requisition-form';
+} from "@/features/procurement/services/material-requisitions/data";
 
 export const metadata: Metadata = {
-  title: 'Edit Material Requisition',
-  description: 'Edit an existing material requisition',
+  title: "Edit Material Requisition",
+  description: "Edit an existing material requisition",
 };
 
 type Params = Promise<{ requisitionId: string }>;
 
 export default function EditPage({ params }: { params: Params }) {
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-0 flex-1 flex-col space-y-6">
       <ErrorBoundaryWithSuspense
         errorMessage="Failed to load the requisition"
         loader={<FormLoader />}
@@ -39,9 +41,10 @@ async function EditRequisitionContent({ params }: { params: Params }) {
     getRequisition(requisitionId),
   ]);
 
+  if (!requisition) notFound();
+
   return (
     <>
-      <FormHeader title="Edit Requisition" />
       <RequisitionForm
         requisitionNo={requisition.id}
         key={requisition.reference}

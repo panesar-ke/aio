@@ -1,40 +1,42 @@
-'use client';
+"use client";
 
-import { type BaseSyntheticEvent, useMemo, useRef, useState } from 'react';
-import { createId } from '@paralleldrive/cuid2';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { createId } from "@paralleldrive/cuid2";
+import { useSelector } from "@tanstack/react-store";
 import {
-  CircleCheckBigIcon,
   CircleXIcon,
+  PlusIcon,
+  SaveIcon,
   SparkleIcon,
   Trash2Icon,
-} from 'lucide-react';
-import type { UseFormReturn } from 'react-hook-form';
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
+
 import type {
   MaterialRequisitionFormValues,
   Requisition,
-} from '@/features/procurement/utils/procurement.types';
-import type { Option } from '@/types/index.types';
+} from "@/features/procurement/utils/procurement.types";
+import type { Option } from "@/types/index.types";
+
+import FormHeader from "@/components/custom/form-header";
+import { ToastContent } from "@/components/custom/toast";
+import { Button } from "@/components/ui/button";
+import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
+import { LoadingSwap } from "@/components/ui/loading-swap";
+import { SelectItem } from "@/components/ui/select";
+import { createRequisition } from "@/features/procurement/services/material-requisitions/action";
+import { useAppForm, withForm } from "@/lib/form";
+import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
+import { dateFormat } from "@/lib/helpers/formatters";
+import { cn } from "@/lib/utils";
+
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { materialRequisitionFormSchema } from '@/features/procurement/utils/schemas';
-import { Input } from '@/components/ui/input';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { Button } from '@/components/ui/button';
-import { MiniSelect } from '@/components/custom/mini-select';
-import { SearchSelect } from '@/components/custom/search-select';
-import { createRequisition } from '@/features/procurement/services/material-requisitions/action';
-import { useError } from '@/hooks/use-error';
-import { CustomAlert } from '@/components/custom/custom-alert';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { useProcurementServices } from '../../hooks/use-procurement-services';
+  getNextTemporaryRequestId,
+  useNextRequestId,
+} from "../../hooks/use-next-request-id";
+import { useProcurementServices } from "../../hooks/use-procurement-services";
+import { materialRequisitionFormOpts } from "../../utils/form";
 
 interface RequisitionFormProps {
   requisitionNo: number;
@@ -44,6 +46,34 @@ interface RequisitionFormProps {
   requisition?: Requisition;
 }
 
+type LineItemType = MaterialRequisitionFormValues["details"][number]["type"];
+
+function getLineItemOptions(
+  type: LineItemType | undefined,
+  options: { products?: Array<Option>; services?: Array<Option> },
+): Array<Option> {
+  if (type === "item") return options.products ?? [];
+  if (type === "service") return options.services ?? [];
+  return [];
+}
+
+function lineHeaderClass(width: string, align: "left" | "center" = "left") {
+  return cn(
+    "whitespace-nowrap border-b bg-muted px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+    align === "center" ? "text-center" : "text-left",
+    width,
+  );
+}
+
+function lineCellClass(width: string) {
+  return cn(
+    "flex items-center gap-2 py-1.5 before:w-24 before:shrink-0 before:text-[11px] before:font-semibold before:uppercase before:tracking-[0.04em] before:text-muted-foreground before:content-[attr(data-label)] md:table-cell md:px-2 md:py-1.5 md:align-middle md:before:hidden",
+    width,
+  );
+}
+
+type FormAction = "save" | "save-and-generate";
+
 export function RequisitionForm({
   products,
   projects,
@@ -51,444 +81,431 @@ export function RequisitionForm({
   services,
   requisition,
 }: RequisitionFormProps) {
-  const [submitType, setSubmitType] = useState<'SUBMIT' | 'SUBMIT_GENERATE'>(
-    'SUBMIT'
+  const [actionState, setActionState] = useState<FormAction | null>(null);
+  const router = useRouter();
+  const actionRef = useRef<FormAction>("save");
+  const isEdit = !!requisition;
+
+  const { defaultDetails } = useNextRequestId(requisition);
+
+  const initialFormValues = useMemo<MaterialRequisitionFormValues | undefined>(
+    () =>
+      requisition
+        ? ({
+            id: requisition.reference,
+            documentNo: requisitionNo,
+            documentDate: dateFormat(new Date(requisition.documentDate)),
+            details: defaultDetails,
+          } as unknown as MaterialRequisitionFormValues)
+        : undefined,
+    [requisition, requisitionNo, defaultDetails],
   );
-  const initialRequestId = useMemo(() => {
-    const existingRequestIds =
-      requisition?.mrqDetails
-        .map(detail => detail.requestId)
-        .filter((requestId): requestId is number => requestId != null) ?? [];
 
-    return Math.max(requisitionNo * 1000, ...existingRequestIds);
-  }, [requisition, requisitionNo]);
-  const defaultDetails = useMemo<MaterialRequisitionFormValues['details']>(() => {
-    if (requisition?.mrqDetails.length) {
-      let nextRequestId = initialRequestId;
-
-      return requisition.mrqDetails.map(
-        ({ id, itemId, projectId, qty, remarks, requestId, serviceId }) => ({
-          id: id.toString(),
-          projectId,
-          type: itemId ? ('item' as const) : ('service' as const),
-          itemOrServiceId: itemId || serviceId || '',
-          qty: Number(qty) || 0,
-          remarks: remarks || '',
-          requestId: requestId ?? nextRequestId++,
-        })
-      );
-    }
-
-    return [
-      {
-        id: createId(),
-        type: 'item' as const,
-        projectId: '',
-        itemOrServiceId: '',
-        qty: 0,
-        remarks: '',
-        requestId: initialRequestId,
-      },
-    ];
-  }, [initialRequestId, requisition]);
-  const nextRequestIdRef = useRef(
-    Math.max(
-      ...defaultDetails.map(detail => detail.requestId),
-      initialRequestId
-    ) + 1
+  const formOpts = useMemo(
+    () => materialRequisitionFormOpts(requisitionNo, initialFormValues),
+    [requisitionNo, initialFormValues],
   );
-  const getNextRequestId = () => {
-    const requestId = nextRequestIdRef.current;
-    nextRequestIdRef.current += 1;
-    return requestId;
-  };
-  const form = useForm<MaterialRequisitionFormValues>({
-    resolver: zodResolver(materialRequisitionFormSchema),
-    defaultValues: {
-      documentNo: requisitionNo,
-      documentDate: requisition?.documentDate
-        ? new Date(requisition.documentDate)
-        : new Date(),
-      details: defaultDetails,
+  const appForm = useAppForm({
+    ...formOpts,
+    onSubmit: async ({ value }) => {
+      if (value.details.length === 0) {
+        toast.error(() => (
+          <ToastContent
+            message="At least one item is required"
+            title="Validation Error"
+          />
+        ));
+        return;
+      }
+
+      const action = actionRef.current;
+      await handleSubmitFeedback({
+        action: () => createRequisition(value),
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} requisition`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} requisition. Please try again.`,
+        onSuccess: (data) => {
+          appForm.reset();
+          if (!data) {
+            router.push("/procurement/material-requisition");
+            return;
+          }
+          router.push(
+            action === "save"
+              ? `/procurement/material-requisition/${data}/details`
+              : `/procurement/purchase-order/new?requisition=${data}`,
+          );
+        },
+      });
     },
   });
-  const { clearErrors, errors, onError } = useError();
 
-  const isPending = form.formState.isSubmitting;
-  async function onSubmit(
-    data: MaterialRequisitionFormValues,
-    event?: BaseSyntheticEvent
-  ) {
-    clearErrors();
-    const submitter =
-      event?.nativeEvent instanceof SubmitEvent
-        ? event.nativeEvent.submitter
-        : null;
-    const nextSubmitType =
-      submitter instanceof HTMLButtonElement &&
-      submitter.value === 'SUBMIT_GENERATE'
-        ? 'SUBMIT_GENERATE'
-        : 'SUBMIT';
-
-    setSubmitType(nextSubmitType);
-    const res = await createRequisition({
-      values: data,
-      submitType: nextSubmitType,
-      id: requisition?.reference,
-    });
-    if (res.error) {
-      onError(res.message);
-      return;
-    }
+  function handleSubmit(action: FormAction) {
+    actionRef.current = action;
+    setActionState(action);
+    appForm.handleSubmit();
   }
 
+  const isSubmitting = useSelector(
+    appForm.store,
+    (state) => state.isSubmitting,
+  );
+
   return (
-    <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm">
-      {errors && <CustomAlert description={errors} variant="error" />}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="documentNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document No</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="documentDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={dateFormat(field.value)}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 overflow-y-auto pb-6 space-y-6">
+        <div className="space-y-6">
+          <FormHeader
+            title={
+              isEdit
+                ? "Edit Material Requisition"
+                : "Create Material Requisition"
+            }
+            description={
+              isEdit
+                ? "Edit an existing material requisition"
+                : "Create a new material requisition"
+            }
+          />
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            appForm.handleSubmit();
+          }}
+          className="space-y-6"
+        >
+          <FieldGroup className="bg-white border p-6 rounded-lg shadow-sm max-w-xl">
+            <FieldSet>
+              <FieldLegend>Document Details</FieldLegend>
+              <FieldGroup className="grid lg:grid-cols-2 gap-6">
+                <appForm.AppField name="documentNo">
+                  {(field) => <field.Input label="Document No" readOnly />}
+                </appForm.AppField>
+                <appForm.AppField name="documentDate">
+                  {(field) => <field.Input label="Document Date" type="date" />}
+                </appForm.AppField>
+              </FieldGroup>
+            </FieldSet>
+          </FieldGroup>
           <RequisitionDetails
+            form={appForm}
             products={products}
-            form={form}
             projects={projects}
             services={services}
-            isPending={isPending}
-            getNextRequestId={getNextRequestId}
           />
-          <div className="flex items-center gap-2 justify-end">
-            <Button
-              type="submit"
-              value="SUBMIT"
-              size="lg"
-              disabled={isPending}
-              className="min-w-32"
-            >
-              {isPending && submitType === 'SUBMIT' ? (
-                <ButtonLoader loadingText="Processing..." />
-              ) : (
-                <>
-                  <CircleCheckBigIcon />
-                  <span>Save</span>
-                </>
-              )}
-            </Button>
-            <Button
-              type="submit"
-              value="SUBMIT_GENERATE"
-              variant="tertiary"
-              size="lg"
-              disabled={isPending}
-              className="min-w-32"
-            >
-              {isPending && submitType === 'SUBMIT_GENERATE' ? (
-                <ButtonLoader loadingText="Processing..." />
-              ) : (
-                <>
-                  <SparkleIcon />
-                  <span>Save & Generate PO</span>
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              type="reset"
-              disabled={isPending}
-              onClick={() => form.reset()}
-              className="min-w-32"
-            >
-              <CircleXIcon />
-              <span>Cancel</span>
-            </Button>
-          </div>
         </form>
-      </Form>
+      </div>
+      <footer className="sticky bottom-0 z-10 border-t bg-background">
+        <div className="flex flex-col md:flex-row justify-end py-4 gap-2">
+          <Button
+            type="button"
+            onClick={() => handleSubmit("save")}
+            size="lg"
+            disabled={isSubmitting}
+            className="min-w-32"
+          >
+            <LoadingSwap
+              isLoading={isSubmitting && actionState === "save"}
+              className="flex gap-2 items-center"
+            >
+              <SaveIcon />
+              <span>Save</span>
+            </LoadingSwap>
+          </Button>
+          <Button
+            type="button"
+            variant="tertiary"
+            onClick={() => handleSubmit("save-and-generate")}
+            size="lg"
+            className="min-w-32"
+            disabled={isSubmitting}
+          >
+            <LoadingSwap
+              isLoading={isSubmitting && actionState === "save-and-generate"}
+              className="flex gap-2 items-center"
+            >
+              <>
+                <SparkleIcon />
+                <span>Save & Generate PO</span>
+              </>
+            </LoadingSwap>
+          </Button>
+          <Button
+            disabled={isSubmitting}
+            variant="outline"
+            size="lg"
+            className="min-w-32"
+            onClick={() => appForm.reset()}
+          >
+            <CircleXIcon />
+            <span>Cancel</span>
+          </Button>
+        </div>
+      </footer>
     </div>
   );
 }
 
-function RequisitionDetails({
-  products,
-  projects,
-  form,
-  services,
-  isPending,
-  getNextRequestId,
-}: {
-  products: Array<Option>;
-  projects: Array<Option>;
-  services: Array<Option>;
-  form: UseFormReturn<MaterialRequisitionFormValues>;
-  isPending: boolean;
-  getNextRequestId: () => number;
-}) {
-  const {
-    products: queryProducts,
-    services: queryServices,
-    projects: queryProjects,
-  } = useProcurementServices();
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'details',
-  });
+const RequisitionDetails = withForm({
+  ...materialRequisitionFormOpts(),
+  props: {
+    products: [] as Array<Option>,
+    projects: [] as Array<Option>,
+    services: [] as Array<Option>,
+  },
+  render: function Render({
+    form,
+    products: initialProducts,
+    projects: initialProjects,
+    services: initialServices,
+  }) {
+    const { products, projects, services } = useProcurementServices({
+      products: initialProducts,
+      projects: initialProjects,
+      services: initialServices,
+      include: ["products", "projects", "services"],
+    });
 
-  const [details] = useWatch({ control: form.control, name: ['details'] });
-
-  return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto pb-4">
-        <table
-          className="w-full"
-          style={{ minWidth: '1800px', tableLayout: 'fixed' }}
-        >
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '224px' }}
-              >
-                Product/Service
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '480px' }}
-              >
-                Product
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '128px' }}
-              >
-                Qty
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '384px' }}
-              >
-                Project
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '288px' }}
-              >
-                Remarks
-              </th>
-              <th
-                className="text-centre py-2 px-2 font-medium"
-                style={{ width: '128px' }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((f, index) => (
-              <tr key={f.id} className="border-b border-gray-200">
-                <td className="py-2 px-2" style={{ width: '224px' }}>
-                  <FormField
-                    control={form.control}
-                    name={`details.${index}.type`}
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="w-full">
-                          <FormControl>
-                            <MiniSelect
-                              defaultValue={field.value}
-                              options={[
-                                { value: 'item', label: 'Item' },
-                                { value: 'service', label: 'Service' },
-                              ]}
-                              {...field}
-                              disabled={isPending}
-                            />
-                          </FormControl>
-                          {/* <FormMessage /> */}
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </td>
-                <td className="py-2 px-2" style={{ width: '480px' }}>
-                  <FormField
-                    control={form.control}
-                    name={`details.${index}.itemOrServiceId`}
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="w-full">
-                          <SearchSelect
-                            onChange={field.onChange}
-                            value={field.value}
-                            emptyText="Product not found"
-                            placeholder="Select product"
-                            isPending={isPending}
-                            options={
-                              details[index]?.type === 'item'
-                                ? queryProducts || products
-                                : queryServices || services
-                            }
-                            searchText="Search product"
-                          />
-
-                          {/* <FormMessage /> */}
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </td>
-                <td className="py-2 px-2" style={{ width: '128px' }}>
-                  <FormField
-                    control={form.control}
-                    name={`details.${index}.qty`}
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="w-full">
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Qty"
-                              {...field}
-                              value={field.value || ''}
-                              autoFocus={false}
-                              className="w-full"
-                              disabled={isPending}
-                            />
-                          </FormControl>
-                          {/* <FormMessage /> */}
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </td>
-                <td className="py-2 px-2" style={{ width: '384px' }}>
-                  <FormField
-                    control={form.control}
-                    name={`details.${index}.projectId`}
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="w-full">
-                          <FormControl>
-                            <SearchSelect
-                              onChange={field.onChange}
-                              value={field.value}
-                              emptyText="Project not found"
-                              placeholder="Select project"
-                              options={queryProjects || projects}
-                              searchText="Search project"
-                              isPending={isPending}
-                            />
-                          </FormControl>
-                          {/* <FormMessage /> */}
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </td>
-                <td className="py-2 px-2" style={{ width: '288px' }}>
-                  <FormField
-                    control={form.control}
-                    name={`details.${index}.remarks`}
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="w-full">
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Remarks"
-                              {...field}
-                              className="w-full"
-                              disabled={isPending}
-                            />
-                          </FormControl>
-                          {/* <FormMessage /> */}
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </td>
-                <td
-                  className="py-2 px-2 text-center"
-                  style={{ width: '128px' }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="h-6 w-6 text-destructive"
-                    onClick={() => remove(index)}
-                    type="button"
-                    disabled={isPending}
-                  >
-                    <Trash2Icon className="h-4 w-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="text-sm"
-          type="button"
-          onClick={() =>
-            append({
+    return (
+      <form.AppField name="details" mode="array">
+        {(field) => {
+          const addLine = () => {
+            field.pushValue({
               id: createId(),
-              projectId: '',
-              type: 'item',
-              itemOrServiceId: '',
-              qty: 0,
-              remarks: '',
-              requestId: getNextRequestId(),
-            })
-          }
-          disabled={isPending}
-        >
-          Add lines
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-sm"
-          onClick={() => form.setValue('details', [])}
-          type="button"
-          disabled={isPending}
-        >
-          Clear all lines
-        </Button>
-      </div>
-    </div>
-  );
-}
+              projectId: "",
+              type: "item",
+              itemOrServiceId: "",
+              qty: 1,
+              remarks: "",
+              requestId: getNextTemporaryRequestId(field.state.value),
+            });
+          };
+          return (
+            <section className="bg-white border rounded-lg shadow-sm gap-0 overflow-hidden ">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-card-foreground">
+                    Requisition Lines
+                  </h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Add each item or service being requested.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLine}
+                  className="border-primary text-xs text-primary hover:bg-primary/10"
+                >
+                  <PlusIcon className="size-3.5" />
+                  Add Line
+                </Button>
+              </div>
+              <FieldGroup className="overflow-x-auto">
+                <table
+                  aria-label="Item Details"
+                  className="w-full border-collapse md:table-fixed"
+                >
+                  <thead className="hidden md:table-header-group">
+                    <tr>
+                      <th className={lineHeaderClass("w-10", "center")}>#</th>
+                      <th className={lineHeaderClass("w-28")}>Item Type</th>
+                      <th className={lineHeaderClass("w-72")}>
+                        Product / Service{" "}
+                        <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass("w-24 min-w-20")}>
+                        Qty <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass("w-56")}>
+                        Project <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass("w-40")}>Remarks</th>
+                      <th className="w-11 border-b bg-muted px-2 py-2">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="block w-full md:table-row-group">
+                    {field.state.value.map((f, i) => {
+                      return (
+                        <tr
+                          key={f.id}
+                          className="mb-3 block w-full rounded-lg border bg-card p-3 transition-colors md:mb-0 md:table-row md:rounded-none md:border-0 md:p-0 md:[&>td]:border-b md:[&>td]:border-border md:last:[&>td]:border-b-0 md:hover:[&>td]:bg-muted/40"
+                        >
+                          <td
+                            data-label="#"
+                            className="hidden md:table-cell md:w-10 md:px-2 md:py-1.5 md:text-center md:align-middle md:text-[11px] md:text-muted-foreground"
+                          >
+                            {i + 1}
+                          </td>
+                          <td
+                            data-label="Item Type"
+                            className={lineCellClass("md:w-28")}
+                          >
+                            <form.AppField
+                              name={`details[${i}].type`}
+                              listeners={{
+                                onChange: ({ fieldApi }) => {
+                                  fieldApi.form.setFieldValue(
+                                    `details[${i}].itemOrServiceId`,
+                                    "",
+                                  );
+                                },
+                              }}
+                            >
+                              {(field) => (
+                                <field.Select
+                                  label=""
+                                  className="w-full min-w-0"
+                                >
+                                  <SelectItem value="item">Product</SelectItem>
+                                  <SelectItem value="service">
+                                    Service
+                                  </SelectItem>
+                                </field.Select>
+                              )}
+                            </form.AppField>
+                          </td>
+                          <td
+                            data-label="Product / Service"
+                            className={lineCellClass(
+                              "md:w-72 md:max-w-72 md:overflow-hidden",
+                            )}
+                          >
+                            <form.Subscribe
+                              selector={(state) =>
+                                state.values.details[i]?.type
+                              }
+                            >
+                              {(lineType) => {
+                                const itemOptions = getLineItemOptions(
+                                  lineType,
+                                  {
+                                    products,
+                                    services,
+                                  },
+                                );
+
+                                return (
+                                  <form.AppField
+                                    name={`details[${i}].itemOrServiceId`}
+                                  >
+                                    {(field) => (
+                                      <field.Combobox
+                                        key={lineType ?? "empty"}
+                                        label=""
+                                        items={itemOptions}
+                                        placeholder="Select..."
+                                      />
+                                    )}
+                                  </form.AppField>
+                                );
+                              }}
+                            </form.Subscribe>
+                          </td>
+                          <td
+                            data-label="Qty"
+                            className={lineCellClass("md:w-24")}
+                          >
+                            <form.AppField name={`details[${i}].qty`}>
+                              {(field) => (
+                                <field.Input
+                                  label=""
+                                  type="number"
+                                  className="w-full"
+                                />
+                              )}
+                            </form.AppField>
+                          </td>
+                          <td
+                            data-label="Project"
+                            className={lineCellClass(
+                              "md:w-56 md:max-w-56 md:overflow-hidden",
+                            )}
+                          >
+                            <form.AppField name={`details[${i}].projectId`}>
+                              {(field) => (
+                                <field.Combobox
+                                  label=""
+                                  items={projects ?? []}
+                                />
+                              )}
+                            </form.AppField>
+                          </td>
+                          <td
+                            data-label="Remarks"
+                            className={lineCellClass("md:w-40")}
+                          >
+                            <form.AppField name={`details[${i}].remarks`}>
+                              {(field) => (
+                                <field.Input label="" className="w-full" />
+                              )}
+                            </form.AppField>
+                          </td>
+                          <td
+                            className="
+                          flex justify-end pt-2
+                          md:table-cell md:w-11 md:px-2 md:py-1.5
+                          md:text-center md:align-middle"
+                          >
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => field.removeValue(i)}
+                              aria-label={`Remove line ${i + 1}`}
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2Icon
+                                className="size-3.5"
+                                strokeWidth={2.5}
+                                aria-hidden="true"
+                              />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {field.state.value?.length === 0 && (
+                  <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      No lines added
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Click &quot;Add Line&quot; to start adding items or
+                      services.
+                    </p>
+                  </div>
+                )}
+                {field.state.value.length > 0 && (
+                  <div className="flex items-center justify-between border-t px-5 py-3">
+                    <p className="text-xs text-muted-foreground">
+                      {field.state.value.length}{" "}
+                      {field.state.value.length === 1 ? "line" : "lines"}
+                    </p>
+
+                    <Button
+                      type="button"
+                      onClick={addLine}
+                      size="sm"
+                      variant="link"
+                      className="hover:no-underline hover:text-muted-foreground"
+                    >
+                      + Add another line
+                    </Button>
+                  </div>
+                )}
+              </FieldGroup>
+            </section>
+          );
+        }}
+      </form.AppField>
+    );
+  },
+});

@@ -1,17 +1,20 @@
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import FormHeader from '@/components/custom/form-header';
-import { getRequisition } from '@/features/procurement/services/material-requisitions/data';
-import { RequisitionView } from '@/features/procurement/components/material-requisitions/requisition-view';
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+
+import FormHeader from "@/components/custom/form-header";
+import { RequisitionView } from "@/features/procurement/components/material-requisitions/requisition-view";
+import { getRequisition } from "@/features/procurement/services/material-requisitions/data";
 
 type Params = Promise<{ requisitionId: string }>;
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { requisitionId } = await params;
   const requisition = await getRequisition(requisitionId);
+  if (!requisition) notFound();
   return {
-    title: `Material Requisition ${requisition.id || 'Details'}`,
-    description: `Details for requisition ${requisition.id || ''}`,
+    title: `Material Requisition ${requisition.id || "Details"}`,
+    description: `Details for requisition ${requisition.id || ""}`,
   };
 }
 
@@ -25,13 +28,10 @@ export default function DetailsPage({ params }: { params: Params }) {
   );
 }
 
-async function SuspendedRequisitionView({
-  params,
-}: {
-  params: Params;
-}) {
+async function SuspendedRequisitionView({ params }: { params: Params }) {
   const { requisitionId } = await params;
   const requisition = await getRequisition(requisitionId);
+  if (!requisition) notFound();
 
   return (
     <div className="space-y-6">

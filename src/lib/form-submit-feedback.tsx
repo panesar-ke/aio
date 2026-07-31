@@ -1,28 +1,26 @@
-'use client';
+"use client";
 
-import { ToastContent } from '@/components/custom/toast';
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
-type SubmitResult = {
-  error: boolean;
-  message: string;
-};
+import { ToastContent } from "@/components/custom/toast";
 
-type HandleSubmitFeedbackParams = {
-  action: () => Promise<SubmitResult>;
+import type { ActionResult } from "./actions/types";
+
+type HandleSubmitFeedbackParams<T> = {
+  action: () => Promise<ActionResult<T>>;
   errorTitle: string;
   successTitle: string;
   fallbackMessage: string;
-  onSuccess: () => void;
+  onSuccess: (data?: T) => void;
 };
 
-export async function handleSubmitFeedback({
+export async function handleSubmitFeedback<T>({
   action,
   errorTitle,
   successTitle,
   fallbackMessage,
   onSuccess,
-}: HandleSubmitFeedbackParams) {
+}: HandleSubmitFeedbackParams<T>) {
   try {
     const res = await action();
 
@@ -36,7 +34,7 @@ export async function handleSubmitFeedback({
     toast.success(() => (
       <ToastContent title={successTitle} message={res.message} />
     ));
-    onSuccess();
+    onSuccess(res.data);
   } catch {
     toast.error(() => (
       <ToastContent title={errorTitle} message={fallbackMessage} />

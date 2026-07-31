@@ -6,7 +6,7 @@ import type {
 
 export type OrderFormRequisitionData = {
   documentDate: Date;
-  details: Requisition['mrqDetails'];
+  details: NonNullable<Requisition>['mrqDetails'];
 };
 
 export function buildOrderFormDefaultValues({
