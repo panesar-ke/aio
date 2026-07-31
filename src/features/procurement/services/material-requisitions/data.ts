@@ -1,19 +1,19 @@
-'use cache';
-import { and, asc, desc, eq } from 'drizzle-orm';
-import { cache } from 'react';
-import { notFound } from 'next/navigation';
-import { cacheTag } from 'next/cache';
-import db from '@/drizzle/db';
-import { mrqHeaders, products, projects, services } from '@/drizzle/schema';
-import { transformOptions } from '@/lib/helpers/formatters';
+"use cache";
+import { and, asc, desc, eq } from "drizzle-orm";
+import { cacheTag } from "next/cache";
+import { cache } from "react";
+
+import db from "@/drizzle/db";
+import { mrqHeaders, products, projects, services } from "@/drizzle/schema";
 import {
   getMaterialRequisitionGlobalTag,
   getMaterialRequisitionIdTag,
-  getProductsGlobalTag,
-  getServicesGlobalTag,
-  getProjectsGlobalTag,
   getMaterialRequisitionNoGlobalTag,
-} from '@/features/procurement/utils/cache';
+  getProductsGlobalTag,
+  getProjectsGlobalTag,
+  getServicesGlobalTag,
+} from "@/features/procurement/utils/cache";
+import { transformOptions } from "@/lib/helpers/formatters";
 
 export const getMaterialRequisitions = cache(async () => {
   cacheTag(getMaterialRequisitionGlobalTag());
@@ -27,9 +27,9 @@ export const getMaterialRequisitions = cache(async () => {
     limit: 100,
   });
 
-  return requisitions.map(req => ({
+  return requisitions.map((req) => ({
     ...req,
-    linked: req.mrqDetails.some(detail => detail.linked),
+    linked: req.mrqDetails.some((detail) => detail.linked),
   }));
 });
 
@@ -110,7 +110,7 @@ export const getRequisition = async (id: string) => {
   });
 
   if (!requisition) {
-    notFound();
+    return null;
   }
 
   return requisition;
