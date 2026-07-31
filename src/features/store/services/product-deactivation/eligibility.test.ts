@@ -1,9 +1,14 @@
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 
-import { isEligibleForDeactivation } from '@/features/store/services/product-deactivation/eligibility';
+import {
+  buildProductUsageAggregatesQuery,
+  isEligibleForDeactivation,
+} from '@/features/store/services/product-deactivation/eligibility';
 
 const asOf = new Date('2026-07-31T00:00:00.000Z');
 const THRESHOLD = 365;
+const dialect = new PgDialect();
 
 describe('isEligibleForDeactivation', () => {
   it('is eligible when real usage exists and is older than the threshold', () => {
@@ -66,5 +71,28 @@ describe('isEligibleForDeactivation', () => {
         asOf,
       ),
     ).toBe(false);
+  });
+});
+
+describe('buildProductUsageAggregatesQuery', () => {
+  it('aggregates stock_movements, mrq (via mrq_headers), and orders (via orders_header), excluding auto_order_items', () => {
+    const query = dialect.sqlToQuery(buildProductUsageAggregatesQuery());
+
+    expect(query.sql).toContain('"stock_movements"');
+    expect(query.sql).toContain('sm.is_deleted = false');
+    expect(query.sql).toContain('"mrq_details"');
+    expect(query.sql).toContain('"mrq_headers"');
+    expect(query.sql).toContain('"orders_details"');
+    expect(query.sql).toContain('"orders_header"');
+    expect(query.sql).toContain('GREATEST(');
+    expect(query.sql).not.toContain('auto_order_items');
+  });
+
+  it('restricts to active, stock-item, non-excluded products', () => {
+    const query = dialect.sqlToQuery(buildProductUsageAggregatesQuery());
+
+    expect(query.sql).toContain('p.active = true');
+    expect(query.sql).toContain('p.stock_item = true');
+    expect(query.sql).toContain('p.exclude_from_auto_deactivation = false');
   });
 });
