@@ -18,7 +18,8 @@ export type StoreCacheTags =
   | 'material issues'
   | 'material issue no'
   | 'unreceived orders'
-  | 'transfers';
+  | 'transfers'
+  | 'product-deactivation-batches';
 
 export type Store = Awaited<ReturnType<typeof getStores>>[number];
 export type StoreFormValues = z.infer<typeof storeFormSchema>;
