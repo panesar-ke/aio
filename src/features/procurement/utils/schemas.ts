@@ -21,7 +21,7 @@ export const materialRequisitionFormSchema = z.object({
       itemOrServiceId: requiredStringSchemaEntry("Field is required"),
       qty: requiredNumberSchemaEntry("Qty is required"),
       remarks: optionalStringSchemaEntry(),
-      requestId: requiredNumberSchemaEntry("Request ID is required"),
+      requestId: z.number({ required_error: "Request ID is required" }),
     }),
   ),
 });
