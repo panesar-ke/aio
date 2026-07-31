@@ -48,7 +48,7 @@ export async function reactivateItems(itemIds: Array<string>) {
     });
 
     const batchIds = [...new Set(items.map((item) => item.batchId))];
-    if (batchIds.length) {
+    if (batchIds.length === 0) {
       revalidateProductDeactivation();
     } else {
       for (const batchId of batchIds) {
