@@ -1,7 +1,10 @@
 import { formOptions } from "@tanstack/react-form";
-import { materialRequisitionFormSchema } from "./schemas";
-import { MaterialRequisitionFormValues } from "./procurement.types";
+
 import { dateFormat } from "@/lib/helpers/formatters";
+
+import type { MaterialRequisitionFormValues } from "./procurement.types";
+
+import { materialRequisitionFormSchema } from "./schemas";
 
 export const materialRequisitionFormOpts = (
   requisitionNumber?: number,

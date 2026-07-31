@@ -1,7 +1,9 @@
 "use client";
 
-import { ToastContent } from "@/components/custom/toast";
 import toast from "react-hot-toast";
+
+import { ToastContent } from "@/components/custom/toast";
+
 import type { ActionResult } from "./actions/types";
 
 type HandleSubmitFeedbackParams<T> = {

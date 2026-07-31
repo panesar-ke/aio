@@ -1,23 +1,24 @@
-import type { Metadata } from 'next';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { FormLoader } from '@/components/custom/loaders';
-import FormHeader from '@/components/custom/form-header';
-import { OrderForm } from '@/features/procurement/components/purchase-order/order-form';
+import type { Metadata } from "next";
+
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import FormHeader from "@/components/custom/form-header";
+import { FormLoader } from "@/components/custom/loaders";
+import { OrderForm } from "@/features/procurement/components/purchase-order/order-form";
 import {
   getRequisition,
   getSelectableProducts,
   getSelectableProjects,
   getSelectableServices,
-} from '@/features/procurement/services/material-requisitions/data';
+} from "@/features/procurement/services/material-requisitions/data";
 import {
   getActiveVendors,
   getPendingRequests,
   getPurchaseOrderNo,
-} from '@/features/procurement/services/purchase-orders/data';
+} from "@/features/procurement/services/purchase-orders/data";
 
 export const metadata: Metadata = {
-  title: 'New Purchase Order',
-  description: 'Create a new purchase order',
+  title: "New Purchase Order",
+  description: "Create a new purchase order",
 };
 
 type SearchParams = Promise<{ requisition?: string }>;

@@ -1,4 +1,5 @@
 import z from "zod";
+
 import {
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
@@ -20,7 +21,14 @@ export const materialRequisitionFormSchema = z.object({
       itemOrServiceId: requiredStringSchemaEntry("Field is required"),
       qty: requiredNumberSchemaEntry("Qty is required"),
       remarks: optionalStringSchemaEntry(),
-      requestId: requiredNumberSchemaEntry("Request ID is required"),
+      requestId: z.coerce
+        .number({
+          required_error: "Request ID is required",
+          invalid_type_error: "Request ID is required",
+        })
+        .refine((value) => !Number.isNaN(value), {
+          message: "Request ID must be a valid number",
+        }),
     }),
   ),
 });
