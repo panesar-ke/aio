@@ -2,9 +2,10 @@
 import type { LucideIcon } from 'lucide-react';
 import type { Route } from 'next';
 
-import { BellDot, Lock, LogOutIcon } from 'lucide-react';
+import { Lock, LogOutIcon } from 'lucide-react';
 import Link from 'next/link';
 
+import { NotificationDropdown } from '@/components/layout/notification-dropdown';
 import {
   Tooltip,
   TooltipContent,
@@ -20,11 +21,7 @@ export function NavbarActions() {
         linkPath="/change-password"
         Icon={Lock}
       />
-      <HeaderNavItem
-        toolTipContent="Notifications"
-        linkPath="/notifications"
-        Icon={BellDot}
-      />
+      <NotificationDropdown />
       <HeaderNavItem
         toolTipContent="Logout"
         asButton
