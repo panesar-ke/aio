@@ -1,6 +1,10 @@
 'use server';
+
+import { and, eq } from 'drizzle-orm';
+
 import db from '@/drizzle/db';
 import { notifications } from '@/drizzle/schema';
+import { getCurrentUserOrNull } from '@/lib/session';
 
 export const createNotification = async (data: {
   title: string;
@@ -19,3 +23,29 @@ export const createNotification = async (data: {
     eventId: data.eventId,
   });
 };
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  const currentUser = await getCurrentUserOrNull();
+  if (!currentUser) return;
+
+  await db
+    .update(notifications)
+    .set({ isRead: true })
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.addressedTo, currentUser.id)
+      )
+    );
+};
+
+export const markAllNotificationsAsRead = async () => {
+  const currentUser = await getCurrentUserOrNull();
+  if (!currentUser) return;
+
+  await db
+    .update(notifications)
+    .set({ isRead: true })
+    .where(eq(notifications.addressedTo, currentUser.id));
+};
+
