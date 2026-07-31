@@ -1,6 +1,8 @@
 import z from "zod";
 
 import {
+  nullableNonNegativeNumberField,
+  nullableTrimmedString,
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
   requiredDateSchemaEntry,
@@ -97,14 +99,16 @@ export const vendorSchema = z.object({
 });
 
 export const productsSchema = z.object({
+  id: nullableTrimmedString,
   productName: requiredStringSchemaEntry("Product name is required."),
   categoryId: requiredStringSchemaEntry("Select product category."),
   uomId: requiredStringSchemaEntry("Select product unit of measure."),
-  buyingPrice: optionalStringSchemaEntry(),
+  buyingPrice: nullableNonNegativeNumberField("Buying price"),
   stockItem: z.boolean(),
   subItem: z.boolean(),
   active: z.boolean(),
-  openingBalance: optionalNumberSchemaEntry(),
+  openingBalance: nullableNonNegativeNumberField("Opening Balance"),
+  excludeFromAutoDeactivation: z.boolean(),
 });
 
 export const serviceSchema = z.object({

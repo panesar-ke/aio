@@ -4,7 +4,7 @@ import { dateFormat } from "@/lib/helpers/formatters";
 
 import type { MaterialRequisitionFormValues } from "./procurement.types";
 
-import { materialRequisitionFormSchema } from "./schemas";
+import { materialRequisitionFormSchema, productsSchema } from "./schemas";
 
 export const materialRequisitionFormOpts = (
   requisitionNumber?: number,
@@ -21,3 +21,9 @@ export const materialRequisitionFormOpts = (
     },
   });
 };
+
+export const productFormOpts = formOptions({
+  validators: {
+    onSubmit: productsSchema,
+  },
+});
