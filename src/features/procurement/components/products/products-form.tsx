@@ -1,5 +1,7 @@
 "use client";
 
+import type { ChangeEvent } from "react";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { SaveIcon } from "lucide-react";
@@ -14,12 +16,21 @@ import type { Option } from "@/types/index.types";
 
 import { FooterFormActions } from "@/components/custom/form-actions";
 import { FormSectionHeader } from "@/components/custom/form-header";
-import { FieldGroup, FieldSeparator, FieldSet } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { SelectItem } from "@/components/ui/select";
 import { useModal } from "@/features/integrations/modal-provider";
 import { productsSchema } from "@/features/procurement/utils/schemas";
 import { useAppForm } from "@/lib/form";
 import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
+import { toNullableNumber } from "@/lib/helpers/numbers";
 import { cn } from "@/lib/utils";
 
 import { upsertProduct } from "../../services/products/actions";
@@ -60,6 +71,13 @@ interface ProductsFormProps {
   units: Array<Option>;
   fromModal?: boolean;
   product?: Product;
+}
+
+function handleNullableNumberChange(
+  field: { handleChange: (value: number | null) => void },
+  event: ChangeEvent<HTMLInputElement>,
+) {
+  field.handleChange(toNullableNumber(event.target.value));
 }
 
 export function ProductsForm({
@@ -178,13 +196,30 @@ export function ProductsForm({
             </FieldGroup>
             <FieldGroup className={cn({ "px-6": !fromModal })}>
               <form.AppField name="buyingPrice">
-                {(field) => (
-                  <field.Input
-                    label="Buying Price"
-                    placeholder="Price of the product"
-                    type="number"
-                  />
-                )}
+                {(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Buying Price</FieldLabel>
+                      <Input
+                        id={field.name}
+                        aria-invalid={isInvalid}
+                        value={field.state.value ?? ""}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          handleNullableNumberChange(field, event)
+                        }
+                        placeholder="Price of the product"
+                        type="number"
+                      />
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
               </form.AppField>
             </FieldGroup>
           </FieldSet>
@@ -210,7 +245,19 @@ export function ProductsForm({
               <form.AppField name="active">
                 {(field) => <field.Checkbox label="Active" />}
               </form.AppField>
-              <form.AppField name="stockItem">
+              <form.AppField
+                name="stockItem"
+                listeners={{
+                  onChange: ({ fieldApi }) => {
+                    if (!fieldApi.state.value) {
+                      fieldApi.form.setFieldValue(
+                        "excludeFromAutoDeactivation",
+                        false,
+                      );
+                    }
+                  },
+                }}
+              >
                 {(field) => (
                   <field.Checkbox
                     label="Stock Item"
@@ -222,7 +269,6 @@ export function ProductsForm({
                 {(field) => (
                   <field.Checkbox
                     label="Exclude from auto deactivation"
-                    helperText={undefined}
                     disabled={!isStockItem}
                   />
                 )}

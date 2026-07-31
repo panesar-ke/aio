@@ -97,14 +97,15 @@ export function FooterFormActions(props: FooterFormActionsProps) {
           </LoadingSwap>
         </Button>
         <Button
+          type="button"
           disabled={props.isSubmitting}
           variant="outline"
           size="lg"
           className="min-w-32"
           onClick={() => props.handleReset()}
         >
-          <CircleXIcon />
-          <span>Cancel</span>
+          {props.resetIcon ? <props.resetIcon /> : <CircleXIcon />}
+          <span>{props.resetText ?? "Cancel"}</span>
         </Button>
       </div>
     </footer>

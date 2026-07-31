@@ -26,7 +26,7 @@ function buildProductPayload(data: ProductsFormValues) {
     uomId: toNullishNumber(data.uomId),
     isPeace: data.subItem,
     buyingPrice: toNullableString(data.buyingPrice),
-    active: data.id ? true : data.active,
+    active: data.id ? data.active : true,
     excludeFromAutoDeactivation: data.excludeFromAutoDeactivation,
     stockItem: toNumber(data.categoryId) === 4 ? false : data.stockItem,
   };
@@ -44,33 +44,39 @@ export const upsertProduct = async (values: unknown) =>
     const data = parseOrFail(productsSchema, values);
     const payload = buildProductPayload(data);
 
+    if (data.id) {
+      const product = await getProduct(data.id);
+
+      if (!product) {
+        return {
+          error: true,
+          message: "Trying to edit a product that doesn't exist.",
+        };
+      }
+    }
+
     try {
-      await db.transaction(async (tx) => {
+      const returnedId = await db.transaction(async (tx) => {
+        let productId;
         if (data.id) {
-          const product = await getProduct(data.id);
-
-          if (!product) {
-            return {
-              error: true,
-              message: "Trying to edit a product that doesn't exist.",
-            };
-          }
-
+          productId = data.id;
           await tx
             .update(products)
             .set(payload)
             .where(eq(products.id, data.id));
-
-          revalidateProducts(data.id);
         } else {
           const [{ id }] = await tx
             .insert(products)
             .values({ ...payload, active: true })
             .returning({ id: products.id });
 
-          revalidateProducts(id);
+          productId = id;
         }
+
+        return productId;
       });
+
+      revalidateProducts(returnedId);
 
       return {
         error: false,
@@ -101,6 +107,7 @@ export const productIsReferenced = async (productId: string) => {
 };
 
 export const deleteProduct = async (productId: string) => {
+  await requireAnyPermission(["procurement:admin", "store:admin"]);
   try {
     if (!productId) {
       return {
@@ -131,6 +138,13 @@ export const deleteProduct = async (productId: string) => {
 };
 
 export const toggleProductState = async (productId: string) => {
+  await requireAnyPermission([
+    "procurement:admin",
+    "procurement:standard",
+    "store:admin",
+    "store:standard",
+  ]);
+
   try {
     if (!productId) {
       return {

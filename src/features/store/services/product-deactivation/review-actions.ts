@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from "drizzle-orm";
 
-import db from '@/drizzle/db';
-import { productDeactivationItems, products } from '@/drizzle/schema';
-import { revalidateProductDeactivation } from '@/features/store/utils/cache';
-import { requirePermission } from '@/lib/permissions/guards';
-import { getCurrentUser } from '@/lib/session';
+import db from "@/drizzle/db";
+import { productDeactivationItems, products } from "@/drizzle/schema";
+import { revalidateProductDeactivation } from "@/features/store/utils/cache";
+import { requirePermission } from "@/lib/permissions/guards";
+import { getCurrentUser } from "@/lib/session";
 
 export async function reactivateItems(itemIds: Array<string>) {
-  await requirePermission('store:admin', { mode: 'action' });
+  await requirePermission("store:admin", { mode: "action" });
 
   if (itemIds.length === 0) {
-    return { error: true, message: 'No items selected.' };
+    return { error: true, message: "No items selected." };
   }
 
   try {
@@ -26,7 +26,7 @@ export async function reactivateItems(itemIds: Array<string>) {
       .from(productDeactivationItems)
       .where(inArray(productDeactivationItems.id, itemIds));
 
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       await tx
         .update(productDeactivationItems)
         .set({
@@ -42,25 +42,32 @@ export async function reactivateItems(itemIds: Array<string>) {
         .where(
           inArray(
             products.id,
-            items.map(item => item.productId),
+            items.map((item) => item.productId),
           ),
         );
     });
 
-    const batchIds = new Set(items.map(item => item.batchId));
-    for (const batchId of batchIds) {
-      revalidateProductDeactivation(batchId);
+    const batchIds = [...new Set(items.map((item) => item.batchId))];
+    if (batchIds.length) {
+      revalidateProductDeactivation();
+    } else {
+      for (const batchId of batchIds) {
+        revalidateProductDeactivation(batchId);
+      }
     }
 
-    return { error: false, message: 'Selected items reactivated successfully.' };
+    return {
+      error: false,
+      message: "Selected items reactivated successfully.",
+    };
   } catch (error) {
-    console.error('Error reactivating items:', error);
-    return { error: true, message: 'Failed to reactivate selected items.' };
+    console.error("Error reactivating items:", error);
+    return { error: true, message: "Failed to reactivate selected items." };
   }
 }
 
 export async function excludeProductFromAutoDeactivation(productId: string) {
-  await requirePermission('store:admin', { mode: 'action' });
+  await requirePermission("store:admin", { mode: "action" });
 
   try {
     await db
@@ -70,9 +77,9 @@ export async function excludeProductFromAutoDeactivation(productId: string) {
 
     revalidateProductDeactivation();
 
-    return { error: false, message: 'Product excluded from future checks.' };
+    return { error: false, message: "Product excluded from future checks." };
   } catch (error) {
-    console.error('Error excluding product:', error);
-    return { error: true, message: 'Failed to exclude product.' };
+    console.error("Error excluding product:", error);
+    return { error: true, message: "Failed to exclude product." };
   }
 }

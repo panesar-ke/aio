@@ -1,4 +1,4 @@
-import Big from 'big.js';
+import Big from "big.js";
 
 export type NumericValue = string | number | Big | null | undefined;
 
@@ -26,7 +26,7 @@ export function toNullableString(
   value: NumericValue,
   decimals = 2,
 ): string | null {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
 
@@ -38,7 +38,7 @@ export function toDecimalNumber(value: NumericValue, decimals = 2) {
 }
 
 export function toNullishNumber(value: NumericValue): number | null {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
 
@@ -55,10 +55,4 @@ export function toBig(value: NumericValue) {
   } catch {
     return new Big(0);
   }
-}
-
-export function roundDecimal(value: NumericValue, decimals = 2) {
-  return Number(
-    toBig(value).round(decimals, Big.roundHalfUp).toFixed(decimals),
-  );
 }
