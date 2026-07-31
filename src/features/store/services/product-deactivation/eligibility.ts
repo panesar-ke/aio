@@ -96,12 +96,12 @@ export function buildProductUsageAggregatesQuery() {
   `;
 }
 
-interface ProductUsageAggregateRow {
+type ProductUsageAggregateRow = {
   product_id: string;
   created_on: Date | null;
   last_used_date: Date | null;
   last_used_source: LastUsedSource;
-}
+};
 
 export async function getProductUsageAggregates(): Promise<
   Array<ProductUsageAggregate>
