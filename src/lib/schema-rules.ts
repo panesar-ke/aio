@@ -19,7 +19,7 @@ export const optionalStringSchemaEntry = () =>
   z
     .string()
     .optional()
-    .transform((val) => val?.trim().toLowerCase());
+    .transform((val) => val?.trim());
 
 export const optionalNumberSchemaEntry = () => z.coerce.number().optional();
 export const requiredDateSchemaEntry = () =>
