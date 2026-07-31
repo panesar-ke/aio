@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ProductsFormValues } from "@/features/procurement/utils/procurement.types";
@@ -77,6 +78,7 @@ export const upsertProduct = async (values: unknown) =>
       });
 
       revalidateProducts(returnedId);
+      revalidatePath("/procurement/products", "page");
 
       return {
         error: false,
