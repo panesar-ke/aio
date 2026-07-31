@@ -1,30 +1,69 @@
 "use server";
 import { createId } from "@paralleldrive/cuid2";
-import { eq, inArray } from "drizzle-orm";
+import { type AxiosResponse, isAxiosError } from "axios";
+import { eq, inArray, max, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAxiosError, type AxiosResponse } from "axios";
-import type { MaterialRequisitionFormValues } from "@/features/procurement/utils/procurement.types";
+
+import db from "@/drizzle/db";
+import { mrqDetails, mrqHeaders } from "@/drizzle/schema";
 import {
   getRequisition,
   getRequisitionNo,
 } from "@/features/procurement/services/material-requisitions/data";
-import db from "@/drizzle/db";
-import { mrqDetails, mrqHeaders } from "@/drizzle/schema";
-import { getCurrentUser } from "@/lib/session";
 import {
   getMaterialRequisitionNoGlobalTag,
   revalidateMaterialRequisitions,
 } from "@/features/procurement/utils/cache";
-import axios from "@/lib/axios";
-import { apiErrorHandler } from "@/lib/utils";
-import { revalidateTag } from "next/cache";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import axios from "@/lib/axios";
 import { requireAnyPermission } from "@/lib/permissions/guards";
+import { getCurrentUser } from "@/lib/session";
+import { apiErrorHandler } from "@/lib/utils";
+
 import { materialRequisitionFormSchema } from "../../utils/schemas";
+
+const REQUEST_ID_ADVISORY_LOCK = 90210;
+
+function omitFormId(
+  detail: {
+    id: string;
+  } & Omit<typeof mrqDetails.$inferInsert, "requestId">,
+) {
+  return {
+    headerId: detail.headerId,
+    itemId: detail.itemId,
+    projectId: detail.projectId,
+    qty: detail.qty,
+    remarks: detail.remarks,
+    serviceId: detail.serviceId,
+    unitId: detail.unitId,
+  };
+}
+
+async function assignRequestIds(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  details: Array<Omit<typeof mrqDetails.$inferInsert, "requestId">>,
+) {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(${REQUEST_ID_ADVISORY_LOCK})`,
+  );
+
+  const [requestIdState] = await tx
+    .select({ maxRequestId: max(mrqDetails.requestId) })
+    .from(mrqDetails);
+
+  let nextRequestId = Number(requestIdState?.maxRequestId ?? 0) + 1;
+
+  return details.map((detail) => ({
+    ...detail,
+    requestId: nextRequestId++,
+  }));
+}
 
 export const createRequisition = async (values: unknown) =>
   runAction("create-requisition", async () => {
-    await requireAnyPermission(["it:admin", "it:standard"]);
+    await requireAnyPermission(["procurement:admin", "procurement:standard"]);
     const data = parseOrFail(materialRequisitionFormSchema, values);
 
     let reference: string;
@@ -44,8 +83,8 @@ export const createRequisition = async (values: unknown) =>
         const user = await getCurrentUser();
 
         const formattedDetails = details.map((detail) => ({
+          id: detail.id,
           headerId: documentNo,
-          requestId: detail.requestId,
           projectId: detail.projectId,
           itemId: detail.type === "item" ? detail.itemOrServiceId : null,
           serviceId: detail.type === "service" ? detail.itemOrServiceId : null,
@@ -72,51 +111,65 @@ export const createRequisition = async (values: unknown) =>
           .returning({ reference: mrqHeaders.reference });
 
         if (data.id) {
-          const requestIds = await db.query.mrqDetails
-            .findMany({
-              columns: { requestId: true },
-              where: (model, { eq }) => eq(model.headerId, documentNo),
+          const existingDetails = await tx
+            .select({
+              id: mrqDetails.id,
+              requestId: mrqDetails.requestId,
             })
-            .then((res) => res.map((req) => req.requestId));
+            .from(mrqDetails)
+            .where(eq(mrqDetails.headerId, documentNo));
 
-          const existingIds = formattedDetails.filter((detail) =>
-            requestIds.includes(detail.requestId),
+          const existingDetailIds = new Set(
+            existingDetails.map((detail) => detail.id),
           );
-          const nonExistingIds = formattedDetails.filter(
-            (detail) => !requestIds.includes(detail.requestId),
+          const persistedDetails = formattedDetails.filter((detail) =>
+            existingDetailIds.has(detail.id),
+          );
+          const newDetails = formattedDetails.filter(
+            (detail) => !existingDetailIds.has(detail.id),
           );
 
-          const removeIds = requestIds.filter(
-            (reqId) =>
-              !formattedDetails
-                .map((detail) => detail.requestId)
-                .includes(reqId),
-          );
+          const removeIds = existingDetails
+            .filter(
+              (detail) =>
+                !formattedDetails.some(
+                  (submittedDetail) => submittedDetail.id === detail.id,
+                ),
+            )
+            .map((detail) => detail.id);
 
           if (removeIds.length > 0) {
             await tx
               .delete(mrqDetails)
-              .where(inArray(mrqDetails.requestId, removeIds));
+              .where(inArray(mrqDetails.id, removeIds));
           }
 
-          if (nonExistingIds.length > 0) {
-            await tx.insert(mrqDetails).values(nonExistingIds);
-          }
-
-          existingIds.forEach(async (detail) => {
+          if (newDetails.length > 0) {
             await tx
-              .update(mrqDetails)
-              .set({
-                qty: detail.qty.toString(),
-                itemId: detail.itemId,
-                remarks: detail.remarks,
-                serviceId: detail.serviceId,
-                projectId: detail.projectId,
-              })
-              .where(eq(mrqDetails.requestId, detail.requestId));
-          });
+              .insert(mrqDetails)
+              .values(await assignRequestIds(tx, newDetails.map(omitFormId)));
+          }
+
+          await Promise.all(
+            persistedDetails.map(({ id, ...detail }) =>
+              tx
+                .update(mrqDetails)
+                .set({
+                  qty: detail.qty.toString(),
+                  itemId: detail.itemId,
+                  remarks: detail.remarks,
+                  serviceId: detail.serviceId,
+                  projectId: detail.projectId,
+                })
+                .where(eq(mrqDetails.id, id)),
+            ),
+          );
         } else {
-          await tx.insert(mrqDetails).values(formattedDetails);
+          await tx
+            .insert(mrqDetails)
+            .values(
+              await assignRequestIds(tx, formattedDetails.map(omitFormId)),
+            );
         }
 
         return ref[0].reference;
@@ -127,7 +180,9 @@ export const createRequisition = async (values: unknown) =>
 
       return {
         error: false,
-        message: "Requisition created successfully",
+        message: data.id
+          ? "Requisition updated successfully"
+          : "Requisition created successfully",
         data: reference,
       };
     } catch (e) {
@@ -153,6 +208,14 @@ export async function generateRequisitionAction(
     const requisitionId = formData.get("requisitionId") as string;
 
     const requisition = await getRequisition(requisitionId);
+
+    if (!requisition) {
+      return {
+        success: false,
+        error: "Requisition not found",
+        fileUrl: null,
+      };
+    }
 
     if (!requisitionId) {
       return {
