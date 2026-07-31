@@ -1,5 +1,3 @@
-'use server';
-
 import { inArray } from 'drizzle-orm';
 
 import type { ProductUsageAggregate } from '@/features/store/services/product-deactivation/eligibility';
