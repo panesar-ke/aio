@@ -1,12 +1,16 @@
 'use client';
-// biome-ignore assist/source/organizeImports: <Too annoying to fix>
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import Link from 'next/link';
-import { KeyRoundIcon } from 'lucide-react';
 import type z from 'zod';
 
-import { loginSchema } from '@/features/auth/actions/schema';
+// biome-ignore assist/source/organizeImports: <Too annoying to fix>
+import { zodResolver } from '@hookform/resolvers/zod';
+import { KeyRoundIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+
+import { CustomAlert } from '@/components/custom/custom-alert';
+import { ButtonLoader } from '@/components/custom/loaders';
+import { PasswordInput } from '@/components/custom/password-input';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -16,13 +20,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { PasswordInput } from '@/components/custom/password-input';
-import { Button } from '@/components/ui/button';
-import { CustomAlert } from '@/components/custom/custom-alert';
-import { useError } from '@/hooks/use-error';
 import { loginAction } from '@/features/auth/actions/auth';
+import { loginSchema } from '@/features/auth/actions/schema';
+import { useError } from '@/hooks/use-error';
 import { setFormErrors } from '@/lib/helpers/errors';
-import { ButtonLoader } from '@/components/custom/loaders';
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({

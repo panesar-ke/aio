@@ -1,9 +1,11 @@
+import type { Metadata } from 'next';
+
 import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { Metadata } from 'next';
+
 import PageHeader from '@/components/custom/page-header';
-import { TableSkeleton } from '@/components/custom/table-skeleton';
 import Search from '@/components/custom/search';
+import { TableSkeleton } from '@/components/custom/table-skeleton';
 import { RequisitionsDataTable } from '@/features/procurement/components/material-requisitions/requisitions-datatable';
 import { getMaterialRequisitions } from '@/features/procurement/services/material-requisitions/data';
 

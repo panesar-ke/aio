@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
+import { FormLoader } from '@/components/custom/loaders';
 import { ProductsForm } from '@/features/procurement/components/products/products-form';
 import {
   getCategories,

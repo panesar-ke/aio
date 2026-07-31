@@ -1,9 +1,11 @@
+import type { Metadata } from 'next';
+
+import Link from 'next/link';
+
 import PageHeader from '@/components/custom/page-header';
 import { Button } from '@/components/ui/button';
 import { JobTrackerReport } from '@/features/production/cnc/components/job-tracker-report';
 import { ReportFilters } from '@/features/production/cnc/components/report-filters';
-import type { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'CNC Tracker Report',

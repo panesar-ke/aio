@@ -1,5 +1,6 @@
-import { getGlobalTag, getIdTag } from '@/lib/cache';
 import { revalidateTag } from 'next/cache';
+
+import { getGlobalTag, getIdTag } from '@/lib/cache';
 
 export const getJobTrackingGlobalTag = () => {
   return getGlobalTag('job-tracking');

@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import z from 'zod';
 import type { NextRequest } from 'next/server';
-import { getCurrentUser } from '@/lib/session';
+
+import bcrypt from 'bcryptjs';
+import { NextResponse } from 'next/server';
+import z from 'zod';
+
 import db from '@/drizzle/db';
+import { getCurrentUser } from '@/lib/session';
 
 const bodySchema = z.object({
   currentPassword: z.string().min(1),

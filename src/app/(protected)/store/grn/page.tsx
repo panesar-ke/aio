@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+
 import type { SearchParams } from '@/types/index.types';
+
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { getGrns } from '@/features/store/services/grns/data';
 import { GrnsDatatable } from '@/features/store/components/grns/grns-datatable';
+import { getGrns } from '@/features/store/services/grns/data';
 
 export const metadata: Metadata = {
   title: 'Goods received note',

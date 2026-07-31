@@ -1,17 +1,18 @@
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
+import type { Option } from '@/types/index.types';
+
 import db from '@/drizzle/db';
 import {
   departments,
-  itAssetCategories,
   itAssetAssignments,
+  itAssetCategories,
   itAssets,
   users,
   vendors,
 } from '@/drizzle/schema';
 import { requireAnyPermission } from '@/lib/permissions/guards';
-import type { Option } from '@/types/index.types';
 
 export async function getAssetCategories() {
   await requireAnyPermission(['it:admin', 'it:standard'], { mode: 'page' });

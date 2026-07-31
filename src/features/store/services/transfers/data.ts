@@ -1,11 +1,12 @@
 'use cache';
 
 import { cacheTag } from 'next/cache';
+
+import db from '@/drizzle/db';
 import {
   getTransfersGlobalTag,
   getTransfersIdTag,
 } from '@/features/store/utils/cache';
-import db from '@/drizzle/db';
 
 export const getTransfers = async () => {
   cacheTag(getTransfersGlobalTag());

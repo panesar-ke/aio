@@ -1,4 +1,5 @@
 import { format, parse } from 'date-fns';
+
 import type { Option } from '@/types/index.types';
 
 export const titleCase = (str: string) => {

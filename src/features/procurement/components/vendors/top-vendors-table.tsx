@@ -1,7 +1,9 @@
 'use client';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ReportDataTable } from '@/components/custom/report-datatable';
+
 import type { TopVendor } from '@/features/procurement/utils/procurement.types';
+
+import { ReportDataTable } from '@/components/custom/report-datatable';
 import { numberFormat } from '@/lib/helpers/formatters';
 
 const columns: Array<ColumnDef<TopVendor>> = [

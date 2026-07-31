@@ -1,7 +1,8 @@
 import { Loader2 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { TableSkeleton } from '@/components/custom/table-skeleton';
 import Image from 'next/image';
+
+import { TableSkeleton } from '@/components/custom/table-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function FullPageLoader() {
   return (

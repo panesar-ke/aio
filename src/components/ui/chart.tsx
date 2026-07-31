@@ -1,7 +1,5 @@
 "use client"
 
-import * as React from "react"
-import * as RechartsPrimitive from "recharts"
 import type {
   DefaultLegendContentProps,
   LegendPayload,
@@ -9,6 +7,9 @@ import type {
   TooltipPayloadEntry,
   TooltipValueType,
 } from "recharts"
+
+import * as React from "react"
+import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 

@@ -1,28 +1,31 @@
 import type { Metadata } from 'next';
+
 import {
 
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Users,
-  FileText,
-  Calendar,
   AwardIcon,
+  Calendar,
+  FileText,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { connection } from 'next/server';
+
+import type { SearchParams } from '@/types/index.types';
+
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import { DatatableSkeleton } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
-import type { SearchParams } from '@/types/index.types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { VendorsDatatable } from '@/features/procurement/components/vendors/vendors-datatable';
 import {
   getVendors,
   getVendorStats,
 } from '@/features/procurement/services/vendors/data';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { compactNumberFormatter } from '@/lib/helpers/formatters';
-import { VendorsDatatable } from '@/features/procurement/components/vendors/vendors-datatable';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { DatatableSkeleton } from '@/components/custom/loaders';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Vendors',

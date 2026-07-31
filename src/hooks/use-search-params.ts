@@ -1,6 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 

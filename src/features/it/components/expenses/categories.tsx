@@ -1,11 +1,13 @@
 'use client';
 
-import { useAppForm } from '@/lib/form';
-import { expenseCategorySchema } from '@/features/it/utils/expenses/schemas';
-import type { ExpenseCategorySchema } from '@/features/it/utils/expenses/schemas';
-import { createExpenseCategory } from '@/features/it/services/expenses/actions';
 import { useQueryClient } from '@tanstack/react-query';
+
+import type { ExpenseCategorySchema } from '@/features/it/utils/expenses/schemas';
+
 import { useModal } from '@/features/integrations/modal-provider';
+import { createExpenseCategory } from '@/features/it/services/expenses/actions';
+import { expenseCategorySchema } from '@/features/it/utils/expenses/schemas';
+import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
 
 export function CategoriesForm() {

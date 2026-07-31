@@ -1,13 +1,16 @@
 'use client';
-import { useFieldArray, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2Icon } from 'lucide-react';
-import type { Option } from '@/types/index.types';
+import { useFieldArray, useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import type { AutoOrderFormValues } from '@/features/procurement/utils/procurement.types';
-import { generateRandomId } from '@/lib/utils';
-import { autoOrdersSchema } from '@/features/procurement/utils/schemas';
+import type { Option } from '@/types/index.types';
+
 import { FormActions } from '@/components/custom/form-actions';
+import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -15,11 +18,10 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { SearchSelect } from '@/components/custom/search-select';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createAutoOrder } from '@/features/procurement/services/auto-order/action';
-import { ToastContent } from '@/components/custom/toast';
+import { autoOrdersSchema } from '@/features/procurement/utils/schemas';
+import { generateRandomId } from '@/lib/utils';
 
 interface AutoOrdersFormProps {
   products: Array<Option>;

@@ -1,7 +1,9 @@
 'use server';
 
+import { and, eq, ne } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
-import { eq, and, ne } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+
 import type {
   CloneUserRightsFormValues,
   ResetPasswordFormValues,
@@ -9,30 +11,30 @@ import type {
   UserRightsFormValue,
 } from '@/features/admin/utils/admin.types';
 import type { ApiFailureWithoutData } from '@/types/index.types';
+
+import db from '@/drizzle/db';
 import {
   permissions as userPermissions,
   userRights,
   users,
 } from '@/drizzle/schema';
-import db from '@/drizzle/db';
+import { getUser } from '@/features/admin/services/data';
 import {
   getUserFormsGlobalTag,
   revalidateUserTags,
 } from '@/features/admin/utils/cache';
-import { validateFields } from '@/lib/action-validator';
+import { generatePassword, hashPassword } from '@/features/admin/utils/helpers';
 import {
   cloneUserRightsFormSchema,
   userRightsFormSchema,
   userSchema,
 } from '@/features/admin/utils/schema';
 import { inngest } from '@/inngest/client';
+import { validateFields } from '@/lib/action-validator';
 import {
   internationalizePhoneNumber,
   titleCase,
 } from '@/lib/helpers/formatters';
-import { redirect } from 'next/navigation';
-import { generatePassword, hashPassword } from '@/features/admin/utils/helpers';
-import { getUser } from '@/features/admin/services/data';
 import { requirePermission } from '@/lib/permissions/guards';
 import { normalizePermissions } from '@/lib/permissions/service';
 

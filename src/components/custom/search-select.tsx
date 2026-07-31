@@ -1,16 +1,12 @@
 /** biome-ignore-all lint/a11y/useSemanticElements: <> */
 'use client';
 
-import { useState } from 'react';
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
+import { useState } from 'react';
+
 import type { Option } from '@/types/index.types';
+
 import { Button } from '@/components/ui/button';
-import { FormControl } from '@/components/ui/form';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -19,6 +15,12 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { FormControl } from '@/components/ui/form';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 interface SearchSelectProps {

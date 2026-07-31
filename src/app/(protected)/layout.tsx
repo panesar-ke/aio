@@ -4,10 +4,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import { PermissionProvider } from "@/components/auth/permission-provider";
 import { AppSidebar, SidebarSkeleton } from "@/components/layout/app-sidebar";
 import { AppNavbar } from "@/components/layout/navbar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
-
 import { getCurrentUser } from "@/lib/session";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

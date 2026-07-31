@@ -1,10 +1,12 @@
+import type { Metadata } from 'next';
+
+import Link from 'next/link';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { FormLoader } from '@/components/custom/loaders';
 import { Button } from '@/components/ui/button';
 import { UserForm } from '@/features/admin/components/users/user-form';
 import { requirePermission } from '@/lib/permissions/guards';
-import type { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'New User',

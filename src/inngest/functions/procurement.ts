@@ -1,13 +1,14 @@
 import { NonRetriableError } from 'inngest';
-import { getPurchaseOrder } from '@/features/procurement/services/purchase-orders/data';
-import { formatOrderForFileGeneration } from '@/features/procurement/utils/formatters';
-import { inngest } from '@/inngest/client';
-import { isValidEmail } from '@/lib/utils';
+
+import { createNotification } from '@/features/global/services/actions';
 import {
   generateOrderFile,
   sendOrderEmailAction,
 } from '@/features/procurement/services/purchase-orders/actions';
-import { createNotification } from '@/features/global/services/actions';
+import { getPurchaseOrder } from '@/features/procurement/services/purchase-orders/data';
+import { formatOrderForFileGeneration } from '@/features/procurement/utils/formatters';
+import { inngest } from '@/inngest/client';
+import { isValidEmail } from '@/lib/utils';
 
 export const sendSupplierPoEmail = inngest.createFunction(
   { id: 'send-supplier-po-email', retries: 0 },

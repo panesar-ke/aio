@@ -1,13 +1,15 @@
-import { useFieldArray, useWatch } from 'react-hook-form';
 import { Trash2Icon } from 'lucide-react';
+import { useFieldArray, useWatch } from 'react-hook-form';
+
 import type { OrderForm } from '@/features/procurement/utils/procurement.types';
 import type { IsPending, Option } from '@/types/index.types';
+
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
+import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { calculateDiscount } from '@/features/procurement/utils/calculators';
-import { Button } from '@/components/ui/button';
 
 interface OrderDetailsProps extends OrderForm, IsPending {
   services: Array<Option>;

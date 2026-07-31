@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { FormLoader } from '@/components/custom/loaders';
+import { getAssignableAssets } from '@/features/it/assets/services/data';
 import { ExpenseForm } from '@/features/it/components/expenses/expense-form';
 import {
   getCategories,
   getExpenseById,
   getSubCategories,
 } from '@/features/it/services/expenses/data';
-import { getAssignableAssets } from '@/features/it/assets/services/data';
 import { getVendors } from '@/features/procurement/services/vendors/data';
 import { requireAnyPermission } from '@/lib/permissions/guards';
 

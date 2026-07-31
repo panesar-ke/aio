@@ -1,13 +1,15 @@
-import db from '@/drizzle/db';
-import { NextResponse } from 'next/server';
-import { itCategories } from '@/drizzle/schema';
-import type { Option } from '@/types/index.types';
 import { asc } from 'drizzle-orm';
-import { requireAnyPermission } from '@/lib/permissions/guards';
+import { NextResponse } from 'next/server';
+
+import type { Option } from '@/types/index.types';
+
+import db from '@/drizzle/db';
+import { itCategories } from '@/drizzle/schema';
 import {
   ForbiddenError,
   UnauthorizedError,
 } from '@/lib/permissions/errors';
+import { requireAnyPermission } from '@/lib/permissions/guards';
 
 export async function GET(): Promise<NextResponse> {
   try {

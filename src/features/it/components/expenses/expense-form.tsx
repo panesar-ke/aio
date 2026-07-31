@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useStore } from '@tanstack/react-form';
-import { useQueryClient } from '@tanstack/react-query';
-import { SaveIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useStore } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { SaveIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -11,19 +11,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field';
-import { SelectItem } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { upsertExpense } from '@/features/it/services/expenses/actions';
+} from "@/components/ui/card";
+import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
+import { SelectItem } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { upsertExpense } from "@/features/it/services/expenses/actions";
 import {
   type ExpenseFormSchemaValues,
   expenseFormSchemaValues,
-} from '@/features/it/utils/expenses/schemas';
-import { useAppForm } from '@/lib/form';
-import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { type Option } from '@/types/index.types';
+} from "@/features/it/utils/expenses/schemas";
+import { useAppForm } from "@/lib/form";
+import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
+import { type Option } from "@/types/index.types";
 
 type ExpenseFormProps = {
   categories: Array<{ id: string; name: string }>;
@@ -52,12 +51,12 @@ export function ExpenseForm({
       initialValues ??
       ({
         amount: 0,
-        categoryId: '',
-        subCategoryId: '',
-        vendorId: '',
-        expenseDate: defaultExpenseDate ?? '',
-        title: '',
-        referenceNo: '',
+        categoryId: "",
+        subCategoryId: "",
+        vendorId: "",
+        expenseDate: defaultExpenseDate ?? "",
+        title: "",
+        referenceNo: "",
         description: undefined,
         assetId: undefined,
         licenseId: undefined,
@@ -68,34 +67,34 @@ export function ExpenseForm({
     onSubmit: async ({ value }) => {
       await handleSubmitFeedback({
         action: () => upsertExpense(value),
-        errorTitle: `Error ${isEdit ? 'updating' : 'creating'} expense`,
-        successTitle: `✅ ${isEdit ? 'Updated' : 'Created'}`,
-        fallbackMessage: `Failed to ${isEdit ? 'update' : 'create'} expense. Please try again.`,
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} expense`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} expense. Please try again.`,
         onSuccess: () => {
-          router.push('/it/expenses-budgeting/expenses');
-          queryClient.invalidateQueries({ queryKey: ['it-expenses'] });
+          router.push("/it/expenses-budgeting/expenses");
+          queryClient.invalidateQueries({ queryKey: ["it-expenses"] });
         },
       });
     },
   });
 
-  const [categoryId] = useStore(store, state => [state.values.categoryId]);
+  const [categoryId] = useStore(store, (state) => [state.values.categoryId]);
   const filteredSubCategories = subCategories.filter(
-    subCategory => subCategory.categoryId === categoryId,
+    (subCategory) => subCategory.categoryId === categoryId,
   );
 
   return (
     <Card className="shadow-none">
       <CardHeader className="border-b">
-        <CardTitle>{isEdit ? 'Edit Expense' : 'New Expense'}</CardTitle>
+        <CardTitle>{isEdit ? "Edit Expense" : "New Expense"}</CardTitle>
         <CardDescription>
-          Fill in the details below to {isEdit ? 'update this ' : 'create an '}
+          Fill in the details below to {isEdit ? "update this " : "create an "}
           expense.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
@@ -105,7 +104,7 @@ export function ExpenseForm({
             <FieldLegend>General Information</FieldLegend>
             <FieldGroup className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AppField name="title">
-                {field => (
+                {(field) => (
                   <field.Input
                     fieldClassName="col-span-2"
                     required
@@ -115,7 +114,7 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="referenceNo">
-                {field => (
+                {(field) => (
                   <field.Input
                     required
                     placeholder="eg Vendor Invoice #12345"
@@ -124,12 +123,12 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="expenseDate">
-                {field => (
+                {(field) => (
                   <field.Input type="date" required label="Expense Date" />
                 )}
               </AppField>
               <AppField name="vendorId">
-                {field => (
+                {(field) => (
                   <field.Select
                     required
                     label="Vendor"
@@ -144,7 +143,7 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="amount">
-                {field => (
+                {(field) => (
                   <field.Input
                     type="number"
                     required
@@ -160,7 +159,7 @@ export function ExpenseForm({
             <FieldLegend>CATEGORIZATION</FieldLegend>
             <FieldGroup className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AppField name="categoryId">
-                {field => (
+                {(field) => (
                   <field.Select
                     required
                     label="Category"
@@ -175,7 +174,7 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="subCategoryId">
-                {field => (
+                {(field) => (
                   <field.Select
                     required
                     label="Sub Category"
@@ -190,7 +189,7 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="assetId">
-                {field => (
+                {(field) => (
                   <field.Select label="Asset" placeholder="Select Asset">
                     {assets?.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
@@ -201,7 +200,7 @@ export function ExpenseForm({
                 )}
               </AppField>
               <AppField name="licenseId">
-                {field => (
+                {(field) => (
                   <field.Select label="License" placeholder="Select License">
                     {licenses?.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
@@ -217,7 +216,7 @@ export function ExpenseForm({
             <FieldLegend>ADDITIONAL INFORMATION</FieldLegend>
             <FieldGroup>
               <AppField name="description">
-                {field => (
+                {(field) => (
                   <field.Textarea
                     label="Description"
                     placeholder="Enter additional information"
@@ -230,7 +229,7 @@ export function ExpenseForm({
             <SubmitButton
               icon={<SaveIcon />}
               withReset
-              buttonText={isEdit ? 'Update Expense' : 'Create Expense'}
+              buttonText={isEdit ? "Update Expense" : "Create Expense"}
             />
           </AppForm>
         </form>

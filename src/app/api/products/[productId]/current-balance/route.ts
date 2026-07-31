@@ -1,11 +1,13 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import type { NextRequest } from 'next/server';
+
+import { getProduct } from '@/features/procurement/services/products/data';
 import {
   getProductBalance,
   getStore,
 } from '@/features/store/services/stores/data';
-import { getProduct } from '@/features/procurement/services/products/data';
 import { requiredDateSchemaEntry } from '@/lib/schema-rules';
 
 const querySchema = z.object({

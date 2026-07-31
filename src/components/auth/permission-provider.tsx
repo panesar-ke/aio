@@ -2,10 +2,11 @@
 
 import {
   createContext,
+  type ReactNode,
   useContext,
   useMemo,
-  type ReactNode,
 } from 'react';
+
 import type { Permission } from '@/lib/permissions/catalog';
 
 const PermissionContext = createContext<Set<Permission> | null>(null);

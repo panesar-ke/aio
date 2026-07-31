@@ -1,39 +1,41 @@
 'use client';
-import { useEffect, useTransition } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import toast from 'react-hot-toast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
-import type { Form as FormType, Option } from '@/types/index.types';
+import { useEffect, useTransition } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import type {
   CloneUserRightsFormValues,
   UserRightsFormValue,
 } from '@/features/admin/utils/admin.types';
+import type { Form as FormType, Option } from '@/types/index.types';
+
+import CustomModal from '@/components/custom/custom-modal';
+import { FormActions } from '@/components/custom/form-actions';
+import { ButtonLoader } from '@/components/custom/loaders';
+import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
-  FormField,
   FormControl,
+  FormField,
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  cloneUserRightsFormSchema,
-  userRightsFormSchema,
-} from '@/features/admin/utils/schema';
-import { SearchSelect } from '@/components/custom/search-select';
-import { userRightsQueryOptions } from '@/features/admin/services/query-options';
 import {
   cloneUserRights,
   updateUserRights,
 } from '@/features/admin/services/action';
-import { ToastContent } from '@/components/custom/toast';
-import { ButtonLoader } from '@/components/custom/loaders';
+import { userRightsQueryOptions } from '@/features/admin/services/query-options';
+import {
+  cloneUserRightsFormSchema,
+  userRightsFormSchema,
+} from '@/features/admin/utils/schema';
 import { useModal } from '@/features/integrations/modal-provider';
-import CustomModal from '@/components/custom/custom-modal';
-import { FormActions } from '@/components/custom/form-actions';
 
 interface Props {
   users: Array<Option>;

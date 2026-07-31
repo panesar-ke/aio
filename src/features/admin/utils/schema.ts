@@ -1,9 +1,10 @@
 import z from 'zod';
+
+import { PERMISSIONS } from '@/lib/permissions/catalog';
 import {
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
 } from '@/lib/schema-rules';
-import { PERMISSIONS } from '@/lib/permissions/catalog';
 
 export const userSchema = z.object({
   id: z.string().optional(),

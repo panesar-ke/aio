@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+
+import { notFound } from 'next/navigation';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { FormLoader } from '@/components/custom/loaders';
 import FormHeader from '@/components/custom/form-header';
+import { FormLoader } from '@/components/custom/loaders';
 import { StoreForm } from '@/features/store/components/stores/store-form';
 import { getStore } from '@/features/store/services/stores/data';
-import { notFound } from 'next/navigation';
 import { titleCase } from '@/lib/helpers/formatters';
 
 export const metadata: Metadata = {

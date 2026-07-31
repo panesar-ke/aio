@@ -1,12 +1,13 @@
-import { type NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import db from '@/drizzle/db';
 import { userRights } from '@/drizzle/schema';
-import { requirePermission } from '@/lib/permissions/guards';
 import {
   ForbiddenError,
   UnauthorizedError,
 } from '@/lib/permissions/errors';
+import { requirePermission } from '@/lib/permissions/guards';
 
 type ResponseData = {
   error: string | null;

@@ -1,7 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
+
 import type { Permission } from '@/lib/permissions/catalog';
+
 import { usePermissions } from '@/components/auth/permission-provider';
 
 type PermissionGateProps = {

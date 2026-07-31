@@ -5,6 +5,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+
 import { forms, users } from '@/drizzle/schema';
 
 export const userRights = pgTable(

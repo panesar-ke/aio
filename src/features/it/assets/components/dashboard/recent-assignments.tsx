@@ -1,5 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dateFormat } from '@/lib/helpers/formatters';
 
 export function RecentAssignments({

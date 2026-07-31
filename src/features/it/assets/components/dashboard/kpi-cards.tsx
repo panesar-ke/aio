@@ -7,9 +7,10 @@ import {
   WrenchIcon,
 } from 'lucide-react';
 
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { numberFormat } from '@/lib/helpers/formatters';
 
 type KpiProps = ITAssetsDashboardStats['kpis'];

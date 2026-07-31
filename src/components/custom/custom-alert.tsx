@@ -1,6 +1,8 @@
 import { InfoIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import type { ColorVariant } from '@/types/index.types';
+
+import { cn } from '@/lib/utils';
 
 interface CustomAlertProps {
   title?: string;

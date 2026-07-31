@@ -1,15 +1,15 @@
 import 'server-only';
-
-import { cache } from 'react';
 import { eq } from 'drizzle-orm';
+import { cache } from 'react';
+
 import db from '@/drizzle/db';
 import { permissions as userPermissions } from '@/drizzle/schema';
-import { getCurrentUserOrNull } from '@/lib/session';
 import {
-  PERMISSIONS,
   isPermission,
   type Permission,
+  PERMISSIONS,
 } from '@/lib/permissions/catalog';
+import { getCurrentUserOrNull } from '@/lib/session';
 
 const ADMIN_USER_TYPES = new Set(['ADMIN', 'SUPER ADMIN']);
 

@@ -1,29 +1,29 @@
-'use server';
-import { and, desc, eq, gte, lte, ne, or, sql } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
+"use server";
+import { and, desc, eq, gte, lte, ne, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 
-import db from '@/drizzle/db';
-import { itLicenseRenewals, itLicenses } from '@/drizzle/schema';
+import db from "@/drizzle/db";
+import { itLicenseRenewals, itLicenses } from "@/drizzle/schema";
 import {
   licenseFormSchemaValues,
   licenseRenewalFormSchema,
-} from '@/features/it/licenses/utils/schemas';
-import { parseOrFail, runAction } from '@/lib/actions/safe-action';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { requireAnyPermission } from '@/lib/permissions/guards';
+} from "@/features/it/licenses/utils/schemas";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import { dateFormat } from "@/lib/helpers/formatters";
+import { requireAnyPermission } from "@/lib/permissions/guards";
 import {
   normalizeNullableString,
   normalizeString,
-} from '@/lib/string-normalizers';
+} from "@/lib/string-normalizers";
 
 export const upsertLicenseDetails = async (values: unknown) =>
-  runAction('upsert license details', async () => {
-    await requireAnyPermission(['it:admin', 'it:standard']);
+  runAction("upsert license details", async () => {
+    await requireAnyPermission(["it:admin", "it:standard"]);
 
     const data = parseOrFail(licenseFormSchemaValues, values);
 
     try {
-      const id = await db.transaction(async tx => {
+      const id = await db.transaction(async (tx) => {
         const licensePayload = {
           name: normalizeString(data.name),
           softwareName: normalizeString(data.softwareName),
@@ -33,18 +33,18 @@ export const upsertLicenseDetails = async (values: unknown) =>
 
         const licenseRows = data.id
           ? await tx
-            .update(itLicenses)
-            .set(licensePayload)
-            .where(eq(itLicenses.id, data.id))
-            .returning({ id: itLicenses.id })
+              .update(itLicenses)
+              .set(licensePayload)
+              .where(eq(itLicenses.id, data.id))
+              .returning({ id: itLicenses.id })
           : await tx
-            .insert(itLicenses)
-            .values(licensePayload)
-            .returning({ id: itLicenses.id });
+              .insert(itLicenses)
+              .values(licensePayload)
+              .returning({ id: itLicenses.id });
 
         const licenseId = licenseRows[0]?.id;
         if (!licenseId) {
-          return '__NOT_FOUND__' as const;
+          return "__NOT_FOUND__" as const;
         }
 
         const latestRenewalRows = await tx
@@ -78,32 +78,32 @@ export const upsertLicenseDetails = async (values: unknown) =>
             .limit(1);
 
           if (existingRows[0]) {
-            return '__LICENSE_KEY_EXISTS__' as const;
+            return "__LICENSE_KEY_EXISTS__" as const;
           }
         }
 
         const renewalPayload = {
           vendorId: data.vendorId,
           startDate:
-            data.licenseType === 'subscription'
+            data.licenseType === "subscription"
               ? data.startDate
                 ? dateFormat(data.startDate)
                 : null
               : null,
           endDate:
-            data.licenseType === 'subscription'
+            data.licenseType === "subscription"
               ? data.endDate
                 ? dateFormat(data.endDate)
                 : null
               : null,
           renewalCost:
-            data.licenseType === 'subscription'
+            data.licenseType === "subscription"
               ? data.renewalCost
                 ? data.renewalCost.toString()
                 : null
               : null,
           renewalDate:
-            data.licenseType === 'subscription'
+            data.licenseType === "subscription"
               ? data.renewalDate
                 ? dateFormat(data.renewalDate)
                 : null
@@ -129,19 +129,19 @@ export const upsertLicenseDetails = async (values: unknown) =>
         return licenseId;
       });
 
-      if (id === '__NOT_FOUND__') {
-        return { error: true, message: 'License not found.' };
+      if (id === "__NOT_FOUND__") {
+        return { error: true, message: "License not found." };
       }
 
-      if (id === '__LICENSE_KEY_EXISTS__') {
-        return { error: true, message: 'License key already exists.' };
+      if (id === "__LICENSE_KEY_EXISTS__") {
+        return { error: true, message: "License key already exists." };
       }
 
-      revalidateTag(`licenses-${id}`, 'max');
+      revalidateTag(`licenses-${id}`, "max");
 
       return {
         error: false,
-        message: `License ${data.id ? 'updated' : 'created'} successfully.`,
+        message: `License ${data.id ? "updated" : "created"} successfully.`,
         data: { id },
       };
     } catch (error) {
@@ -150,8 +150,8 @@ export const upsertLicenseDetails = async (values: unknown) =>
   });
 
 export const renewLicense = async (values: unknown) =>
-  runAction('renew license', async () => {
-    await requireAnyPermission(['it:admin', 'it:standard']);
+  runAction("renew license", async () => {
+    await requireAnyPermission(["it:admin", "it:standard"]);
 
     const data = parseOrFail(licenseRenewalFormSchema, values);
 
@@ -162,14 +162,14 @@ export const renewLicense = async (values: unknown) =>
     if (!license) {
       return {
         error: true,
-        message: 'License not found.',
+        message: "License not found.",
       };
     }
 
     if (!data.startDate || !data.endDate) {
       return {
         error: true,
-        message: 'Renewal dates are required.',
+        message: "Renewal dates are required.",
       };
     }
 
@@ -186,7 +186,7 @@ export const renewLicense = async (values: unknown) =>
     if (overlapping) {
       return {
         error: true,
-        message: 'Renewal period overlaps with an existing renewal.',
+        message: "Renewal period overlaps with an existing renewal.",
       };
     }
 
@@ -207,7 +207,7 @@ export const renewLicense = async (values: unknown) =>
         })
         .returning({ id: itLicenseRenewals.id });
 
-      revalidateTag(`licenses-${data.licenseId}`, 'max');
+      revalidateTag(`licenses-${data.licenseId}`, "max");
 
       return {
         error: false,

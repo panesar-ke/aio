@@ -1,7 +1,8 @@
-import db from '@/drizzle/db';
-import { websiteEnquiryDedup } from '@/drizzle/schema';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
+import db from '@/drizzle/db';
+import { websiteEnquiryDedup } from '@/drizzle/schema';
 
 const schema = z.object({
   fingerprint: z.string().min(1, 'Finger print is required').max(255),

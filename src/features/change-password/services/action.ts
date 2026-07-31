@@ -2,19 +2,21 @@
 
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-import db from '@/drizzle/db';
-import { users } from '@/drizzle/schema';
-import { getCurrentUser } from '@/lib/session';
-import { validateFields } from '@/lib/action-validator';
-import {
-  changePasswordSchema,
-  type ChangePasswordFormValues,
-} from '@/features/change-password/utils/schema';
+
 import type {
   ApiFailureWithoutData,
   ApiSuccessWithoutData,
 } from '@/types/index.types';
+
+import db from '@/drizzle/db';
+import { users } from '@/drizzle/schema';
 import { env } from '@/env/server';
+import {
+  type ChangePasswordFormValues,
+  changePasswordSchema,
+} from '@/features/change-password/utils/schema';
+import { validateFields } from '@/lib/action-validator';
+import { getCurrentUser } from '@/lib/session';
 
 export async function changePasswordAction(
   values: unknown

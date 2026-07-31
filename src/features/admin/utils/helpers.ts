@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+
 import { env } from '@/env/server';
 
 export const generatePassword = (length: number) => {

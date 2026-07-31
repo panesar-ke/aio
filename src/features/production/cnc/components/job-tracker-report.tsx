@@ -1,15 +1,18 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
-import { reportFilterSchema } from '@/features/production/cnc/utils/schema';
-import { useQuery } from '@tanstack/react-query';
-import { CustomAlert } from '@/components/custom/custom-alert';
-import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
-import { ReportLoader } from '@/components/custom/loaders';
 import type { ColumnDef } from '@tanstack/react-table';
-import { numberFormat, titleCase } from '@/lib/helpers/formatters';
+
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
+
+import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
+
+import { CustomAlert } from '@/components/custom/custom-alert';
+import { ReportLoader } from '@/components/custom/loaders';
 import { ReportDataTable } from '@/components/custom/report-datatable';
 import { TableCell } from '@/components/ui/table';
+import { reportFilterSchema } from '@/features/production/cnc/utils/schema';
+import { numberFormat, titleCase } from '@/lib/helpers/formatters';
 
 const columns: Array<ColumnDef<JobTrackerFormValues>> = [
   {

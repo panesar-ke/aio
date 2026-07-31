@@ -1,17 +1,20 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+
+import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+
 import type { VendorOrder } from '@/features/procurement/utils/procurement.types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { ErrorNotification } from '@/components/custom/error-components';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { VendorOrderDatatable } from '@/features/procurement/components/vendors/vendor-order-datatable';
 import {
 
   getVendor,
   getVendorOrders,
 } from '@/features/procurement/services/vendors/data';
 import { compactNumberFormatter } from '@/lib/helpers/formatters';
-import { VendorOrderDatatable } from '@/features/procurement/components/vendors/vendor-order-datatable';
 
 type Params = Promise<{ vendorId: string }>;
 

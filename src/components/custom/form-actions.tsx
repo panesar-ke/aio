@@ -1,8 +1,10 @@
 import { CircleCheckBigIcon, CircleXIcon } from 'lucide-react';
+
 import type { IsEdit, IsPending } from '@/types/index.types';
+
+import { ButtonLoader } from '@/components/custom/loaders';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ButtonLoader } from '@/components/custom/loaders';
 
 interface FormActionsProps extends IsPending, IsEdit {
   resetFn: () => void;

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import PageHeader from '@/components/custom/page-header';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { getGrn } from '@/features/store/services/grns/data';
+import PageHeader from '@/components/custom/page-header';
 import { GrnView } from '@/features/store/components/grns/grn-view';
+import { getGrn } from '@/features/store/services/grns/data';
 
 export const metadata: Metadata = {
   title: 'View GRN Details',

@@ -1,14 +1,16 @@
 'use client';
-import Link from 'next/link';
-import { BellDot, Lock, LogOutIcon } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { Route } from 'next';
+
+import { BellDot, Lock, LogOutIcon } from 'lucide-react';
+import Link from 'next/link';
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { logoutAction } from '@/features/auth/actions/auth';
-import type { Route } from 'next';
 
 export function NavbarActions() {
   return (

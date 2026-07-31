@@ -1,9 +1,10 @@
 import type z from 'zod';
+
 import type {
   cloneUserRightsFormSchema,
+  resetPasswordFormSchema,
   userRightsFormSchema,
   userSchema,
-  resetPasswordFormSchema,
 } from '@/features/admin/utils/schema';
 
 export type UserRightsFormValue = z.infer<typeof userRightsFormSchema>;

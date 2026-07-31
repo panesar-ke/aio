@@ -1,16 +1,21 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Option } from '@/types/index.types';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import type {
-  ProductsFormValues,
   Product,
+  ProductsFormValues,
 } from '@/features/procurement/utils/procurement.types';
-import { productsSchema } from '@/features/procurement/utils/schemas';
+import type { Option } from '@/types/index.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -21,15 +26,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { MiniSelect } from '@/components/custom/mini-select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FormActions } from '@/components/custom/form-actions';
+import { useModal } from '@/features/integrations/modal-provider';
 import {
   createProduct,
   updateProduct,
 } from '@/features/procurement/services/products/actions';
-import { ToastContent } from '@/components/custom/toast';
-import { useModal } from '@/features/integrations/modal-provider';
+import { productsSchema } from '@/features/procurement/utils/schemas';
 import { cn } from '@/lib/utils';
 
 interface ProductsFormProps {

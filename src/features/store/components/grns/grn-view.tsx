@@ -1,4 +1,7 @@
 import { notFound } from 'next/navigation';
+
+import type { getGrn } from '@/features/store/services/grns/data';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -9,7 +12,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { dateFormat } from '@/lib/helpers/formatters';
-import type { getGrn } from '@/features/store/services/grns/data';
 
 type GrnData = Awaited<ReturnType<typeof getGrn>>;
 

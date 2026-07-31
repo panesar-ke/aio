@@ -1,7 +1,10 @@
-import type { OrderForm } from '@/features/procurement/utils/procurement.types'
-import { numberFormat } from '@/lib/helpers/formatters'
 import { useMemo } from 'react'
 import { useWatch } from 'react-hook-form'
+
+import type { OrderForm } from '@/features/procurement/utils/procurement.types'
+
+import { numberFormat } from '@/lib/helpers/formatters'
+
 import { calculateVatValues } from '../../utils/calculators'
 
 interface OrderSummaryProps {

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+
 import type { ColorVariant } from '@/types/index.types';
 
 interface Props {

@@ -1,4 +1,5 @@
 import Axios from 'axios';
+
 import { env } from '@/env/server';
 
 const axios = Axios.create({

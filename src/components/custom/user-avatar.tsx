@@ -1,6 +1,8 @@
 import { initials } from '@dicebear/collection'
 import { createAvatar } from '@dicebear/core'
+
 import type { User } from '@/types/index.types'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getInitials } from '@/lib/helpers/formatters'
 import { cn } from '@/lib/utils'

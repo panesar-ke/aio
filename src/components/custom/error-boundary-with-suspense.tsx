@@ -1,6 +1,8 @@
+import type { PropsWithChildren } from 'react';
+
 import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { PropsWithChildren } from 'react';
+
 import { ErrorNotification } from '@/components/custom/error-components';
 import { ReportLoader } from '@/components/custom/loaders';
 

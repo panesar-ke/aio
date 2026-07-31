@@ -1,14 +1,16 @@
 'use server';
 
-import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+
 import type { ProductsFormValues } from '@/features/procurement/utils/procurement.types';
-import { productsSchema } from '@/features/procurement/utils/schemas';
-import { products } from '@/drizzle/schema';
+
 import db from '@/drizzle/db';
-import { revalidateProducts } from '@/features/procurement/utils/cache';
-import { validateFields } from '@/lib/action-validator';
+import { products } from '@/drizzle/schema';
 import { getProduct } from '@/features/procurement/services/products/data';
+import { revalidateProducts } from '@/features/procurement/utils/cache';
+import { productsSchema } from '@/features/procurement/utils/schemas';
+import { validateFields } from '@/lib/action-validator';
 
 export const createProduct = async (values: unknown) => {
   try {

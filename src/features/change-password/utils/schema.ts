@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { requiredStringSchemaEntry } from '@/lib/schema-rules';
 
 export const changePasswordSchema = z

@@ -1,5 +1,14 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+
+import { BanIcon, CheckIcon, Undo2Icon, UserLockIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useTransition } from 'react';
+import toast from 'react-hot-toast';
+
+import type { getUsers } from '@/features/admin/services/data';
+
 import { EditAction } from '@/components/custom/custom-button';
 import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
 import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
@@ -8,14 +17,8 @@ import { ToastContent } from '@/components/custom/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import type { getUsers } from '@/features/admin/services/data';
-import { cn } from '@/lib/utils';
-import type { ColumnDef } from '@tanstack/react-table';
-import { BanIcon, CheckIcon, Undo2Icon, UserLockIcon } from 'lucide-react';
-import Link from 'next/link';
-import { useTransition } from 'react';
-import toast from 'react-hot-toast';
 import { toggleUserActiveState } from '@/features/admin/services/action';
+import { cn } from '@/lib/utils';
 
 type User = Awaited<ReturnType<typeof getUsers>>[number];
 export function UsersDatatable({ users }: { users: Array<User> }) {
