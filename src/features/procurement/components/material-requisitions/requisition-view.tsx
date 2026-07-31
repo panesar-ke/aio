@@ -1,13 +1,14 @@
-'use client';
-import { useActionState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { format } from 'date-fns';
-import { FileScanIcon, PrinterIcon, SparkleIcon } from 'lucide-react';
-import type { Requisition } from '@/features/procurement/utils/procurement.types';
-import { Button } from '@/components/ui/button';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { generateRequisitionAction } from '@/features/procurement/services/material-requisitions/action';
+"use client";
+import { format } from "date-fns";
+import { FileScanIcon, PrinterIcon, SparkleIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useActionState } from "react";
+
+import type { Requisition } from "@/features/procurement/utils/procurement.types";
+
+import { ButtonLoader } from "@/components/custom/loaders";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,8 +16,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { numberFormat } from '@/lib/helpers/formatters';
+} from "@/components/ui/table";
+import { generateRequisitionAction } from "@/features/procurement/services/material-requisitions/action";
+import { numberFormat } from "@/lib/helpers/formatters";
 
 export function RequisitionView({ requisition }: { requisition: Requisition }) {
   const [state, action, pending] = useActionState(generateRequisitionAction, {
@@ -24,6 +26,14 @@ export function RequisitionView({ requisition }: { requisition: Requisition }) {
     error: null,
     fileUrl: null,
   });
+
+  if (!requisition)
+    return (
+      <div className="space-y-6">
+        <p className="text-destructive">Requisition not found.</p>
+      </div>
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -56,7 +66,7 @@ export function RequisitionView({ requisition }: { requisition: Requisition }) {
             </a>
           </Button>
         )}
-        {requisition.mrqDetails.filter(d => d.linked).length === 0 && (
+        {requisition.mrqDetails.filter((d) => d.linked).length === 0 && (
           <Button variant="tertiary" size="lg" disabled={pending} asChild>
             <Link
               href={`/procurement/purchase-order/new?requisition=${requisition.reference}`}
@@ -72,13 +82,19 @@ export function RequisitionView({ requisition }: { requisition: Requisition }) {
   );
 }
 
-function RequisitionDetails({ mrq }: { mrq: Requisition }) {
+function RequisitionDetails({ mrq }: { mrq: NonNullable<Requisition> }) {
+  if (!mrq)
+    return (
+      <div className="space-y-6">
+        <p className="text-destructive">Requisition not found.</p>
+      </div>
+    );
   const rows = mrq.mrqDetails.map((item, i) => {
     const buyingPrice = item.itemId
       ? numberFormat(item.product?.buyingPrice || 0)
       : numberFormat(item.service?.serviceFee || 0);
     const gross =
-      parseFloat(buyingPrice.replace(/[^0-9.-]+/g, '')) * Number(item.qty);
+      parseFloat(buyingPrice.replace(/[^0-9.-]+/g, "")) * Number(item.qty);
 
     return { item, i, buyingPrice, gross };
   });
@@ -102,7 +118,7 @@ function RequisitionDetails({ mrq }: { mrq: Requisition }) {
         <div className="flex items-center justify-between">
           <div className="text-lg flex items-center">
             <span className="font-medium mr-2">Date:</span>
-            <span>{format(new Date(mrq.documentDate), 'PPP')}</span>
+            <span>{format(new Date(mrq.documentDate), "PPP")}</span>
           </div>
           <div className="text-lg flex items-center">
             <span className="font-medium mr-2">MRQ No:</span>
@@ -148,7 +164,7 @@ function RequisitionDetails({ mrq }: { mrq: Requisition }) {
 }
 
 interface RowProps {
-  item: Requisition['mrqDetails'][number];
+  item: NonNullable<Requisition>["mrqDetails"][number];
   i: number;
   buyingPrice: string;
   gross: number;
@@ -160,11 +176,11 @@ function Row({ item, i, buyingPrice, gross }: RowProps) {
       <TableCell className="p-2">{i + 1}</TableCell>
       <TableCell className="p-2 uppercase">
         {item.itemId
-          ? item.product?.productName || ''
-          : item.service?.serviceName || ''}
+          ? item.product?.productName || ""
+          : item.service?.serviceName || ""}
       </TableCell>
       <TableCell className="p-2 uppercase">
-        {item.itemId ? item.product?.uom?.abbreviation || 'DEF' : 'DEF'}
+        {item.itemId ? item.product?.uom?.abbreviation || "DEF" : "DEF"}
       </TableCell>
       <TableCell className="p-2 text-center">{item.qty}</TableCell>
       <TableCell className="p-2 text-center">{buyingPrice}</TableCell>
