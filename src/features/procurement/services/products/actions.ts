@@ -1,102 +1,99 @@
-'use server';
+"use server";
 
-import { eq } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import type { ProductsFormValues } from '@/features/procurement/utils/procurement.types';
+import type { ProductsFormValues } from "@/features/procurement/utils/procurement.types";
 
-import db from '@/drizzle/db';
-import { products } from '@/drizzle/schema';
-import { getProduct } from '@/features/procurement/services/products/data';
-import { revalidateProducts } from '@/features/procurement/utils/cache';
-import { productsSchema } from '@/features/procurement/utils/schemas';
-import { validateFields } from '@/lib/action-validator';
+import db from "@/drizzle/db";
+import { products } from "@/drizzle/schema";
+import { getProduct } from "@/features/procurement/services/products/data";
+import { revalidateProducts } from "@/features/procurement/utils/cache";
+import { productsSchema } from "@/features/procurement/utils/schemas";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import {
+  toNullableString,
+  toNullishNumber,
+  toNumber,
+} from "@/lib/helpers/numbers";
+import { requireAnyPermission } from "@/lib/permissions/guards";
+import { normalizeString } from "@/lib/string-normalizers";
 
-export const createProduct = async (values: unknown) => {
-  try {
-    const { data, error } = validateFields<ProductsFormValues>(
-      values,
-      productsSchema
-    );
+function buildProductPayload(data: ProductsFormValues) {
+  return {
+    productName: normalizeString(data.productName),
+    categoryId: toNumber(data.categoryId),
+    uomId: toNullishNumber(data.uomId),
+    isPeace: data.subItem,
+    buyingPrice: toNullableString(data.buyingPrice),
+    active: data.id ? data.active : true,
+    excludeFromAutoDeactivation: data.excludeFromAutoDeactivation,
+    stockItem: toNumber(data.categoryId) === 4 ? false : data.stockItem,
+  };
+}
 
-    if (error !== null) {
-      return {
-        error: true,
-        message: error,
-      };
+export const upsertProduct = async (values: unknown) =>
+  runAction("upsertProduct", async () => {
+    await requireAnyPermission([
+      "procurement:admin",
+      "procurement:standard",
+      "store:admin",
+      "store:standard",
+    ]);
+
+    const data = parseOrFail(productsSchema, values);
+    const payload = buildProductPayload(data);
+
+    if (data.id) {
+      const product = await getProduct(data.id);
+
+      if (!product) {
+        return {
+          error: true,
+          message: "Trying to edit a product that doesn't exist.",
+        };
+      }
     }
 
-    const [{ id }] = await db
-      .insert(products)
-      .values({ ...data, categoryId: +data.categoryId, uomId: +data.uomId })
-      .returning({ id: products.id });
+    try {
+      const returnedId = await db.transaction(async (tx) => {
+        let productId;
+        if (data.id) {
+          productId = data.id;
+          await tx
+            .update(products)
+            .set(payload)
+            .where(eq(products.id, data.id));
+        } else {
+          const [{ id }] = await tx
+            .insert(products)
+            .values({ ...payload, active: true })
+            .returning({ id: products.id });
 
-    revalidateProducts(id);
+          productId = id;
+        }
 
-    return {
-      error: false,
-      message: 'Product created successfully.',
-      data: { id },
-    };
-  } catch (error) {
-    console.error('Error creating product:', error);
-    return {
-      error: true,
-      message: 'Failed to create product. Please try again.',
-    };
-  }
-};
+        return productId;
+      });
 
-export const updateProduct = async (id: string, values: unknown) => {
-  try {
-    if (!id) {
+      revalidateProducts(returnedId);
+      revalidatePath("/procurement/products", "page");
+
+      return {
+        error: false,
+        message: `Product ${data.id ? "updated" : "created"} successfully.`,
+      };
+    } catch (e) {
+      console.log(e);
       return {
         error: true,
-        message: 'Product ID is required.',
+        message: data.id
+          ? "Unable to update product"
+          : "Unable to create product",
       };
     }
-
-    const { data, error } = validateFields<ProductsFormValues>(
-      values,
-      productsSchema
-    );
-
-    if (error !== null) {
-      return {
-        error: true,
-        message: error,
-      };
-    }
-
-    const product = await getProduct(id);
-
-    if (!product) {
-      return {
-        error: true,
-        message: "Trying to edit a product that doesn't exist.",
-      };
-    }
-
-    await db
-      .update(products)
-      .set({
-        ...data,
-        categoryId: +data.categoryId,
-        uomId: +data.uomId,
-        isPeace: data.subItem,
-      })
-      .where(eq(products.id, id));
-
-    revalidateProducts(id);
-  } catch (error) {
-    console.error('Error updating product:', error);
-    return {
-      error: true,
-      message: 'Failed to update product. Please try again.',
-    };
-  }
-  redirect('/procurement/products');
-};
+  });
 
 export const productIsReferenced = async (productId: string) => {
   const inOrders = await db.query.ordersDetails.findFirst({
@@ -112,11 +109,12 @@ export const productIsReferenced = async (productId: string) => {
 };
 
 export const deleteProduct = async (productId: string) => {
+  await requireAnyPermission(["procurement:admin", "store:admin"]);
   try {
     if (!productId) {
       return {
         error: true,
-        message: 'Product ID is required.',
+        message: "Product ID is required.",
       };
     }
 
@@ -125,28 +123,35 @@ export const deleteProduct = async (productId: string) => {
     if (isReferenced) {
       return {
         error: true,
-        message: 'Product is referenced elsewhere and cannot be deleted.',
+        message: "Product is referenced elsewhere and cannot be deleted.",
       };
     }
 
     await db.delete(products).where(eq(products.id, productId));
     revalidateProducts(productId);
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error("Error deleting product:", error);
     return {
       error: true,
-      message: 'Failed to delete product. Please try again.',
+      message: "Failed to delete product. Please try again.",
     };
   }
-  redirect('/procurement/products');
+  redirect("/procurement/products");
 };
 
 export const toggleProductState = async (productId: string) => {
+  await requireAnyPermission([
+    "procurement:admin",
+    "procurement:standard",
+    "store:admin",
+    "store:standard",
+  ]);
+
   try {
     if (!productId) {
       return {
         error: true,
-        message: 'Product ID is required.',
+        message: "Product ID is required.",
       };
     }
 
@@ -168,14 +173,14 @@ export const toggleProductState = async (productId: string) => {
     return {
       error: false,
       message: `Product ${
-        product.active ? 'deactivated' : 'activated'
+        product.active ? "deactivated" : "activated"
       } successfully.`,
     };
   } catch (error) {
-    console.error('Error toggling product state:', error);
+    console.error("Error toggling product state:", error);
     return {
       error: true,
-      message: 'Failed to update product state. Please try again.',
+      message: "Failed to update product state. Please try again.",
     };
   }
 };

@@ -3,6 +3,8 @@ import type {
   ColumnDef,
   PaginationState,
   Table as ReactTable,
+  Row,
+  RowSelectionState,
   SortingState,
 } from "@tanstack/react-table";
 
@@ -58,6 +60,14 @@ interface DataTableProps<TData, TValue> {
   onSortingChange?: (
     updater: SortingState | ((old: SortingState) => SortingState),
   ) => void;
+
+  // Row selection — all optional, opt-in only.
+  enableRowSelection?: boolean | ((row: Row<TData>) => boolean);
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: (
+    updater: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => void;
+  getRowId?: (row: TData) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -72,6 +82,10 @@ export function DataTable<TData, TValue>({
   onPaginationChange,
   sorting: controlledSorting,
   onSortingChange,
+  enableRowSelection = false,
+  rowSelection,
+  onRowSelectionChange,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     [],
@@ -99,9 +113,13 @@ export function DataTable<TData, TValue>({
     ...(manualPagination
       ? { manualPagination, pageCount, onPaginationChange }
       : {}),
+    ...(getRowId ? { getRowId } : {}),
+    enableRowSelection,
+    ...(onRowSelectionChange ? { onRowSelectionChange } : {}),
     state: {
       sorting,
       ...(manualPagination && pagination ? { pagination } : {}),
+      ...(rowSelection ? { rowSelection } : {}),
     },
   });
 

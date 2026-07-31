@@ -6,7 +6,10 @@ const { revalidateTag } = vi.hoisted(() => ({
 
 vi.mock('next/cache', () => ({ revalidateTag }));
 
-import { revalidateMaterialsIssues } from '@/features/store/utils/cache';
+import {
+  revalidateMaterialsIssues,
+  revalidateProductDeactivation,
+} from '@/features/store/utils/cache';
 
 describe('stock movement cache invalidation', () => {
   beforeEach(() => {
@@ -17,5 +20,37 @@ describe('stock movement cache invalidation', () => {
     revalidateMaterialsIssues('issue-1');
 
     expect(revalidateTag).toHaveBeenCalledWith('stock-balance', 'max');
+  });
+});
+
+describe('product deactivation cache invalidation', () => {
+  beforeEach(() => {
+    revalidateTag.mockClear();
+  });
+
+  it('revalidates the global tag always, and the id tag when a batchId is given', () => {
+    revalidateProductDeactivation('batch-1');
+
+    expect(revalidateTag).toHaveBeenCalledWith(
+      'global:product-deactivation-batches',
+      'max',
+    );
+    expect(revalidateTag).toHaveBeenCalledWith(
+      'id:batch-1-product-deactivation-batches',
+      'max',
+    );
+  });
+
+  it('revalidates only the global tag when no batchId is given', () => {
+    revalidateProductDeactivation();
+
+    expect(revalidateTag).toHaveBeenCalledWith(
+      'global:product-deactivation-batches',
+      'max',
+    );
+    expect(revalidateTag).not.toHaveBeenCalledWith(
+      expect.stringContaining('id:'),
+      'max',
+    );
   });
 });

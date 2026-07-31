@@ -47,6 +47,11 @@ const validateData = (values: unknown) => {
   } satisfies SchemaValidationSuccess<MaterialIssueFormValues>;
 };
 
+// Note: products.active = false includes products deactivated by the
+// auto-deactivation pipeline (src/inngest/functions/store.ts). This blocks
+// editing an existing Issue that references such a product until it's
+// reactivated or excluded — a known, accepted tradeoff, not a bug to silently
+// "fix" by relaxing this check without checking back with the product owner.
 const validateBusinessLogic = async (data: MaterialIssueFormValues) => {
   const fromStore = await db
     .select()

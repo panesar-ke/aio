@@ -84,3 +84,18 @@ export const revalidateMaterialsIssues = (id: string) => {
   revalidateTag(getMaterialIssueNo(), 'max');
   revalidateStockBalance();
 };
+
+export const getProductDeactivationBatchesGlobalTag = () => {
+  return getGlobalTag('product-deactivation-batches');
+};
+
+export const getProductDeactivationBatchIdTag = (id: string) => {
+  return getIdTag('product-deactivation-batches', id);
+};
+
+export const revalidateProductDeactivation = (batchId?: string) => {
+  revalidateTag(getProductDeactivationBatchesGlobalTag(), 'max');
+  if (batchId) {
+    revalidateTag(getProductDeactivationBatchIdTag(batchId), 'max');
+  }
+};

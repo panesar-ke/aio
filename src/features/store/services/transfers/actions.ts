@@ -47,6 +47,11 @@ const validateData = (values: unknown) => {
   } satisfies SchemaValidationSuccess<MaterialTransferFormValues>;
 };
 
+// Note: products.active = false includes products deactivated by the
+// auto-deactivation pipeline (src/inngest/functions/store.ts). This blocks
+// creating a Transfer that references such a product until it's reactivated
+// or excluded — a known, accepted tradeoff, not a bug to silently "fix" by
+// relaxing this check without checking back with the product owner.
 const validateBusinessLogic = async (data: MaterialTransferFormValues) => {
   const [fromStore, toStore] = await Promise.all([
     db.select().from(stores).where(eq(stores.id, data.fromStoreId)),

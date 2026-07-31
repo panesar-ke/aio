@@ -16,6 +16,20 @@ export const requiredStringSchemaEntry = (message?: string) =>
     .toLowerCase()
     .min(1, { message: message || "This field is required" });
 
+export const nullableTrimmedString = z
+  .string()
+  .trim()
+  .transform((value) => (value === "" || value === undefined ? null : value))
+  .nullable();
+
+export const nullableNonNegativeNumberField = (label: string) =>
+  z
+    .number({ message: `${label} must be a number` })
+    .nullable()
+    .refine((value) => !value || (Number.isFinite(value) && value >= 0), {
+      message: `${label} must be zero or greater`,
+    });
+
 export const optionalStringSchemaEntry = () =>
   z
     .string()

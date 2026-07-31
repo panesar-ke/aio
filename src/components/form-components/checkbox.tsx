@@ -1,49 +1,51 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-	Field,
-	FieldContent,
-	FieldDescription,
-	FieldError,
-	FieldLabel,
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
 } from "@/components/ui/field";
 import { useFieldContext } from "@/lib/form";
 
 type CheckboxProps = {
-	label: string;
-	required?: boolean;
-	helperText?: string;
-	className?: string;
-	fieldClassName?: string;
-	switch?: boolean;
+  label: string;
+  required?: boolean;
+  helperText?: string;
+  className?: string;
+  fieldClassName?: string;
+  switch?: boolean;
+  disabled?: boolean;
 };
 
 export function FormCheckbox(props: CheckboxProps) {
-	const field = useFieldContext<boolean>();
-	const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-	return (
-		<Field
-			data-invalid={isInvalid}
-			className={props.fieldClassName}
-			orientation="horizontal"
-		>
-			<Checkbox
-				id={field.name}
-				name={field.name}
-				checked={field.state.value}
-				onBlur={field.handleBlur}
-				onCheckedChange={(e) => field.handleChange(e === true)}
-				aria-invalid={isInvalid}
-			/>
+  const field = useFieldContext<boolean>();
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+  return (
+    <Field
+      data-invalid={isInvalid}
+      className={props.fieldClassName}
+      orientation="horizontal"
+    >
+      <Checkbox
+        id={field.name}
+        name={field.name}
+        checked={field.state.value}
+        onBlur={field.handleBlur}
+        onCheckedChange={(e) => field.handleChange(e === true)}
+        aria-invalid={isInvalid}
+        disabled={props.disabled}
+      />
 
-			<FieldContent>
-				<FieldLabel htmlFor={field.name}>
-					{props.label} {props.required ? "*" : ""}
-				</FieldLabel>
-				{props.helperText && (
-					<FieldDescription>{props.helperText}</FieldDescription>
-				)}
-				{isInvalid && <FieldError errors={field.state.meta.errors} />}
-			</FieldContent>
-		</Field>
-	);
+      <FieldContent>
+        <FieldLabel htmlFor={field.name}>
+          {props.label} {props.required ? "*" : ""}
+        </FieldLabel>
+        {props.helperText && (
+          <FieldDescription>{props.helperText}</FieldDescription>
+        )}
+        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+      </FieldContent>
+    </Field>
+  );
 }

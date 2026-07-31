@@ -11,7 +11,7 @@ import {
 } from '@/lib/permissions/catalog';
 import { getCurrentUserOrNull } from '@/lib/session';
 
-const ADMIN_USER_TYPES = new Set(['ADMIN', 'SUPER ADMIN']);
+export const ADMIN_USER_TYPES = new Set(['ADMIN', 'SUPER ADMIN']);
 
 export const getUserAssignedPermissions = cache(
   async (userId: string): Promise<Array<Permission>> => {

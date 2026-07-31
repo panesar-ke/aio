@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   BlocksIcon,
@@ -8,28 +8,28 @@ import {
   MonitorSmartphoneIcon,
   ShoppingBasketIcon,
   User2Icon,
-} from 'lucide-react';
-import { usePathname } from 'next/navigation';
+} from "lucide-react";
+import { usePathname } from "next/navigation";
 
-import type { Option } from '@/types/index.types';
+import type { Option } from "@/types/index.types";
 
-import { PermissionGate } from '@/components/auth/client-permission-gate';
-import CustomModal from '@/components/custom/custom-modal';
-import { Button } from '@/components/ui/button';
+import { PermissionGate } from "@/components/auth/client-permission-gate";
+import CustomModal from "@/components/custom/custom-modal";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useModal } from '@/features/integrations/modal-provider';
-import { AssetCategoryForm } from '@/features/it/assets/components/asset-category-form';
-import { CategoriesForm } from '@/features/it/components/expenses/categories';
-import { SubCategoriesForm } from '@/features/it/components/expenses/sub-categories';
-import { ProductsForm } from '@/features/procurement/components/products/products-form';
-import { ProjectForm } from '@/features/procurement/components/project/project-form';
-import { ServiceForm } from '@/features/procurement/components/services/service-form';
-import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
+} from "@/components/ui/dropdown-menu";
+import { useModal } from "@/features/integrations/modal-provider";
+import { AssetCategoryForm } from "@/features/it/assets/components/asset-category-form";
+import { CategoriesForm } from "@/features/it/components/expenses/categories";
+import { SubCategoriesForm } from "@/features/it/components/expenses/sub-categories";
+import { ProductsForm } from "@/features/procurement/components/products/products-form";
+import { ProjectForm } from "@/features/procurement/components/project/project-form";
+import { ServiceForm } from "@/features/procurement/components/services/service-form";
+import { VendorForm } from "@/features/procurement/components/vendors/vendor-form";
 
 export function NavBarOptions({
   categories,
@@ -40,7 +40,7 @@ export function NavBarOptions({
 }) {
   const pathName = usePathname();
 
-  if (!pathName.startsWith('/procurement') && !pathName.startsWith('/it'))
+  if (!pathName.startsWith("/procurement") && !pathName.startsWith("/it"))
     return null;
 
   return (
@@ -56,11 +56,11 @@ export function NavBarOptions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 *:cursor-pointer *:font-medium">
-        {pathName.startsWith('/procurement') && (
+        {pathName.startsWith("/procurement") && (
           <ProcurementOptions categories={categories} units={units} />
         )}
-        {pathName.startsWith('/it') && (
-          <PermissionGate permissions={['it:admin']}>
+        {pathName.startsWith("/it") && (
+          <PermissionGate permissions={["it:admin"]}>
             <ITOptions />
           </PermissionGate>
         )}
