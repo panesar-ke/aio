@@ -3,6 +3,7 @@ import {
   boolean,
   date,
   index,
+  integer,
   numeric,
   pgTable,
   text,
@@ -12,7 +13,12 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-import { grnsHeader, materialIssuesHeader, products } from '@/drizzle/schema';
+import {
+  grnsHeader,
+  materialIssuesHeader,
+  products,
+  users,
+} from '@/drizzle/schema';
 
 export const stores = pgTable(
   'stores',
@@ -123,6 +129,57 @@ export const stockBalanceSnapshotsRelations = relations(
     store: one(stores, {
       fields: [stockBalanceSnapshots.storeId],
       references: [stores.id],
+    }),
+  }),
+);
+
+export const productDeactivationBatches = pgTable(
+  'product_deactivation_batches',
+  {
+    id: uuid('id').notNull().primaryKey().defaultRandom(),
+    deactivationDate: timestamp('deactivation_date').notNull().defaultNow(),
+    thresholdDays: integer('threshold_days').notNull(),
+    totalCount: integer('total_count').notNull(),
+  },
+);
+
+export const productDeactivationBatchesRelations = relations(
+  productDeactivationBatches,
+  ({ many }) => ({
+    items: many(productDeactivationItems),
+  }),
+);
+
+export const productDeactivationItems = pgTable('product_deactivation_items', {
+  id: uuid('id').notNull().primaryKey().defaultRandom(),
+  batchId: uuid('batch_id')
+    .references(() => productDeactivationBatches.id)
+    .notNull(),
+  productId: uuid('product_id')
+    .references(() => products.id)
+    .notNull(),
+  lastUsedDate: date('last_used_date'),
+  lastUsedSource: varchar('last_used_source').notNull(),
+  balanceAtDeactivation: numeric('balance_at_deactivation'),
+  reactivated: boolean('reactivated').notNull().default(false),
+  reactivatedBy: uuid('reactivated_by').references(() => users.id),
+  reactivatedOn: timestamp('reactivated_on'),
+});
+
+export const productDeactivationItemsRelations = relations(
+  productDeactivationItems,
+  ({ one }) => ({
+    batch: one(productDeactivationBatches, {
+      fields: [productDeactivationItems.batchId],
+      references: [productDeactivationBatches.id],
+    }),
+    product: one(products, {
+      fields: [productDeactivationItems.productId],
+      references: [products.id],
+    }),
+    reactivatedByUser: one(users, {
+      fields: [productDeactivationItems.reactivatedBy],
+      references: [users.id],
     }),
   }),
 );

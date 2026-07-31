@@ -1355,6 +1355,10 @@ export const products = pgTable(
     active: boolean().default(true),
     stockItem: boolean('stock_item').default(true),
     isPeace: boolean('is_peace').default(false).notNull(),
+    createdOn: timestamp('created_on').$defaultFn(() => new Date()),
+    excludeFromAutoDeactivation: boolean('exclude_from_auto_deactivation')
+      .default(false)
+      .notNull(),
   },
   table => [
     index('product_name_idx').using(
