@@ -1,11 +1,13 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+
+import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
 import { TableSkeleton } from '@/components/custom/table-skeleton';
-import { getPurchaseOrders } from '@/features/procurement/services/purchase-orders/data';
 import { OrdersTable } from '@/features/procurement/components/purchase-order/orders-table';
+import { getPurchaseOrders } from '@/features/procurement/services/purchase-orders/data';
 
 type SearchParams = Promise<{ search?: string }>;
 

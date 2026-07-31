@@ -1,6 +1,8 @@
 import type { z } from 'zod';
-import { validateFields } from '@/lib/action-validator';
+
 import type { ActionResult } from '@/lib/actions/types';
+
+import { validateFields } from '@/lib/action-validator';
 import {
   ForbiddenError,
   UnauthorizedError,

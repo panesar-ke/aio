@@ -1,27 +1,37 @@
-'use no memo';
-import React from 'react';
+"use no memo";
+import type {
+  ColumnDef,
+  Table as ReactTable,
+  SortingState,
+} from "@tanstack/react-table";
+
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
+} from "@tanstack/react-table";
+import { format } from "date-fns";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from 'lucide-react';
-import type {
-  ColumnDef,
-  Table as ReactTable,
-  SortingState,
-} from '@tanstack/react-table';
+} from "lucide-react";
+import React from "react";
 
+import { ExcelIcon, PdfIcon } from "@/components/custom/icons";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,19 +40,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ExcelIcon, PdfIcon } from '@/components/custom/icons';
-import { reportCaseFormatter } from '@/lib/helpers/formatters';
-import { useExportExcel } from '@/hooks/use-export-excel';
+} from "@/components/ui/table";
+import { useExportExcel } from "@/hooks/use-export-excel";
+import { reportCaseFormatter } from "@/lib/helpers/formatters";
 
 interface DataTableProps<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>;
@@ -50,7 +50,7 @@ interface DataTableProps<TData, TValue> {
   reportTitle: string;
   exportExcelButton?: boolean;
   exportPdfButton?: boolean;
-  orientation?: 'portrait' | 'landscape';
+  orientation?: "portrait" | "landscape";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   excelData?: Array<any>;
   customFooter?: React.ReactNode;
@@ -63,7 +63,7 @@ export function ReportDataTable<TData, TValue>({
   reportTitle,
   exportExcelButton = true,
   exportPdfButton = true,
-  orientation = 'portrait',
+  orientation = "portrait",
   excelData,
   customFooter,
   defaultPageSize = 10,
@@ -72,10 +72,11 @@ export function ReportDataTable<TData, TValue>({
 
   const reportName = `${reportTitle
     .toLowerCase()
-    .replaceAll(' ', '-')}-${format(new Date(), 'ddMMyyyyhhmmss')}`;
+    .replaceAll(" ", "-")}-${format(new Date(), "ddMMyyyyhhmmss")}`;
 
   const exportToExcel = useExportExcel(reportName);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -96,22 +97,22 @@ export function ReportDataTable<TData, TValue>({
   const handleExportRowsExcel = () => {
     const rowData =
       excelData ||
-      table.getPrePaginationRowModel().rows.map(row => row.original);
+      table.getPrePaginationRowModel().rows.map((row) => row.original);
     exportToExcel(rowData);
   };
 
   const handleExportRowsPdf = () => {
-    const doc = new jsPDF(orientation, 'pt', 'a4');
+    const doc = new jsPDF(orientation, "pt", "a4");
     const tableData = table
       .getPrePaginationRowModel()
-      .rows.map(row =>
-        Object.values(row.original as Record<string, unknown>).map(value =>
-          value == null ? '' : String(value)
-        )
+      .rows.map((row) =>
+        Object.values(row.original as Record<string, unknown>).map((value) =>
+          value == null ? "" : String(value),
+        ),
       );
     const tableHeaders = table
       .getAllColumns()
-      .map(col => reportCaseFormatter(col.id));
+      .map((col) => reportCaseFormatter(col.id));
 
     autoTable(doc, {
       head: [tableHeaders],
@@ -148,16 +149,16 @@ export function ReportDataTable<TData, TValue>({
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader className="bg-secondary">
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => {
+                {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="h-12 px-4">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -167,16 +168,16 @@ export function ReportDataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="p-4">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -219,15 +220,15 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={value => {
+            onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className="h-8 w-17.5">
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map(pageSize => (
+              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -235,8 +236,8 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
+        <div className="flex w-25 items-center justify-center text-sm font-medium">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>
         <div className="flex items-center space-x-2">

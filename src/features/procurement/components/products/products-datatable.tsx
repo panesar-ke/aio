@@ -1,23 +1,26 @@
 'use client';
-import Link from 'next/link';
 import type { ColumnDef } from '@tanstack/react-table';
+
+import Link from 'next/link';
+
 import type { ProductTableRow } from '@/features/procurement/utils/procurement.types';
-import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
-import { DataTable } from '@/components/custom/datatable';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+
 import {
   CheckButton,
   DeleteAction,
   EditAction,
 } from '@/components/custom/custom-button';
+import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
+import { DataTable } from '@/components/custom/datatable';
+import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
+import { CustomStatusBadge } from '@/components/custom/status-badges';
 import { ActionButton } from '@/components/ui/action-button';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import {
   deleteProduct,
   toggleProductState,
 } from '@/features/procurement/services/products/actions';
-import { CustomStatusBadge } from '@/components/custom/status-badges';
 
 export function ProductsDataTable({
   products,

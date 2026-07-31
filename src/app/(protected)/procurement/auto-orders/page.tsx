@@ -1,5 +1,7 @@
-import { CogIcon } from 'lucide-react';
 import type { Metadata } from 'next';
+
+import { CogIcon } from 'lucide-react';
+
 import PageHeader from '@/components/custom/page-header';
 
 export const metadata: Metadata = {

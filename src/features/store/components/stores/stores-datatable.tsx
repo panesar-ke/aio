@@ -1,14 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import type { ColumnDef } from '@tanstack/react-table';
+
+import Link from 'next/link';
+
 import type { Store } from '@/features/store/utils/store.types';
-import { DataTable } from '@/components/custom/datatable';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+
 import { DeleteAction, EditAction } from '@/components/custom/custom-button';
+import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
+import { DataTable } from '@/components/custom/datatable';
 import { ActionButton } from '@/components/ui/action-button';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { deleteStore } from '@/features/store/services/stores/actions';
 
 export function StoresDatatable({ stores }: { stores: Array<Store> }) {

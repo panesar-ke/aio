@@ -1,18 +1,21 @@
 'use server';
 
-import { validateFields } from '@/lib/action-validator';
+import { eq } from 'drizzle-orm';
+
+import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
 import type {
   SchemaValidationFailure,
   SchemaValidationSuccess,
 } from '@/types/index.types';
-import { jobTrackerSchema } from '@/features/production/cnc/utils/schema';
-import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
-import { getCurrentUser } from '@/lib/session';
+
 import db from '@/drizzle/db';
 import { cncJobTracker } from '@/drizzle/schema';
+import { jobTrackerSchema } from '@/features/production/cnc/utils/schema';
+import { validateFields } from '@/lib/action-validator';
 import { dateFormat } from '@/lib/helpers/formatters';
+import { getCurrentUser } from '@/lib/session';
+
 import { revalidateJobTrackingTag } from '../utils/cache';
-import { eq } from 'drizzle-orm';
 
 const validateJobTrackerEntry = async (values: unknown) => {
   const { data, error } = validateFields<JobTrackerFormValues>(

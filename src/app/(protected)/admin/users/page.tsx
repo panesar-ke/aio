@@ -1,3 +1,7 @@
+import type { Metadata } from 'next';
+
+import type { SearchParams } from '@/types/index.types';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { DatatableSkeleton } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
@@ -5,8 +9,6 @@ import Search from '@/components/custom/search';
 import { UsersDatatable } from '@/features/admin/components/users/users-table';
 import { getUsers } from '@/features/admin/services/data';
 import { requirePermission } from '@/lib/permissions/guards';
-import type { SearchParams } from '@/types/index.types';
-import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Users',

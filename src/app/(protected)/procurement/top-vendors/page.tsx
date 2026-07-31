@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
+
 import type { TopVendorFormValues } from '@/features/procurement/utils/procurement.types';
-import { TopVendorForm } from '@/features/procurement/components/vendors/top-vendor-form';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { ErrorNotification } from '@/components/custom/error-components';
+import { TopVendorForm } from '@/features/procurement/components/vendors/top-vendor-form';
+import { TopVendorsTable } from '@/features/procurement/components/vendors/top-vendors-table';
 import { getTopVendors } from '@/features/procurement/services/reports/data';
 import { isEmptyObject } from '@/lib/utils';
-import { TopVendorsTable } from '@/features/procurement/components/vendors/top-vendors-table';
 
 export const metadata: Metadata = {
   title: 'Top Vendors',

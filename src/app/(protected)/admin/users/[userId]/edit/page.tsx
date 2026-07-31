@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { FormLoader } from '@/components/custom/loaders';
 import { Button } from '@/components/ui/button';
@@ -5,7 +7,6 @@ import { UserForm } from '@/features/admin/components/users/user-form';
 import { getUser } from '@/features/admin/services/data';
 import { requirePermission } from '@/lib/permissions/guards';
 import { getUserAssignedPermissions } from '@/lib/permissions/service';
-import Link from 'next/link';
 
 export const metadata = {
   title: 'Edit User',

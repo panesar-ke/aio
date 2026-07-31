@@ -1,9 +1,14 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { jobTrackerSchema } from '@/features/production/cnc/utils/schema';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
+import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { MiniSelect } from '@/components/custom/mini-select';
+import { ToastContent } from '@/components/custom/toast';
 import {
   Form,
   FormControl,
@@ -13,14 +18,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { DateTimePicker } from '@/lib/datetime-picker/date-time-picker';
-import { FormActions } from '@/components/custom/form-actions';
 import { useModal } from '@/features/integrations/modal-provider';
 import { upsertJobTrackerEntry } from '@/features/production/cnc/services/action';
-import { ToastContent } from '@/components/custom/toast';
-import toast from 'react-hot-toast';
-import { MiniSelect } from '@/components/custom/mini-select';
+import { jobTrackerSchema } from '@/features/production/cnc/utils/schema';
+import { DateTimePicker } from '@/lib/datetime-picker/date-time-picker';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 export function JobTrackerForm({ data }: { data?: JobTrackerFormValues }) {
   const { setClose } = useModal();

@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
+
 import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
 import PageHeader from "@/components/custom/page-header";
 import { requireAnyPermission } from "@/lib/permissions/guards";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "IT Dashboard",

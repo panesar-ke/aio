@@ -1,17 +1,18 @@
 "use cache";
-import { cacheTag } from "next/cache";
 import { and, asc, eq, sql } from "drizzle-orm";
+import { cacheTag } from "next/cache";
+import { notFound } from "next/navigation";
+
+import type { User } from "@/types/index.types";
+
+import db from "@/drizzle/db";
+import { forms, userRights } from "@/drizzle/schema";
 import {
   getFormsGlobalTag,
   getUserFormsGlobalTag,
   getUsersGlobalTag,
   getUserTag,
 } from "@/features/admin/utils/cache";
-import db from "@/drizzle/db";
-
-import type { User } from "@/types/index.types";
-import { forms, userRights } from "@/drizzle/schema";
-import { notFound } from "next/navigation";
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());

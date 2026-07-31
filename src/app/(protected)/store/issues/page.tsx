@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+
 import type { SearchParams } from '@/types/index.types';
+
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { getMaterialIssues } from '@/features/store/services/issues/data';
 import { MaterialIssuesDatatable } from '@/features/store/components/material-issues/issues-datatable';
+import { getMaterialIssues } from '@/features/store/services/issues/data';
 
 export const metadata: Metadata = {
   title: 'Material Issues',

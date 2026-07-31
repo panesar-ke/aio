@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+
 import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
 import { FormLoader } from "@/components/custom/loaders";
 import { RequisitionForm } from "@/features/procurement/components/material-requisitions/requisition-form";
 import {
+  getRequisitionNo,
   getSelectableProducts,
   getSelectableProjects,
-  getRequisitionNo,
   getSelectableServices,
 } from "@/features/procurement/services/material-requisitions/data";
 

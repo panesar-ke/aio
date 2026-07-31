@@ -1,3 +1,5 @@
+import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -7,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
 import { dateFormat } from '@/lib/helpers/formatters';
 
 export function WarrantyExpiryList({

@@ -1,8 +1,10 @@
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import type { Route } from 'next';
+
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;

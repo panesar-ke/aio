@@ -1,15 +1,23 @@
 'use client';
-import type { Option } from '@/types/index.types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createId } from '@paralleldrive/cuid2';
+import axios, { isAxiosError } from 'axios';
+import { Trash2Icon } from 'lucide-react';
 import {
   useFieldArray,
   useForm,
   type UseFormReturn,
   useWatch,
 } from 'react-hook-form';
-import { createId } from '@paralleldrive/cuid2';
+import toast from 'react-hot-toast';
+
 import type { ConversionFormValues } from '@/features/store/utils/store.types';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { conversionSchema } from '@/features/store/utils/schema';
+import type { Option } from '@/types/index.types';
+
+import { FormActions } from '@/components/custom/form-actions';
+import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -19,15 +27,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { dateFormat } from '@/lib/helpers/formatters';
-import { SearchSelect } from '@/components/custom/search-select';
-import axios, { isAxiosError } from 'axios';
-import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
-import { Trash2Icon } from 'lucide-react';
-import { FormActions } from '@/components/custom/form-actions';
-import { ToastContent } from '@/components/custom/toast';
 import { createConversion } from '@/features/store/services/conversions/action';
+import { conversionSchema } from '@/features/store/utils/schema';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 export function ConversionForm({
   products,

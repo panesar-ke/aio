@@ -1,12 +1,14 @@
 'use server';
 
-import bcrypt from 'bcryptjs';
+import type { Route } from 'next';
 import type z from 'zod';
+
+import bcrypt from 'bcryptjs';
+import { redirect } from 'next/navigation';
+
 import db from '@/drizzle/db';
 import { loginSchema } from '@/features/auth/actions/schema';
-import { redirect } from 'next/navigation';
 import { createSession, deleteSession } from '@/lib/session';
-import type { Route } from 'next';
 
 export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
   const { success, data, error } = loginSchema.safeParse(unsafeData);

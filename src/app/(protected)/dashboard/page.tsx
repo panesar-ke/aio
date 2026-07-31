@@ -1,6 +1,8 @@
 import type { Metadata, Route } from 'next';
+
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
+
 import db from '@/drizzle/db';
 import { getCurrentUser } from '@/lib/session';
 

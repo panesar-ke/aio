@@ -1,10 +1,11 @@
 'use cache';
 import { cacheTag } from 'next/cache';
+
+import db from '@/drizzle/db';
 import {
   getServiceIdTag,
   getServicesGlobalTag,
 } from '@/features/procurement/utils/cache';
-import db from '@/drizzle/db';
 
 export const serviceIsReferenced = async (serviceId: string) => {
   const inOrders = await db.query.ordersDetails.findFirst({

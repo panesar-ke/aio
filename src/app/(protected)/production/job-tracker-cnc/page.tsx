@@ -1,3 +1,8 @@
+import type { Metadata } from 'next';
+
+import { FileIcon } from 'lucide-react';
+import Link from 'next/link';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
@@ -5,9 +10,6 @@ import { Button } from '@/components/ui/button';
 import { JobTrackerTable } from '@/features/production/cnc/components/job-tracker-table';
 import { NewJobTrackerButton } from '@/features/production/cnc/components/new-job-tracker';
 import { getJobTrackerEntries } from '@/features/production/cnc/services/data';
-import { FileIcon } from 'lucide-react';
-import type { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Job Tracker - CNC',

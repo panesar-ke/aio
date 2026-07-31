@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+
 import type { SearchParams } from '@/types/index.types';
+
+import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
 import Search from '@/components/custom/search';
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import { getStores } from '@/features/store/services/stores/data';
 import { StoresDatatable } from '@/features/store/components/stores/stores-datatable';
+import { getStores } from '@/features/store/services/stores/data';
 
 export const metadata: Metadata = {
   title: 'Stores',

@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { numeric, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+
 import { products, vendors } from '@/drizzle/schema';
 
 export const autoOrdersItems = pgTable('auto_order_items', {

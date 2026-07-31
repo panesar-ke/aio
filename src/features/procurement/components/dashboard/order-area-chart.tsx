@@ -2,6 +2,9 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
+import type { ChartConfig } from '@/components/ui/chart';
+import type { getPurchasesByDate } from '@/features/procurement/services/dashboard/data';
+
 import {
   Card,
   CardContent,
@@ -16,8 +19,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import type { ChartConfig } from '@/components/ui/chart';
-import type { getPurchasesByDate } from '@/features/procurement/services/dashboard/data';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {

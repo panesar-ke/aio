@@ -1,9 +1,10 @@
 'use client';
 
+import { PlusIcon } from 'lucide-react';
+
 import CustomModal from '@/components/custom/custom-modal';
 import { Button } from '@/components/ui/button';
 import { useModal } from '@/features/integrations/modal-provider';
-import { PlusIcon } from 'lucide-react';
 import { JobTrackerForm } from '@/features/production/cnc/components/job-tracker-form';
 
 export function NewJobTrackerButton() {

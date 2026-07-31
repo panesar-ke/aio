@@ -1,15 +1,17 @@
 import type React from 'react';
+
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  ShoppingCartIcon,
-  PercentIcon,
-  HandshakeIcon,
   CalculatorIcon,
+  HandshakeIcon,
+  Minus,
+  PercentIcon,
+  ShoppingCartIcon,
+  TrendingDown,
+  TrendingUp,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { numberFormat } from '@/lib/helpers/formatters';
+import { cn } from '@/lib/utils';
 
 interface DashboardStatsCardProps {
   title: string;

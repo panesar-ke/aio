@@ -4,8 +4,8 @@
 
 import { Suspense } from 'react';
 
-import { NavBarOptions } from '@/components/layout/nav-bar-options';
 import { NavbarActions } from '@/components/layout/header-actions';
+import { NavBarOptions } from '@/components/layout/nav-bar-options';
 import {
   getCategories,
   getProductUoms,

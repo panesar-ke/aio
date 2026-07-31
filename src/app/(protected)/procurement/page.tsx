@@ -1,6 +1,17 @@
+import { connection } from 'next/server';
+
+import { DashboardStatsGrid } from '@/components/custom/dashboard-stats-card';
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import PageHeader from '@/components/custom/page-header';
-import { connection } from 'next/server';
+import {
+  OrderAreaChart,
+  OrderAreaChartLoading,
+} from '@/features/procurement/components/dashboard/order-area-chart';
+import { PurchaseByCategory } from '@/features/procurement/components/dashboard/purchase-by-category';
+import {
+  TopVendorsChart,
+  TopVendorsChartLoading,
+} from '@/features/procurement/components/dashboard/top-vendors-chart';
 import {
 
   getDashboardStats,
@@ -9,17 +20,8 @@ import {
   getSpendingByProductCategory,
   getTopVendorsDetails,
 } from '@/features/procurement/services/dashboard/data';
+
 import { VendorStatsLoading } from './vendors/page';
-import { DashboardStatsGrid } from '@/components/custom/dashboard-stats-card';
-import {
-  OrderAreaChart,
-  OrderAreaChartLoading,
-} from '@/features/procurement/components/dashboard/order-area-chart';
-import {
-  TopVendorsChart,
-  TopVendorsChartLoading,
-} from '@/features/procurement/components/dashboard/top-vendors-chart';
-import { PurchaseByCategory } from '@/features/procurement/components/dashboard/purchase-by-category';
 
 export const metadata = {
   title: 'Procurement Dashboard',

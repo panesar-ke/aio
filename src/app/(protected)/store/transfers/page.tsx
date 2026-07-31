@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import PageHeader from '@/components/custom/page-header';
-import { getTransfers } from '@/features/store/services/transfers/data';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
+import PageHeader from '@/components/custom/page-header';
 import { TransfersDatatable } from '@/features/store/components/transfers/transfer-datatable';
+import { getTransfers } from '@/features/store/services/transfers/data';
 
 export const metadata: Metadata = {
   title: 'Transfers',

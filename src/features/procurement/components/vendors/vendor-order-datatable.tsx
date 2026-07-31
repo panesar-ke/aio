@@ -1,9 +1,11 @@
 'use client';
 import type { ColumnDef } from '@tanstack/react-table';
+
+import type { VendorOrder } from '@/features/procurement/utils/procurement.types';
+
 import { DataTable } from '@/components/custom/datatable';
 import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
 import { dateFormat, numberFormat } from '@/lib/helpers/formatters';
-import type { VendorOrder } from '@/features/procurement/utils/procurement.types';
 
 interface VendorOrderDatatableProps {
   orders: Array<VendorOrder>;

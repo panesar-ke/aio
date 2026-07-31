@@ -8,6 +8,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+
 import { users } from '../schema';
 
 export const jobStatusEnum = pgEnum('job_status', [

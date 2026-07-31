@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import FormHeader from '@/components/custom/form-header';
 import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
 

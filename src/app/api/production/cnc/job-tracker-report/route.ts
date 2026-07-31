@@ -1,8 +1,10 @@
+import type { NextRequest } from 'next/server';
+
+import { and, asc, eq, gte, lte, type SQL } from 'drizzle-orm';
+
 import db from '@/drizzle/db';
 import { cncJobTracker } from '@/drizzle/schema';
 import { reportFilterSchema } from '@/features/production/cnc/utils/schema';
-import { and, asc, eq, gte, lte, type SQL } from 'drizzle-orm';
-import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

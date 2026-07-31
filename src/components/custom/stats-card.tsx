@@ -1,7 +1,9 @@
 import type React from 'react';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+
 import { numberFormat } from '@/lib/helpers/formatters';
+import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
   title: string;

@@ -1,14 +1,15 @@
 'use cache';
-import { cacheTag } from 'next/cache';
 import { eq, or, sql } from 'drizzle-orm';
+import { cacheTag } from 'next/cache';
+
+import db from '@/drizzle/db';
+import { productCategories, products, uoms } from '@/drizzle/schema';
 import {
   getProductIdTag,
   getProductsCategoryGlobalTag,
   getProductsGlobalTag,
   getUomGlobalTag,
 } from '@/features/procurement/utils/cache';
-import db from '@/drizzle/db';
-import { productCategories, products, uoms } from '@/drizzle/schema';
 import { transformOptions } from '@/lib/helpers/formatters';
 
 export const getProducts = async (q?: string) => {

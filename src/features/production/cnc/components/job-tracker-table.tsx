@@ -1,19 +1,23 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
-import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
-import { DataTable } from '@/components/custom/datatable';
+
 import { format } from 'date-fns';
+
+import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
+
+import { DeleteAction, EditAction } from '@/components/custom/custom-button';
+import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
+import CustomModal from '@/components/custom/custom-modal';
+import { DataTable } from '@/components/custom/datatable';
+import { ActionButton } from '@/components/ui/action-button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
-import { ActionButton } from '@/components/ui/action-button';
-import { DeleteAction, EditAction } from '@/components/custom/custom-button';
+import { useModal } from '@/features/integrations/modal-provider';
 import { deleteJobTrackerEntry } from '@/features/production/cnc/services/action';
 import { titleCase } from '@/lib/helpers/formatters';
-import { useModal } from '@/features/integrations/modal-provider';
-import CustomModal from '@/components/custom/custom-modal';
+
 import { JobTrackerForm } from './job-tracker-form';
 
 export function JobTrackerTable({

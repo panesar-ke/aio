@@ -17,11 +17,9 @@ import {
   PackageIcon,
   ReceiptIcon,
   RecycleIcon,
-  ShieldAlertIcon,
   TabletSmartphoneIcon,
   Users2,
   Users2Icon,
-  WalletIcon,
   WarehouseIcon,
   WrenchIcon,
 } from "lucide-react";

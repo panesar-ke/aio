@@ -1,10 +1,11 @@
 'use cache';
 
-import { cacheTag } from 'next/cache';
-import db from '@/drizzle/db';
-import { getJobTrackingGlobalTag } from '@/features/production/cnc/utils/cache';
 import { and, ilike, ne, or } from 'drizzle-orm';
+import { cacheTag } from 'next/cache';
+
+import db from '@/drizzle/db';
 import { cncJobTracker } from '@/drizzle/schema';
+import { getJobTrackingGlobalTag } from '@/features/production/cnc/utils/cache';
 
 export const getJobTrackerEntries = async (q?: string) => {
   cacheTag(getJobTrackingGlobalTag());

@@ -1,18 +1,20 @@
 'use client';
 import { useStore } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
+import { ClipboardCheckIcon, ClipboardIcon } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+
+import type { ResetPasswordFormValues } from '@/features/admin/utils/admin.types';
+
+import { ToastContent } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheckIcon, ClipboardIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ToastContent } from '@/components/custom/toast';
-import { resetPasswordFormSchema } from '@/features/admin/utils/schema';
-import type { ResetPasswordFormValues } from '@/features/admin/utils/admin.types';
 import { resetPassword } from '@/features/admin/services/action';
+import { resetPasswordFormSchema } from '@/features/admin/utils/schema';
 import { useAppForm } from '@/lib/form';
-import { useParams } from 'next/navigation';
 
 const RESET_PASSWORD_METHODS = [
   {

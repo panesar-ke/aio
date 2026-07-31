@@ -1,15 +1,16 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { isAxiosError } from 'axios';
 import { LockIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
-import {
-  changePasswordSchema,
-  type ChangePasswordFormValues,
-} from '@/features/change-password/utils/schema';
+import { ButtonLoader } from '@/components/custom/loaders';
+import { PasswordInput } from '@/components/custom/password-input';
+import { ToastContent } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -18,12 +19,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { PasswordInput } from '@/components/custom/password-input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { ToastContent } from '@/components/custom/toast';
 import { changePasswordAction } from '@/features/change-password/services/action';
+import {
+  type ChangePasswordFormValues,
+  changePasswordSchema,
+} from '@/features/change-password/utils/schema';
 
 export function ChangePasswordForm() {
   const form = useForm<ChangePasswordFormValues>({

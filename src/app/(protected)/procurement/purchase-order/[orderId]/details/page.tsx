@@ -1,11 +1,12 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+
+import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+
+import { LoadingSpinner } from '@/components/custom/loaders';
 import PageHeader from '@/components/custom/page-header';
 import { OrderView } from '@/features/procurement/components/purchase-order/order-view';
 import { getPurchaseOrder } from '@/features/procurement/services/purchase-orders/data';
-
-import { LoadingSpinner } from '@/components/custom/loaders';
 
 type Params = Promise<{ orderId: string }>;
 

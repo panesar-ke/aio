@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import PageHeader from '@/components/custom/page-header';
 import { ChangePasswordForm } from '@/features/change-password/components/change-password-form';
 

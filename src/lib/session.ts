@@ -1,13 +1,15 @@
 import 'server-only';
-import { SignJWT, jwtVerify } from 'jose';
-import { env } from '@/env/server';
-import type { SessionPayload } from '@/types/index.types';
+import { eq } from 'drizzle-orm';
+import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { cache } from 'react';
+
+import type { SessionPayload } from '@/types/index.types';
+
 import db from '@/drizzle/db';
 import { sessions } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { cache } from 'react';
-import { redirect } from 'next/navigation';
+import { env } from '@/env/server';
 
 const secretKey = env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);

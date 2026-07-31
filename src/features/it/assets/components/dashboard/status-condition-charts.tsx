@@ -2,14 +2,15 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 
+import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart';
-import type { ITAssetsDashboardStats } from '@/features/it/assets/services/dashboard';
 import { reportCaseFormatter } from '@/lib/helpers/formatters';
 
 const chartConfig = {
