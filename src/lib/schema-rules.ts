@@ -13,6 +13,7 @@ export const requiredStringSchemaEntry = (message?: string) =>
   z
     .string()
     .trim()
+    .toLowerCase()
     .min(1, { message: message || "This field is required" });
 
 export const optionalStringSchemaEntry = () =>
