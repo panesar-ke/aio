@@ -106,4 +106,12 @@ describe('buildProductUsageAggregatesQuery', () => {
       'GREATEST(su.last_date, mu.last_date, ou.last_date, ru.last_date)',
     );
   });
+
+  it('normalizes the reactivation timestamp to UTC before truncating to a date', () => {
+    const query = dialect.sqlToQuery(buildProductUsageAggregatesQuery());
+
+    expect(query.sql).toContain(
+      "MAX(pdi.reactivated_on AT TIME ZONE 'UTC')::date",
+    );
+  });
 });

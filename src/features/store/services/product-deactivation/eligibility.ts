@@ -84,7 +84,7 @@ export function buildProductUsageAggregatesQuery() {
       GROUP BY od.item_id
     ),
     reactivation_usage AS (
-      SELECT pdi.product_id AS product_id, MAX(pdi.reactivated_on)::date AS last_date
+      SELECT pdi.product_id AS product_id, MAX(pdi.reactivated_on AT TIME ZONE 'UTC')::date AS last_date
       FROM ${productDeactivationItems} pdi
       WHERE pdi.reactivated = true AND pdi.reactivated_on IS NOT NULL
       GROUP BY pdi.product_id

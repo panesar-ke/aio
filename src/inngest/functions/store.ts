@@ -4,13 +4,13 @@ import {
 } from '@/features/store/services/product-deactivation/actions';
 import { inngest } from '@/inngest/client';
 
-// Split into two steps (persist, then notify) so retries are meaningful:
+// Split into per-purpose steps so retries are meaningful:
 // deactivateAndLogStaleProducts is a single DB transaction, so a retry that
-// re-runs it from scratch is always safe. Once it's memoized, a retry only
-// re-attempts the notification fan-out, instead of re-running the whole
-// function — which would otherwise find zero remaining candidates (they're
-// already deactivated) and silently no-op, masking a failed notification run
-// as a success.
+// re-runs it from scratch is always safe. notifyStoreAdminsOfDeactivation
+// wraps each admin notification in its own uniquely named step.run, so a
+// retry only re-sends notifications that didn't already succeed — a single
+// step.run around the whole admin loop would re-run it from scratch on
+// retry, duplicating notifications already sent to earlier admins.
 export const deactivateStaleProducts = inngest.createFunction(
   { id: 'deactivate-stale-products', retries: 2 },
   { cron: '0 6 * * 1' },
@@ -23,13 +23,12 @@ export const deactivateStaleProducts = inngest.createFunction(
       return { batchId: null, totalCount: 0 };
     }
 
-    await step.run('notify-store-admins', async () => {
-      await notifyStoreAdminsOfDeactivation(
-        batch.batchId,
-        batch.totalCount,
-        event.id,
-      );
-    });
+    await notifyStoreAdminsOfDeactivation(
+      batch.batchId,
+      batch.totalCount,
+      event.id,
+      step,
+    );
 
     return batch;
   },

@@ -1,3 +1,5 @@
+import type { GetStepTools } from 'inngest';
+
 import { inArray } from 'drizzle-orm';
 
 import type { ProductUsageAggregate } from '@/features/store/services/product-deactivation/eligibility';
@@ -14,7 +16,10 @@ import { sumProductBalanceAcrossStores } from '@/features/store/services/product
 import { PRODUCT_DEACTIVATION_THRESHOLD_DAYS } from '@/features/store/services/product-deactivation/constants';
 import { getEligibleCandidates } from '@/features/store/services/product-deactivation/eligibility';
 import { revalidateProductDeactivation } from '@/features/store/utils/cache';
+import { type inngest } from '@/inngest/client';
 import { dateFormat } from '@/lib/helpers/formatters';
+
+type StepTools = GetStepTools<typeof inngest>;
 
 export function buildDeactivationItemRow(
   candidate: ProductUsageAggregate,
@@ -85,19 +90,22 @@ export async function notifyStoreAdminsOfDeactivation(
   batchId: string,
   totalCount: number,
   eventId: string,
+  step: StepTools,
 ): Promise<void> {
   const adminUserIds = await getStoreAdminUserIds();
 
   for (const adminUserId of adminUserIds) {
-    await createNotification({
-      title: 'Products auto-deactivated',
-      message: `${totalCount} unused stock product${
-        totalCount === 1 ? '' : 's'
-      } were automatically deactivated for review.`,
-      path: `/store/deactivated-items/${batchId}`,
-      userId: adminUserId,
-      notificationType: 'PRODUCT_DEACTIVATION',
-      eventId,
+    await step.run(`notify-admin-${adminUserId}`, async () => {
+      await createNotification({
+        title: 'Products auto-deactivated',
+        message: `${totalCount} unused stock product${
+          totalCount === 1 ? '' : 's'
+        } were automatically deactivated for review.`,
+        path: `/store/deactivated-items/${batchId}`,
+        userId: adminUserId,
+        notificationType: 'PRODUCT_DEACTIVATION',
+        eventId,
+      });
     });
   }
 }
