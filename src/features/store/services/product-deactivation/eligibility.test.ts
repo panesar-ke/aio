@@ -95,4 +95,15 @@ describe('buildProductUsageAggregatesQuery', () => {
     expect(query.sql).toContain('p.stock_item = true');
     expect(query.sql).toContain('p.exclude_from_auto_deactivation = false');
   });
+
+  it('treats a reactivation as a usage signal, so a reactivated product gets a fresh baseline', () => {
+    const query = dialect.sqlToQuery(buildProductUsageAggregatesQuery());
+
+    expect(query.sql).toContain('"product_deactivation_items"');
+    expect(query.sql).toContain('pdi.reactivated = true');
+    expect(query.sql).toContain('pdi.reactivated_on');
+    expect(query.sql).toContain(
+      'GREATEST(su.last_date, mu.last_date, ou.last_date, ru.last_date)',
+    );
+  });
 });
