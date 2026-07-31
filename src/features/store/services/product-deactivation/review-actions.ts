@@ -19,7 +19,10 @@ export async function reactivateItems(itemIds: Array<string>) {
     const user = await getCurrentUser();
 
     const items = await db
-      .select({ productId: productDeactivationItems.productId })
+      .select({
+        productId: productDeactivationItems.productId,
+        batchId: productDeactivationItems.batchId,
+      })
       .from(productDeactivationItems)
       .where(inArray(productDeactivationItems.id, itemIds));
 
@@ -44,7 +47,10 @@ export async function reactivateItems(itemIds: Array<string>) {
         );
     });
 
-    revalidateProductDeactivation();
+    const batchIds = new Set(items.map(item => item.batchId));
+    for (const batchId of batchIds) {
+      revalidateProductDeactivation(batchId);
+    }
 
     return { error: false, message: 'Selected items reactivated successfully.' };
   } catch (error) {
