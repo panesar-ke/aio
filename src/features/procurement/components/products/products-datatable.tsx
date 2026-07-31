@@ -108,5 +108,5 @@ export function ProductsDataTable({
       ),
     },
   ];
-  return <DataTable data={products} columns={columns} denseCell />;
+  return <DataTable data={products} columns={columns} />;
 }
