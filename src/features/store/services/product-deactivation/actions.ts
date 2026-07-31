@@ -30,8 +30,7 @@ export function buildDeactivationItemRow(
   };
 }
 
-export async function runProductDeactivation(
-  eventId: string,
+export async function deactivateAndLogStaleProducts(
   asOf: Date = new Date(),
 ): Promise<{ batchId: string; totalCount: number } | null> {
   const candidates = await getEligibleCandidates(
@@ -43,43 +42,57 @@ export async function runProductDeactivation(
     return null;
   }
 
-  const [{ id: batchId }] = await db
-    .insert(productDeactivationBatches)
-    .values({
-      thresholdDays: PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
-      totalCount: candidates.length,
-    })
-    .returning({ id: productDeactivationBatches.id });
+  const batchId = await db.transaction(async tx => {
+    const [{ id }] = await tx
+      .insert(productDeactivationBatches)
+      .values({
+        thresholdDays: PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
+        totalCount: candidates.length,
+      })
+      .returning({ id: productDeactivationBatches.id });
 
-  await db
-    .update(products)
-    .set({ active: false })
-    .where(
-      inArray(
-        products.id,
-        candidates.map(candidate => candidate.productId),
-      ),
-    );
+    await tx
+      .update(products)
+      .set({ active: false })
+      .where(
+        inArray(
+          products.id,
+          candidates.map(candidate => candidate.productId),
+        ),
+      );
 
-  for (const candidate of candidates) {
-    const balance = await sumProductBalanceAcrossStores(
-      candidate.productId,
-      asOf,
-    );
+    for (const candidate of candidates) {
+      const balance = await sumProductBalanceAcrossStores(
+        candidate.productId,
+        asOf,
+      );
 
-    await db.insert(productDeactivationItems).values({
-      batchId,
-      ...buildDeactivationItemRow(candidate, balance),
-    });
-  }
+      await tx.insert(productDeactivationItems).values({
+        batchId: id,
+        ...buildDeactivationItemRow(candidate, balance),
+      });
+    }
 
+    return id;
+  });
+
+  revalidateProductDeactivation(batchId);
+
+  return { batchId, totalCount: candidates.length };
+}
+
+export async function notifyStoreAdminsOfDeactivation(
+  batchId: string,
+  totalCount: number,
+  eventId: string,
+): Promise<void> {
   const adminUserIds = await getStoreAdminUserIds();
 
   for (const adminUserId of adminUserIds) {
     await createNotification({
       title: 'Products auto-deactivated',
-      message: `${candidates.length} unused stock product${
-        candidates.length === 1 ? '' : 's'
+      message: `${totalCount} unused stock product${
+        totalCount === 1 ? '' : 's'
       } were automatically deactivated for review.`,
       path: `/store/deactivated-items/${batchId}`,
       userId: adminUserId,
@@ -87,8 +100,4 @@ export async function runProductDeactivation(
       eventId,
     });
   }
-
-  revalidateProductDeactivation(batchId);
-
-  return { batchId, totalCount: candidates.length };
 }
