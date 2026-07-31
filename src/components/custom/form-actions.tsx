@@ -1,10 +1,16 @@
-import { CircleCheckBigIcon, CircleXIcon } from 'lucide-react';
+import {
+  CircleCheckBigIcon,
+  CircleXIcon,
+  type LucideIcon,
+  SaveIcon,
+} from "lucide-react";
 
-import type { IsEdit, IsPending } from '@/types/index.types';
+import type { IsEdit, IsPending } from "@/types/index.types";
 
-import { ButtonLoader } from '@/components/custom/loaders';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ButtonLoader } from "@/components/custom/loaders";
+import { Button } from "@/components/ui/button";
+import { LoadingSwap } from "@/components/ui/loading-swap";
+import { cn } from "@/lib/utils";
 
 interface FormActionsProps extends IsPending, IsEdit {
   resetFn: () => void;
@@ -20,11 +26,11 @@ export function FormActions({
   resetFn,
   className,
   defaultButtonNames = true,
-  actionButtonText = 'Save',
-  cancelButtonText = 'Cancel',
+  actionButtonText = "Save",
+  cancelButtonText = "Cancel",
 }: FormActionsProps) {
   return (
-    <div className={cn('flex items-center gap-x-2 justify-end', className)}>
+    <div className={cn("flex items-center gap-x-2 justify-end", className)}>
       <Button type="submit" disabled={isPending} size="lg">
         {isPending ? (
           <ButtonLoader loadingText="Processing..." />
@@ -34,8 +40,8 @@ export function FormActions({
             <span>
               {defaultButtonNames
                 ? isEdit
-                  ? 'Update'
-                  : 'Save'
+                  ? "Update"
+                  : "Save"
                 : actionButtonText}
             </span>
           </>
@@ -49,8 +55,58 @@ export function FormActions({
         size="lg"
       >
         <CircleXIcon />
-        <span>{defaultButtonNames ? 'Cancel' : cancelButtonText}</span>
+        <span>{defaultButtonNames ? "Cancel" : cancelButtonText}</span>
       </Button>
     </div>
+  );
+}
+
+type FooterFormActionsProps = {
+  handleSubmit: () => void;
+  handleReset: () => void;
+  isSubmitting: boolean;
+  saveText?: string;
+  saveIcon?: LucideIcon;
+  resetText?: string;
+  resetIcon?: LucideIcon;
+  withMarginTop?: boolean;
+};
+
+export function FooterFormActions(props: FooterFormActionsProps) {
+  return (
+    <footer
+      className={cn(
+        "sticky bottom-0 z-10 border-t ",
+        props.withMarginTop ? "mt-12" : "",
+      )}
+    >
+      <div className="flex flex-col md:flex-row justify-end py-4 gap-2">
+        <Button
+          type="button"
+          onClick={props.handleSubmit}
+          size="lg"
+          disabled={props.isSubmitting}
+          className="min-w-32"
+        >
+          <LoadingSwap
+            isLoading={props.isSubmitting}
+            className="flex gap-2 items-center"
+          >
+            {props.saveIcon ? <props.saveIcon /> : <SaveIcon />}
+            <span>{props.saveText ?? "Save"}</span>
+          </LoadingSwap>
+        </Button>
+        <Button
+          disabled={props.isSubmitting}
+          variant="outline"
+          size="lg"
+          className="min-w-32"
+          onClick={() => props.handleReset()}
+        >
+          <CircleXIcon />
+          <span>Cancel</span>
+        </Button>
+      </div>
+    </footer>
   );
 }
