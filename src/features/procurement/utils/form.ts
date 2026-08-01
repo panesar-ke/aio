@@ -17,8 +17,11 @@ export const materialRequisitionFormOpts = (
       documentNo: requisitionNumber,
     },
     validators: {
+      // zod v4 types z.coerce.* input as `unknown`, which no longer structurally matches
+      // TanStack Form's FormValidateOrFn<TParentData> against this schema's Standard Schema
+      // input type. Runtime validation is unaffected; this is a compile-time-only cast.
       onSubmit: materialRequisitionFormSchema,
-    },
+    } as any,
   });
 };
 
