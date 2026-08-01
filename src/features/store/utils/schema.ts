@@ -26,12 +26,12 @@ export const grnFormSchema = z.object({
       itemId: requiredStringSchemaEntry('Item is required'),
       productName: requiredStringSchemaEntry('Item is required'),
       orderedQty: z.coerce.number({
-        required_error: 'Field is required',
-        invalid_type_error: 'Field must be a number',
+        error: (issue) =>
+          issue.input === undefined ? 'Field is required' : 'Field must be a number',
       }),
       qty: z.coerce.number({
-        required_error: 'Field is required',
-        invalid_type_error: 'Field must be a number',
+        error: (issue) =>
+          issue.input === undefined ? 'Field is required' : 'Field must be a number',
       }),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
@@ -103,8 +103,8 @@ export const materialIssueFormSchema = z.object({
       itemId: requiredStringSchemaEntry('Item is required'),
       stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
       issuedQty: z.coerce.number({
-        required_error: 'Field is required',
-        invalid_type_error: 'Field must be a number',
+        error: (issue) =>
+          issue.input === undefined ? 'Field is required' : 'Field must be a number',
       }),
       remarks: optionalStringSchemaEntry(),
     })
@@ -146,7 +146,7 @@ export const stockMovementReportSchema = z
 
 export const conversionSchema = z.object({
   conversionDate: z.coerce.date({
-    required_error: 'Conversion date is required.',
+    error: (issue) => (issue.input === undefined ? 'Conversion date is required.' : undefined),
   }),
   finalProduct: z.string().min(1, 'Select item converting to.'),
   convertedQty: z.coerce.number().min(1, 'Enter a valid quantity.'),

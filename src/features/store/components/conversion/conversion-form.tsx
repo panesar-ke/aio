@@ -6,6 +6,7 @@ import { Trash2Icon } from 'lucide-react';
 import {
   useFieldArray,
   useForm,
+  type Resolver,
   type UseFormReturn,
   useWatch,
 } from 'react-hook-form';
@@ -49,7 +50,7 @@ export function ConversionForm({
       convertedQty: 0,
       convertingItems: [],
     },
-    resolver: zodResolver(conversionSchema),
+    resolver: zodResolver(conversionSchema) as Resolver<ConversionFormValues>,
   });
 
   async function onSubmit(data: ConversionFormValues) {

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import type { UseFormReturn } from 'react-hook-form';
+import type { Resolver, UseFormReturn } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createId } from '@paralleldrive/cuid2';
@@ -70,7 +70,7 @@ export function IssueMaterialForm({
           : new Date(),
       fromStoreId: issue?.storeId || '',
     },
-    resolver: zodResolver(materialIssueFormSchema),
+    resolver: zodResolver(materialIssueFormSchema) as Resolver<MaterialIssueFormValues>,
   });
 
   const isPending = form.formState.isSubmitting;
