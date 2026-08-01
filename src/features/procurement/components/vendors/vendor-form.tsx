@@ -147,7 +147,7 @@ export function VendorForm({ vendor, fromModal }: VendorFormProps) {
                   <field.Input
                     label="Tax PIN"
                     maxLength={11}
-                    placeholder="Example: A12345678B"
+                    placeholder="Example: A123456789B"
                   />
                 )}
               </form.AppField>

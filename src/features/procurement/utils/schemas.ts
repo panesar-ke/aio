@@ -9,6 +9,7 @@ import {
   requiredDateSchemaEntry,
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
+  requiredTrimmedStringSchemaEntry,
 } from "@/lib/schema-rules";
 import { isValidEmail } from "@/lib/utils";
 
@@ -81,7 +82,7 @@ export const orderSchema = z
 
 export const vendorSchema = z.object({
   id: nullableTrimmedString,
-  vendorName: requiredStringSchemaEntry("Vendor name is required."),
+  vendorName: requiredTrimmedStringSchemaEntry("Vendor name is required."),
   contact: z
     .string()
     .trim()
@@ -89,7 +90,7 @@ export const vendorSchema = z.object({
     .max(15, "Contact cannot be over 15 characters"),
   address: optionalTrimmedString,
   kraPin: optionalTrimmedString.refine(
-    (val) => !val || /^[A-P][0-9]{7}[A-Z]$/.test(val.trim()),
+    (val) => !val || /^[A-P][0-9]{9}[A-Z]$/.test(val.trim()),
     {
       message: "Invalid KRA PIN provided.",
     },
@@ -97,7 +98,7 @@ export const vendorSchema = z.object({
   email: optionalTrimmedString.refine((val) => !val || isValidEmail(val), {
     message: "Invalid email address provided.",
   }),
-  contactPerson: requiredStringSchemaEntry(
+  contactPerson: requiredTrimmedStringSchemaEntry(
     "Name of contact person is required.",
   ),
   active: z.boolean(),

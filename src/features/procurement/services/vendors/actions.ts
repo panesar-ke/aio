@@ -5,7 +5,7 @@ import type { z } from "zod";
 import { and, count, eq, ne, sql } from "drizzle-orm";
 
 import db from "@/drizzle/db";
-import { ordersHeader, projects, vendors } from "@/drizzle/schema";
+import { itExpenses, ordersHeader, projects, vendors } from "@/drizzle/schema";
 import {
   revalidateProjects,
   revalidateVendors,
@@ -17,6 +17,7 @@ import {
 import { validateFields } from "@/lib/action-validator";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
 import { requireAnyPermission } from "@/lib/permissions/guards";
+import { normalizeString } from "@/lib/string-normalizers";
 
 import { getVendor } from "./data";
 
@@ -24,13 +25,13 @@ type VendorData = z.infer<typeof vendorSchema>;
 
 const buildVendorPayload = (values: VendorData) => {
   return {
-    vendorName: values.vendorName,
-    contactPerson: values.contactPerson,
+    vendorName: normalizeString(values.vendorName),
+    contactPerson: normalizeString(values.contactPerson),
     contact: values.contact,
     email: values.email,
     kraPin: values.kraPin,
     address: values.address,
-    active: values.active,
+    active: values.id ? Boolean(values.active) : true,
   };
 };
 
@@ -90,24 +91,22 @@ export const upsertVendor = async (values: unknown) =>
     };
   });
 
-export const deleteVendor = async (id: string) => {
-  if (!id) {
-    return {
-      error: true,
-      message: "Vendor ID is required for deletion.",
-    };
-  }
+export const deleteVendor = async (id: string) =>
+  runAction("delete-vendor", async () => {
+    await requireAnyPermission(["procurement:admin"]);
+    if (!id) {
+      return { error: true, message: "Vendor ID is required for deletion." };
+    }
 
-  try {
-    const existingOrders = await db.$count(
-      ordersHeader,
-      eq(ordersHeader.vendorId, id),
-    );
+    const [existingOrders, existingExpenses] = await Promise.all([
+      db.$count(ordersHeader, eq(ordersHeader.vendorId, id)),
+      db.$count(itExpenses, eq(itExpenses.vendorId, id)),
+    ]);
 
-    if (existingOrders > 0) {
+    if (existingOrders > 0 || existingExpenses > 0) {
       return {
         error: true,
-        message: "Vendor has existing orders and cannot be deleted.",
+        message: "Vendor cannot be deleted as they are referenced elsewhere.",
       };
     }
 
@@ -118,14 +117,7 @@ export const deleteVendor = async (id: string) => {
       error: false,
       message: "Vendor deleted successfully.",
     };
-  } catch (error) {
-    console.error("Error deleting vendor:", error);
-    return {
-      error: true,
-      message: "Failed to delete vendor. Please try again.",
-    };
-  }
-};
+  });
 
 export const createProject = async (projectData: unknown) => {
   const validation = validateFields(projectData, projectFormSchema);

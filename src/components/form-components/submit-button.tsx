@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/field";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useFormContext } from "@/lib/form";
+import { cn } from "@/lib/utils";
 
 type SubmitButtonProps = {
   buttonText: string;
@@ -34,7 +35,7 @@ export function SubmitButton({
       {([isSubmitting]) => (
         <Field
           orientation={isMobile ? "vertical" : orientation || "horizontal"}
-          className="flex-row justify-end"
+          className={cn("justify-end", { "flex-row": !isMobile })}
         >
           <Button
             type="submit"
@@ -57,7 +58,7 @@ export function SubmitButton({
               onClick={onReset ? () => onReset() : () => form.reset()}
             >
               <Undo2Icon />
-              Cancel
+              Reset
             </Button>
           )}
         </Field>

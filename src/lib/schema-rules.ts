@@ -16,6 +16,12 @@ export const requiredStringSchemaEntry = (message?: string) =>
     .toLowerCase()
     .min(1, { message: message || "This field is required" });
 
+export const requiredTrimmedStringSchemaEntry = (message?: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, { message: message || "This field is required" });
+
 export const nullableTrimmedString = z
   .string()
   .trim()
