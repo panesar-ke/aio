@@ -13,6 +13,24 @@ export const storeFormSchema = z.object({
   description: requiredStringSchemaEntry('Description is required'),
 });
 
+// z.coerce.number() coerces the raw input to NaN before the `error` map sees
+// it, so it can't distinguish a genuinely missing field from an invalid one.
+// Checking the raw value in a `.transform()` (which runs before coercion)
+// preserves that distinction.
+const requiredQtySchemaEntry = () =>
+  z.unknown().transform((val, ctx) => {
+    if (val === undefined) {
+      ctx.addIssue({ code: 'custom', message: 'Field is required' });
+      return z.NEVER;
+    }
+    const num = Number(val);
+    if (Number.isNaN(num)) {
+      ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
+      return z.NEVER;
+    }
+    return num;
+  });
+
 export const grnFormSchema = z.object({
   receiptDate: requiredDateSchemaEntry(),
   orderId: requiredStringSchemaEntry('Order is required'),
@@ -25,14 +43,8 @@ export const grnFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       productName: requiredStringSchemaEntry('Item is required'),
-      orderedQty: z.coerce.number({
-        error: (issue) =>
-          issue.input === undefined ? 'Field is required' : 'Field must be a number',
-      }),
-      qty: z.coerce.number({
-        error: (issue) =>
-          issue.input === undefined ? 'Field is required' : 'Field must be a number',
-      }),
+      orderedQty: requiredQtySchemaEntry(),
+      qty: requiredQtySchemaEntry(),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
     })
@@ -102,10 +114,7 @@ export const materialIssueFormSchema = z.object({
       id: requiredStringSchemaEntry('ID is required'),
       itemId: requiredStringSchemaEntry('Item is required'),
       stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
-      issuedQty: z.coerce.number({
-        error: (issue) =>
-          issue.input === undefined ? 'Field is required' : 'Field must be a number',
-      }),
+      issuedQty: requiredQtySchemaEntry(),
       remarks: optionalStringSchemaEntry(),
     })
   ),
@@ -145,8 +154,17 @@ export const stockMovementReportSchema = z
   .superRefine(dateRangeOrderRefinement);
 
 export const conversionSchema = z.object({
-  conversionDate: z.coerce.date({
-    error: (issue) => (issue.input === undefined ? 'Conversion date is required.' : undefined),
+  conversionDate: z.unknown().transform((val, ctx) => {
+    if (val === undefined) {
+      ctx.addIssue({ code: 'custom', message: 'Conversion date is required.' });
+      return z.NEVER;
+    }
+    const date = new Date(val as string | number | Date);
+    if (Number.isNaN(date.getTime())) {
+      ctx.addIssue({ code: 'custom', message: 'Conversion date must be a valid date.' });
+      return z.NEVER;
+    }
+    return date;
   }),
   finalProduct: z.string().min(1, 'Select item converting to.'),
   convertedQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
