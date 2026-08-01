@@ -15,11 +15,11 @@ class ActionValidationError extends Error {
   }
 }
 
-export function parseOrFail<S extends z.ZodTypeAny>(
-  schema: S,
+export function parseOrFail<T>(
+  schema: z.ZodType<T, any>,
   values: unknown
-): z.infer<S> {
-  const { data, error } = validateFields<z.infer<S>>(values, schema);
+): T {
+  const { data, error } = validateFields<T>(values, schema);
 
   if (error !== null) {
     throw new ActionValidationError(error);
