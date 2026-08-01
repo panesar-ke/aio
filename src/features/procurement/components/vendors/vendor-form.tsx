@@ -63,11 +63,7 @@ export function VendorForm({ vendor, fromModal }: VendorFormProps) {
     },
   });
 
-  const [isPending, errors] = useSelector(form.store, (state) => [
-    state.isSubmitting,
-    state.errors,
-  ]);
-  console.log({ errors });
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
     <>
