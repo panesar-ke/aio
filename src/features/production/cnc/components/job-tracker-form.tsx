@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
@@ -27,7 +27,7 @@ import { dateFormat } from '@/lib/helpers/formatters';
 export function JobTrackerForm({ data }: { data?: JobTrackerFormValues }) {
   const { setClose } = useModal();
   const form = useForm<JobTrackerFormValues>({
-    resolver: zodResolver(jobTrackerSchema),
+    resolver: zodResolver(jobTrackerSchema) as Resolver<JobTrackerFormValues>,
     defaultValues: data || {
       jobCardNo: '',
       jobDescription: '',

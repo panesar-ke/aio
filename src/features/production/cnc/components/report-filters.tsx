@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { subDays } from 'date-fns';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 
 import type { ReportFilterSchema } from '@/features/production/cnc/utils/cnc.types';
 
@@ -23,7 +23,7 @@ export function ReportFilters() {
       },
       status: 'completed',
     },
-    resolver: zodResolver(reportFilterSchema),
+    resolver: zodResolver(reportFilterSchema) as Resolver<ReportFilterSchema>,
   });
 
   const { setSearchParams } = useSearchParams();
