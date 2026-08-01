@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { subDays } from 'date-fns';
-import { useForm, type Resolver } from 'react-hook-form';
+import { type Resolver, useForm } from 'react-hook-form';
 
 import type { ReportFilterSchema } from '@/features/production/cnc/utils/cnc.types';
 

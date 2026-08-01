@@ -17,7 +17,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { useFieldArray, useForm, type Resolver } from 'react-hook-form';
+import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import type {

@@ -1,7 +1,7 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2Icon } from 'lucide-react';
-import { useFieldArray, useForm, type Resolver } from 'react-hook-form';
+import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type { AutoOrderFormValues } from '@/features/procurement/utils/procurement.types';

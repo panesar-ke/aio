@@ -4,9 +4,9 @@ import { createId } from '@paralleldrive/cuid2';
 import axios, { isAxiosError } from 'axios';
 import { Trash2Icon } from 'lucide-react';
 import {
+  type Resolver,
   useFieldArray,
   useForm,
-  type Resolver,
   type UseFormReturn,
   useWatch,
 } from 'react-hook-form';

@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
 import { useEffect, useTransition } from 'react';
-import { useForm, useWatch, type Resolver } from 'react-hook-form';
+import { type Resolver, useForm, useWatch } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type {

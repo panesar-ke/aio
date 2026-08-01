@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type Resolver } from 'react-hook-form';
+import { type Resolver, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';

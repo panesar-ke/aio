@@ -16,7 +16,7 @@ class ActionValidationError extends Error {
 }
 
 export function parseOrFail<T>(
-  schema: z.ZodType<T, any>,
+  schema: z.ZodType<T, unknown>,
   values: unknown
 ): T {
   const { data, error } = validateFields<T>(values, schema);
