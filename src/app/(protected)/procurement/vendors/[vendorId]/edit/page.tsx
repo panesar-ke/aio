@@ -1,10 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import FormHeader from '@/components/custom/form-header';
-import { FormLoader } from '@/components/custom/loaders';
-import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
-import { getVendor } from '@/features/procurement/services/vendors/data';
+import { notFound } from "next/navigation";
+
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import { FullPageWrapper } from "@/components/custom/full-page-wrapper";
+import { FormLoader } from "@/components/custom/loaders";
+import { VendorForm } from "@/features/procurement/components/vendors/vendor-form";
+import { getVendor } from "@/features/procurement/services/vendors/data";
 
 type Params = Promise<{ vendorId: string }>;
 
@@ -14,33 +16,31 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const vendor = await getVendor((await params).vendorId);
+  if (!vendor) {
+    notFound();
+  }
   return {
     title: `Edit Vendor - ${vendor.vendorName}`,
   };
 }
 export default async function NewVendorPage({ params }: { params: Params }) {
   return (
-    <div className="space-y-6">
+    <FullPageWrapper>
       <ErrorBoundaryWithSuspense
         errorMessage="Failed to load the vendor"
         loader={<FormLoader />}
       >
         <EditVendorContent params={params} />
       </ErrorBoundaryWithSuspense>
-    </div>
+    </FullPageWrapper>
   );
 }
 
 async function EditVendorContent({ params }: { params: Params }) {
   const vendor = await getVendor((await params).vendorId);
+  if (!vendor) {
+    notFound();
+  }
 
-  return (
-    <>
-      <FormHeader
-        title={`Edit Vendor - ${vendor.vendorName}`}
-        description="Edit the details of this vendor."
-      />
-      <VendorForm vendor={vendor} />
-    </>
-  );
+  return <VendorForm vendor={vendor} />;
 }

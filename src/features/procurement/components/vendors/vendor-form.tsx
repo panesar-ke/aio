@@ -1,34 +1,23 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
+import { useRouter } from "next/navigation";
 
 import type {
   Vendor,
   VendorFormValues,
-} from '@/features/procurement/utils/procurement.types';
+} from "@/features/procurement/utils/procurement.types";
 
-import { FormActions } from '@/components/custom/form-actions';
-import { ToastContent } from '@/components/custom/toast';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useModal } from '@/features/integrations/modal-provider';
-import {
-  createVendor,
-  updateVendor,
-} from '@/features/procurement/services/vendors/actions';
-import { vendorSchema } from '@/features/procurement/utils/schemas';
-import { cn } from '@/lib/utils';
+import FormHeader, { FormSectionHeader } from "@/components/custom/form-header";
+import { FieldGroup, FieldSet } from "@/components/ui/field";
+import { useModal } from "@/features/integrations/modal-provider";
+import { vendorSchema } from "@/features/procurement/utils/schemas";
+import { useAppForm } from "@/lib/form";
+import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
+import { cn } from "@/lib/utils";
+
+import { upsertVendor } from "../../services/vendors/actions";
 
 interface VendorFormProps {
   vendor?: Vendor;
@@ -39,167 +28,156 @@ export function VendorForm({ vendor, fromModal }: VendorFormProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { setClose } = useModal();
-  const form = useForm<VendorFormValues>({
-    defaultValues: {
-      vendorName: vendor?.vendorName.toUpperCase() || '',
-      contact: vendor?.contact || '',
-      email: vendor?.email || '',
-      kraPin: vendor?.kraPin?.toUpperCase() || '',
-      active: Boolean(vendor?.active) || true,
-      contactPerson: vendor?.contactPerson?.toUpperCase() || '',
-      address: '',
+  const isEdit = !!vendor;
+  const defaultValues: VendorFormValues = {
+    id: vendor?.id ?? null,
+    vendorName: vendor?.vendorName ?? "",
+    contactPerson: vendor?.contactPerson ?? "",
+    contact: vendor?.contact ?? "",
+    address: vendor?.address,
+    email: vendor?.email,
+    kraPin: vendor?.kraPin,
+    active: vendor?.active ?? true,
+  };
+  const form = useAppForm({
+    defaultValues,
+    validators: {
+      onSubmit: vendorSchema,
     },
-    resolver: zodResolver(vendorSchema),
+    onSubmit: async ({ value }) => {
+      await handleSubmitFeedback({
+        action: () => upsertVendor(value),
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} vendor`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} vendor. Please try again.`,
+        onSuccess: () => {
+          form.reset();
+          queryClient.invalidateQueries({ queryKey: ["vendors"] });
+          if (!fromModal) {
+            router.push("/procurement/vendors");
+          } else {
+            setClose();
+          }
+        },
+      });
+    },
   });
 
-  const isPending = form.formState.isSubmitting;
-
-  async function onSubmit(values: VendorFormValues) {
-    const action = vendor ? updateVendor.bind(null, vendor.id) : createVendor;
-    const res = await action(values);
-    if (res?.error) {
-      return toast(() => (
-        <ToastContent
-          title="Error processing this request"
-          message={res.message}
-          state="error"
-        />
-      ));
-    }
-    queryClient.invalidateQueries({ queryKey: ['vendors'] });
-    if (!fromModal && !vendor) {
-      router.push('/procurement/vendors');
-    }
-    if (fromModal) {
-      setClose();
-    }
-  }
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <div
-      className={cn({ 'space-y-6 bg-card rounded-lg shadow-sm': !fromModal })}
-    >
-      <Form {...form}>
+    <>
+      {!fromModal && (
+        <FormHeader
+          title={isEdit ? "Edit Vendor" : "Create Vendor"}
+          description={
+            isEdit
+              ? "Update vendor information and save your changes."
+              : "Fill in the details below to create vendor"
+          }
+        />
+      )}
+      <div
+        className={cn({
+          "bg-card border rounded-lg shadow-sm max-w-3xl mt-6": !fromModal,
+        })}
+      >
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start"
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className={cn({ "space-y-4": fromModal })}
         >
-          <FormField
-            control={form.control}
-            name="vendorName"
-            render={({ field }) => (
-              <FormItem className="col-span-6">
-                <FormLabel>Vendor Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter vendor name"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <FieldSet>
+            {!fromModal && (
+              <FormSectionHeader
+                title="Vendor Details"
+                description="Information about this vendor!"
+              />
             )}
-          />
-          <FormField
-            control={form.control}
-            name="contactPerson"
-            render={({ field }) => (
-              <FormItem className="col-span-6">
-                <FormLabel>Contact Person</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter contact person"
-                    disabled={isPending}
+            <FieldGroup
+              className={cn("grid md:grid-cols-2 gap-6", {
+                "p-6 pt-0": !fromModal,
+              })}
+            >
+              <form.AppField name="vendorName">
+                {(field) => (
+                  <field.Input
+                    fieldClassName="col-span-full"
+                    label="Vendor Name"
+                    placeholder="Example: Eastleigh Wholesalers"
+                    required
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem className="col-span-full">
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Optional... Enter address"
-                    disabled={isPending}
+                )}
+              </form.AppField>
+              <form.AppField name="contactPerson">
+                {(field) => (
+                  <field.Input
+                    label="Contact Person"
+                    placeholder="Example: John Doe"
+                    required
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="contact"
-            render={({ field }) => (
-              <FormItem className="col-span-4">
-                <FormLabel>Contact</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter contact"
-                    disabled={isPending}
+                )}
+              </form.AppField>
+              <form.AppField name="contact">
+                {(field) => (
+                  <field.Input
+                    label="Contact"
+                    placeholder="Example: 0700000000"
+                    required
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="col-span-4">
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
+                )}
+              </form.AppField>
+              <form.AppField name="email">
+                {(field) => (
+                  <field.Input
                     type="email"
-                    {...field}
-                    placeholder="Optional... Enter email"
-                    disabled={isPending}
+                    label="Email"
+                    placeholder="Example: example@company.com"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="kraPin"
-            render={({ field }) => (
-              <FormItem className="col-span-4">
-                <FormLabel>Tax PIN</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Optional... Enter Tax PIN"
-                    disabled={isPending}
+                )}
+              </form.AppField>
+              <form.AppField name="kraPin">
+                {(field) => (
+                  <field.Input
+                    label="Tax PIN"
+                    maxLength={11}
+                    placeholder="Example: A123456789B"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormActions
-            className="col-span-full"
-            resetFn={() => {
-              form.reset();
-              if (fromModal) {
-                setClose();
-              }
-            }}
-            isPending={isPending}
-          />
+                )}
+              </form.AppField>
+              <form.AppField name="address">
+                {(field) => (
+                  <field.Input
+                    placeholder="Enter vendor address..."
+                    fieldClassName="col-span-full"
+                    label="Address"
+                  />
+                )}
+              </form.AppField>
+              {isEdit && (
+                <form.AppField name="active">
+                  {(field) => (
+                    <field.Checkbox
+                      label="Active"
+                      helperText="Inactive vendors are hidden from purchase orders."
+                    />
+                  )}
+                </form.AppField>
+              )}
+            </FieldGroup>
+          </FieldSet>
+          <FieldGroup className={cn({ "pb-4 pr-6": !fromModal })}>
+            <form.AppForm>
+              <form.SubmitButton
+                isLoading={isPending}
+                buttonText={isEdit ? "Update Vendor" : "Create Vendor"}
+              />
+            </form.AppForm>
+          </FieldGroup>
         </form>
-      </Form>
-    </div>
+      </div>
+    </>
   );
 }

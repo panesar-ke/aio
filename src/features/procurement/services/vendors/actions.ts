@@ -1,139 +1,112 @@
-'use server';
+"use server";
 
-import type { z } from 'zod';
+import type { z } from "zod";
 
-import { count, eq, sql } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
+import { and, count, eq, ne, sql } from "drizzle-orm";
 
-import type {
-  SchemaValidationFailure,
-  SchemaValidationSuccess,
-} from '@/types/index.types';
-
-import db from '@/drizzle/db';
-import { ordersHeader, projects, vendors } from '@/drizzle/schema';
+import db from "@/drizzle/db";
+import { itExpenses, ordersHeader, projects, vendors } from "@/drizzle/schema";
 import {
   revalidateProjects,
   revalidateVendors,
-} from '@/features/procurement/utils/cache';
+} from "@/features/procurement/utils/cache";
 import {
   projectFormSchema,
   vendorSchema,
-} from '@/features/procurement/utils/schemas';
-import { validateFields } from '@/lib/action-validator';
+} from "@/features/procurement/utils/schemas";
+import { validateFields } from "@/lib/action-validator";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import { requireAnyPermission } from "@/lib/permissions/guards";
+import { normalizeString } from "@/lib/string-normalizers";
+
+import { getVendor } from "./data";
 
 type VendorData = z.infer<typeof vendorSchema>;
 
-const validateVendorData = (
-  vendorData: unknown
-): SchemaValidationSuccess<VendorData> | SchemaValidationFailure => {
-  const { success, data, error } = vendorSchema.safeParse(vendorData);
-
-  if (!success) {
-    console.error('Validation errors:', error?.flatten().fieldErrors);
-    return {
-      data: null,
-      error: 'Invalid vendor data provided.',
-    } satisfies SchemaValidationFailure;
-  }
-
+const buildVendorPayload = (values: VendorData) => {
   return {
-    data,
-    error: null,
-  } satisfies SchemaValidationSuccess<VendorData>;
+    vendorName: normalizeString(values.vendorName),
+    contactPerson: normalizeString(values.contactPerson),
+    contact: values.contact,
+    email: values.email,
+    kraPin: values.kraPin,
+    address: values.address,
+    active: values.id ? Boolean(values.active) : true,
+  };
 };
 
-export const createVendor = async (vendorData: unknown) => {
-  const validation = validateVendorData(vendorData);
+export const upsertVendor = async (values: unknown) =>
+  runAction("upsert-vendor", async () => {
+    await requireAnyPermission(["procurement:admin", "procurement:standard"]);
+    const data = parseOrFail(vendorSchema, values);
 
-  if (validation.error !== null) {
-    return {
-      error: true,
-      message: validation.error,
-    };
-  }
-
-  const { data } = validation;
-
-  try {
-    const [{ id }] = await db
-      .insert(vendors)
-      .values({ ...data })
-      .returning({ id: vendors.id });
-
-    revalidateVendors(id);
-  } catch (error) {
-    console.error('Error creating vendor:', error);
-    return {
-      error: true,
-      message: 'Failed to create vendor. Please try again.',
-    };
-  }
-  // redirect('/procurement/vendors');
-};
-
-export const updateVendor = async (id: string, vendorData: unknown) => {
-  if (!id) {
-    return {
-      error: true,
-      message: 'Vendor ID is required for updates.',
-    };
-  }
-
-  const validation = validateVendorData(vendorData);
-
-  if (validation.error !== null) {
-    return {
-      error: true,
-      message: validation.error,
-    };
-  }
-
-  try {
-    const existingVendor = await db
-      .select({ id: vendors.id })
+    const found = await db
+      .select({
+        count: count(vendors.id),
+      })
       .from(vendors)
-      .where(eq(vendors.id, id))
+      .where(
+        and(
+          eq(sql`LOWER(vendor_name)`, data.vendorName.toLowerCase()),
+          data.id ? ne(vendors.id, data.id) : undefined,
+        ),
+      )
       .limit(1);
 
-    if (existingVendor.length === 0) {
+    if (found[0]?.count > 0) {
       return {
         error: true,
-        message: 'Vendor not found.',
+        message: "Vendor with this name already exists.",
       };
     }
 
-    await db.update(vendors).set(validation.data).where(eq(vendors.id, id));
+    if (data.id) {
+      const vendor = await getVendor(data.id);
+      if (!vendor) {
+        return {
+          error: true,
+          message: "Vendor not found.",
+        };
+      }
+      await db
+        .update(vendors)
+        .set(buildVendorPayload(data))
+        .where(eq(vendors.id, data.id));
+      revalidateVendors(data.id);
+      return {
+        error: false,
+        message: "Vendor updated successfully.",
+      };
+    }
+
+    const [{ id }] = await db
+      .insert(vendors)
+      .values({ ...buildVendorPayload(data) })
+      .returning({ id: vendors.id });
 
     revalidateVendors(id);
-  } catch (error) {
-    console.error('Error updating vendor:', error);
     return {
-      error: true,
-      message: 'Failed to update vendor. Please try again.',
+      error: false,
+      message: "Vendor created successfully.",
     };
-  }
-  redirect('/procurement/vendors');
-};
+  });
 
-export const deleteVendor = async (id: string) => {
-  if (!id) {
-    return {
-      error: true,
-      message: 'Vendor ID is required for deletion.',
-    };
-  }
+export const deleteVendor = async (id: string) =>
+  runAction("delete-vendor", async () => {
+    await requireAnyPermission(["procurement:admin"]);
+    if (!id) {
+      return { error: true, message: "Vendor ID is required for deletion." };
+    }
 
-  try {
-    const existingOrders = await db.$count(
-      ordersHeader,
-      eq(ordersHeader.vendorId, id)
-    );
+    const [existingOrders, existingExpenses] = await Promise.all([
+      db.$count(ordersHeader, eq(ordersHeader.vendorId, id)),
+      db.$count(itExpenses, eq(itExpenses.vendorId, id)),
+    ]);
 
-    if (existingOrders > 0) {
+    if (existingOrders > 0 || existingExpenses > 0) {
       return {
         error: true,
-        message: 'Vendor has existing orders and cannot be deleted.',
+        message: "Vendor cannot be deleted as they are referenced elsewhere.",
       };
     }
 
@@ -142,16 +115,9 @@ export const deleteVendor = async (id: string) => {
     revalidateVendors(id);
     return {
       error: false,
-      message: 'Vendor deleted successfully.',
+      message: "Vendor deleted successfully.",
     };
-  } catch (error) {
-    console.error('Error deleting vendor:', error);
-    return {
-      error: true,
-      message: 'Failed to delete vendor. Please try again.',
-    };
-  }
-};
+  });
 
 export const createProject = async (projectData: unknown) => {
   const validation = validateFields(projectData, projectFormSchema);
@@ -176,7 +142,7 @@ export const createProject = async (projectData: unknown) => {
   if (found[0]?.count > 0) {
     return {
       error: true,
-      message: 'Project with this name already exists.',
+      message: "Project with this name already exists.",
     };
   }
 
@@ -188,10 +154,10 @@ export const createProject = async (projectData: unknown) => {
 
     revalidateProjects(id);
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error("Error creating project:", error);
     return {
       error: true,
-      message: 'Failed to create project. Please try again.',
+      message: "Failed to create project. Please try again.",
     };
   }
 };

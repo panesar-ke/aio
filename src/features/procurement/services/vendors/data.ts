@@ -3,7 +3,6 @@
 import { subYears } from 'date-fns';
 import { and, asc, count, desc, eq, gte, lte, or, sql, sum } from 'drizzle-orm';
 import { cacheTag } from 'next/cache';
-import { notFound } from 'next/navigation';
 
 import db from '@/drizzle/db';
 import { ordersDetails, ordersHeader, vendors } from '@/drizzle/schema';
@@ -162,10 +161,7 @@ export const getVendor = async (id: string) => {
   const vendor = await db.query.vendors.findFirst({
     where: (model, { eq: equal }) => equal(model.id, id),
   });
-  if (!vendor) {
-    notFound();
-  }
-  return vendor;
+  return vendor ?? null;
 };
 
 export const getVendorOrders = async (id: string) => {

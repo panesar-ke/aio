@@ -79,7 +79,7 @@ export interface OrderData {
 }
 
 export type VendorTableRow = Awaited<ReturnType<typeof getVendors>>[number];
-export type VendorFormValues = z.infer<typeof vendorSchema>;
+export type VendorFormValues = z.input<typeof vendorSchema>;
 export type Vendor = typeof vendors.$inferSelect;
 export type VendorOrder = Awaited<ReturnType<typeof getVendorOrders>>[number];
 

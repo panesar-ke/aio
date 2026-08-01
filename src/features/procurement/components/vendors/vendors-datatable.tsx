@@ -1,34 +1,39 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from "@tanstack/react-table";
 
-import Link from 'next/link';
+import Link from "next/link";
 
-import type { VendorTableRow } from '@/features/procurement/utils/procurement.types';
+import type { VendorTableRow } from "@/features/procurement/utils/procurement.types";
 
+import { PermissionGate } from "@/components/auth/client-permission-gate";
 import {
   DeleteAction,
   EditAction,
   ViewDetailsAction,
-} from '@/components/custom/custom-button';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { DataTable } from '@/components/custom/datatable';
-import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
-import { CustomStatusBadge } from '@/components/custom/status-badges';
-import { ActionButton } from '@/components/ui/action-button';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { deleteVendor } from '@/features/procurement/services/vendors/actions';
-import { compactNumberFormatter } from '@/lib/helpers/formatters';
+} from "@/components/custom/custom-button";
+import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
+import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
+import { DataTable } from "@/components/custom/datatable";
+import { DataTableColumnHeader } from "@/components/custom/datatable-column-header";
+import { CustomStatusBadge } from "@/components/custom/status-badges";
+import { ActionButton } from "@/components/ui/action-button";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { deleteVendor } from "@/features/procurement/services/vendors/actions";
+import { compactNumberFormatter } from "@/lib/helpers/formatters";
 
-export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }) {
+export function VendorsDatatable({
+  vendors,
+}: {
+  vendors: Array<VendorTableRow>;
+}) {
   async function handleDelete(id: string) {
     const response = await deleteVendor(id);
     return { error: response.error, message: response.message };
   }
   const columns: Array<ColumnDef<VendorTableRow>> = [
     {
-      accessorKey: 'vendorName',
+      accessorKey: "vendorName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Vendor Name" />
       ),
@@ -37,31 +42,31 @@ export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }
       ),
     },
     {
-      accessorKey: 'email',
+      accessorKey: "email",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Email" />
       ),
     },
     {
-      accessorKey: 'contact',
+      accessorKey: "contact",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Contact" />
       ),
     },
     {
-      accessorKey: 'active',
+      accessorKey: "active",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Active" />
       ),
       cell: ({ row }) => (
         <CustomStatusBadge
-          variant={row.original.active ? 'success' : 'warning'}
-          text={row.original.active ? 'Active' : 'Inactive'}
+          variant={row.original.active ? "success" : "warning"}
+          text={row.original.active ? "Active" : "Inactive"}
         />
       ),
     },
     {
-      accessorKey: 'totalSpend',
+      accessorKey: "totalSpend",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Total Spend" />
       ),
@@ -73,17 +78,17 @@ export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }
             <div className="font-semibold">
               {totalOrderSum
                 ? `Ksh ${compactNumberFormatter(totalOrderSum)}`
-                : '-'}
+                : "-"}
             </div>
             <span className="text-xs italic text-muted-foreground">
-              {totalOrderCount ? `${totalOrderCount} orders` : 'No orders yet'}
+              {totalOrderCount ? `${totalOrderCount} orders` : "No orders yet"}
             </span>
           </div>
         );
       },
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({
         row: {
           original: { id },
@@ -105,14 +110,16 @@ export function VendorsDatatable({ vendors }: { vendors: Array<VendorTableRow> }
                 <ViewDetailsAction text="Vendor Overview" />
               </Link>
             </DropdownMenuItem>
-            <ActionButton
-              variant="ghost"
-              className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
-              action={handleDelete.bind(null, id)}
-              requireAreYouSure={true}
-            >
-              <DeleteAction />
-            </ActionButton>
+            <PermissionGate permissions={["procurement:admin"]}>
+              <ActionButton
+                variant="ghost"
+                className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
+                action={handleDelete.bind(null, id)}
+                requireAreYouSure={true}
+              >
+                <DeleteAction />
+              </ActionButton>
+            </PermissionGate>
           </CustomDropdownContent>
         </DropdownMenu>
       ),

@@ -16,11 +16,24 @@ export const requiredStringSchemaEntry = (message?: string) =>
     .toLowerCase()
     .min(1, { message: message || "This field is required" });
 
+export const requiredTrimmedStringSchemaEntry = (message?: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, { message: message || "This field is required" });
+
 export const nullableTrimmedString = z
   .string()
   .trim()
-  .transform((value) => (value === "" || value === undefined ? null : value))
+  .transform((value) => (value === "" ? null : value))
   .nullable();
+
+export const optionalTrimmedString = z
+  .string()
+  .trim()
+  .nullable()
+  .optional()
+  .transform((value) => (value === "" || value === undefined ? null : value));
 
 export const nullableNonNegativeNumberField = (label: string) =>
   z
