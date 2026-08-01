@@ -51,7 +51,7 @@ export function TextField({
       </FieldLabel>
       {!isPassword ? (
         <Input
-          value={field.state.value as string}
+          value={(field.state.value as string) ?? ''}
           onBlur={field.handleBlur}
           onChange={handleChange}
           id={field.name}
@@ -63,7 +63,7 @@ export function TextField({
         />
       ) : (
         <PasswordInput
-          value={field.state.value as string}
+          value={(field.state.value as string) ?? ''}
           onBlur={field.handleBlur}
           onChange={handleChange}
           id={field.name}

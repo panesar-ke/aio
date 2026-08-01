@@ -1,19 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import FormHeader from '@/components/custom/form-header';
-import { VendorForm } from '@/features/procurement/components/vendors/vendor-form';
+import { FullPageWrapper } from "@/components/custom/full-page-wrapper";
+import { VendorForm } from "@/features/procurement/components/vendors/vendor-form";
 
 export const metadata: Metadata = {
-  title: 'New Vendor',
+  title: "New Vendor",
 };
 export default function NewVendorPage() {
   return (
-    <div className="space-y-6">
-      <FormHeader
-        title="New Vendor"
-        description="Add a new vendor to your procurement system."
-      />
+    <FullPageWrapper>
       <VendorForm />
-    </div>
+    </FullPageWrapper>
   );
 }

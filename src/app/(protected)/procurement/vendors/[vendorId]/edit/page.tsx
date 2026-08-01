@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { notFound } from 'next/navigation';
+
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import FormHeader from '@/components/custom/form-header';
 import { FormLoader } from '@/components/custom/loaders';
@@ -14,6 +16,9 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const vendor = await getVendor((await params).vendorId);
+  if (!vendor) {
+    notFound();
+  }
   return {
     title: `Edit Vendor - ${vendor.vendorName}`,
   };
@@ -33,6 +38,9 @@ export default async function NewVendorPage({ params }: { params: Params }) {
 
 async function EditVendorContent({ params }: { params: Params }) {
   const vendor = await getVendor((await params).vendorId);
+  if (!vendor) {
+    notFound();
+  }
 
   return (
     <>

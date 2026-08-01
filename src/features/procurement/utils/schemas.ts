@@ -5,6 +5,7 @@ import {
   nullableTrimmedString,
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
+  optionalTrimmedString,
   requiredDateSchemaEntry,
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
@@ -79,23 +80,27 @@ export const orderSchema = z
   });
 
 export const vendorSchema = z.object({
+  id: nullableTrimmedString,
   vendorName: requiredStringSchemaEntry("Vendor name is required."),
   contact: z
     .string()
+    .trim()
     .min(10, "Invalid contact provided.")
     .max(15, "Contact cannot be over 15 characters"),
-  address: optionalStringSchemaEntry(),
-  kraPin: optionalStringSchemaEntry(),
-  email: optionalStringSchemaEntry().refine(
-    (val) => !val || isValidEmail(val),
+  address: optionalTrimmedString,
+  kraPin: optionalTrimmedString.refine(
+    (val) => !val || /^[A-P][0-9]{7}[A-Z]$/.test(val.trim()),
     {
-      message: "Invalid email address provided.",
+      message: "Invalid KRA PIN provided.",
     },
   ),
+  email: optionalTrimmedString.refine((val) => !val || isValidEmail(val), {
+    message: "Invalid email address provided.",
+  }),
   contactPerson: requiredStringSchemaEntry(
     "Name of contact person is required.",
   ),
-  active: z.boolean().optional(),
+  active: z.boolean(),
 });
 
 export const productsSchema = z.object({

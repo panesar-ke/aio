@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -72,6 +73,9 @@ async function OverviewHeader({ params }: { params: Params }) {
     getVendor(vendorId),
     getVendorOrders(vendorId),
   ]);
+  if (!vendor) {
+    notFound();
+  }
   const { orderTotal, discounted } = orders.reduce(
     (acc, detail) => ({
       orderTotal: acc.orderTotal + parseFloat(detail.orderValue.toString()),
