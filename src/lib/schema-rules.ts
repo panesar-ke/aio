@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const paymentMethodSchemaEntry = () =>
   z.enum(["cash", "mpesa", "cheque", "bank"], {
-    required_error: "Select payment method",
-    invalid_type_error: "Select a payment method",
+    error: (issue) =>
+      issue.input === undefined ? "Select payment method" : "Select a payment method",
   });
 
 export const paymentReferenceSchemaEntry = () =>
@@ -52,15 +52,15 @@ export const optionalStringSchemaEntry = () =>
 export const optionalNumberSchemaEntry = () => z.coerce.number().optional();
 export const requiredDateSchemaEntry = () =>
   z.coerce.date({
-    required_error: "Date is required",
-    invalid_type_error: "Date must be a valid date",
+    error: (issue) =>
+      issue.input === undefined ? "Date is required" : "Date must be a valid date",
   });
 
 export const requiredNumberSchemaEntry = (message?: string) =>
   z.coerce
     .number({
-      required_error: message || "Field is required",
-      invalid_type_error: "Field must be a number",
+      error: (issue) =>
+        issue.input === undefined ? message || "Field is required" : "Field must be a number",
     })
     .min(1, { message: message || "Field is required" })
     .refine((value) => !Number.isNaN(value) && value > 0, {
