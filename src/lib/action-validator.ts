@@ -7,7 +7,7 @@ import type {
 
 export const validateFields = <T>(
   values: unknown,
-  schema: z.ZodSchema<T>
+  schema: z.ZodType<T, unknown>
 ): SchemaValidationFailure | SchemaValidationSuccess<T> => {
   const { success, data, error } = schema.safeParse(values);
   if (!success) {

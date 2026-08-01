@@ -4,8 +4,7 @@ export const jobTrackerSchema = z
   .object({
     id: z.string().optional(),
     dateReceived: z.coerce.date({
-      required_error: 'Please select a date and time',
-      invalid_type_error: 'Please select a date and time',
+      error: () => 'Please select a date and time',
     }),
     jobCardNo: z
       .string()
@@ -20,13 +19,11 @@ export const jobTrackerSchema = z
       .min(1, 'Job type is required')
       .max(50, 'Job type cannot be over 50 characters'),
     startDate: z.coerce.date({
-      required_error: 'Please select a date and time',
-      invalid_type_error: 'Please select a date and time',
+      error: () => 'Please select a date and time',
     }),
     endDate: z.coerce
       .date({
-        required_error: 'Please select a date and time',
-        invalid_type_error: 'Please select a date and time',
+        error: () => 'Please select a date and time',
       })
       .optional(),
     timeTaken: z.coerce.number().min(1, 'Time taken is required').optional(),
@@ -46,12 +43,10 @@ export const reportFilterSchema = z
   .object({
     dateRange: z.object({
       from: z.coerce.date({
-        required_error: 'Please select a date and time',
-        invalid_type_error: 'Please select a date and time',
+        error: () => 'Please select a date and time',
       }),
       to: z.coerce.date({
-        required_error: 'Please select a date and time',
-        invalid_type_error: 'Please select a date and time',
+        error: () => 'Please select a date and time',
       }),
     }),
     status: z.enum(['all', 'on hold', 'in progress', 'completed']),

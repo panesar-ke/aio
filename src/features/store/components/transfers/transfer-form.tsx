@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import type { UseFormReturn } from 'react-hook-form';
+import type { Resolver, UseFormReturn } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createId } from '@paralleldrive/cuid2';
@@ -65,7 +65,7 @@ export function TransferForm({
         transfer?.transferDate ||
         (defaultTransferDate ? new Date(defaultTransferDate) : new Date()),
     },
-    resolver: zodResolver(materialTransferFormSchema),
+    resolver: zodResolver(materialTransferFormSchema) as Resolver<MaterialTransferFormValues>,
   });
 
   const isPending = form.formState.isSubmitting;

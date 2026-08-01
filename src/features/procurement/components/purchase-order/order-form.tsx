@@ -17,7 +17,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import type {
@@ -101,7 +101,7 @@ export function OrderForm({
     [order, orderNo, requisitionData]
   );
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderSchema),
+    resolver: zodResolver(orderSchema) as Resolver<OrderFormValues>,
     defaultValues,
   });
   const lastSeedKey = useRef(seedKey);

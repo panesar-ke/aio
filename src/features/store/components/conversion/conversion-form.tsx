@@ -4,6 +4,7 @@ import { createId } from '@paralleldrive/cuid2';
 import axios, { isAxiosError } from 'axios';
 import { Trash2Icon } from 'lucide-react';
 import {
+  type Resolver,
   useFieldArray,
   useForm,
   type UseFormReturn,
@@ -49,7 +50,7 @@ export function ConversionForm({
       convertedQty: 0,
       convertingItems: [],
     },
-    resolver: zodResolver(conversionSchema),
+    resolver: zodResolver(conversionSchema) as Resolver<ConversionFormValues>,
   });
 
   async function onSubmit(data: ConversionFormValues) {
