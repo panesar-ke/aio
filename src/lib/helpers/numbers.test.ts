@@ -31,12 +31,12 @@ describe('toNullishNumber', () => {
   it('returns null for nullish values', () => {
     expect(toNullishNumber(null)).toBeNull();
     expect(toNullishNumber(undefined)).toBeNull();
+    expect(toNullishNumber('')).toBeNull();
   });
 
   it('matches toBig number conversion for non-nullish values', () => {
     expect(toNullishNumber('12.34')).toBe(toBig('12.34').toNumber());
     expect(toNullishNumber('not-a-number')).toBe(0);
-    expect(toNullishNumber('')).toBe(0);
   });
 });
 
