@@ -40,9 +40,10 @@ export const orderSchema = z
       required_error: "Select vat",
     }),
     vat: optionalStringSchemaEntry(),
-    invoiceDate: z.coerce.date().optional(),
-    displayOdometerDetails: z.boolean(),
-    vehicle: z.coerce.number().optional(),
+    invoiceDate: z.preprocess(
+      (value) => (value === "" || value == null ? undefined : value),
+      z.coerce.date().optional(),
+    ),
     details: z.array(
       z
         .object({

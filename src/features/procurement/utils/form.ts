@@ -2,9 +2,16 @@ import { formOptions } from "@tanstack/react-form";
 
 import { dateFormat } from "@/lib/helpers/formatters";
 
-import type { MaterialRequisitionFormValues } from "./procurement.types";
+import type {
+  MaterialRequisitionFormValues,
+  OrderFormInput,
+} from "./procurement.types";
 
-import { materialRequisitionFormSchema, productsSchema } from "./schemas";
+import {
+  materialRequisitionFormSchema,
+  orderSchema,
+  productsSchema,
+} from "./schemas";
 
 export const materialRequisitionFormOpts = (
   requisitionNumber?: number,
@@ -18,6 +25,29 @@ export const materialRequisitionFormOpts = (
     },
     validators: {
       onSubmit: materialRequisitionFormSchema,
+    },
+  });
+};
+
+export const purchaseOrderFormOpts = (
+  orderNumber?: number,
+  order?: OrderFormInput,
+) => {
+  return formOptions({
+    defaultValues:
+      order ??
+      ({
+        documentNo: orderNumber,
+        documentDate: dateFormat(new Date()),
+        vendor: "",
+        invoiceNo: "",
+        invoiceDate: "",
+        vatType: "NONE",
+        vat: "",
+        details: [],
+      } satisfies OrderFormInput),
+    validators: {
+      onSubmit: orderSchema,
     },
   });
 };

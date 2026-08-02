@@ -1,13 +1,20 @@
 import type {
   Order,
-  OrderFormValues,
+  OrderFormInput,
   Requisition,
 } from '@/features/procurement/utils/procurement.types';
+
+import { dateFormat } from '@/lib/helpers/formatters';
 
 export type OrderFormRequisitionData = {
   documentDate: Date;
   details: NonNullable<Requisition>['mrqDetails'];
 };
+
+function vatIdToRate(vatId: number | null | undefined) {
+  if (!vatId) return '';
+  return vatId === 1 ? '16' : '8';
+}
 
 export function buildOrderFormDefaultValues({
   order,
@@ -17,7 +24,7 @@ export function buildOrderFormDefaultValues({
   order?: Order;
   orderNo: number;
   requisitionData?: OrderFormRequisitionData | null;
-}): OrderFormValues {
+}): OrderFormInput {
   return {
     details:
       order?.ordersDetails.map(
@@ -53,23 +60,19 @@ export function buildOrderFormDefaultValues({
         rate: detail.itemId
           ? +(detail.product?.buyingPrice ?? 0)
           : +(detail.service?.serviceFee ?? 0),
-        discountType: 'NONE',
+        discountType: 'NONE' as const,
         discount: 0,
       })) ||
       [],
-    documentDate: order?.documentDate
-      ? new Date(order.documentDate)
-      : requisitionData?.documentDate
-        ? new Date(requisitionData.documentDate)
-        : new Date(),
-    displayOdometerDetails: false,
-    vehicle: undefined,
+    documentDate: dateFormat(
+      order?.documentDate ?? requisitionData?.documentDate ?? new Date()
+    ),
     documentNo: orderNo,
     vendor: order?.vendor.id || '',
     invoiceNo: order?.billNo || '',
     vatType: order?.vatType || 'NONE',
-    vat: order?.vatId ? order.vatId.toString() : '',
-    invoiceDate: order?.billDate ? new Date(order.billDate) : undefined,
+    vat: vatIdToRate(order?.vatId),
+    invoiceDate: order?.billDate ? dateFormat(order.billDate) : '',
   };
 }
 
@@ -92,7 +95,7 @@ export function getOrderFormSeedKey({
       vendor: order.vendor?.id || '',
       invoiceNo: order.billNo || '',
       vatType: order.vatType || 'NONE',
-      vat: order.vatId ? order.vatId.toString() : '',
+      vat: vatIdToRate(order.vatId),
       invoiceDate: order.billDate ? new Date(order.billDate).toISOString() : '',
       details: (order.ordersDetails || []).map(d => ({
         id: d.id,

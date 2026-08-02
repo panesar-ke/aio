@@ -1,159 +1,147 @@
-import { useMemo } from 'react'
-import { useWatch } from 'react-hook-form'
+import type { OrderFormInput } from '@/features/procurement/utils/procurement.types';
 
-import type { OrderForm } from '@/features/procurement/utils/procurement.types'
+import {
+  calculateDiscount,
+  calculateVatValues,
+} from '@/features/procurement/utils/calculators';
+import { purchaseOrderFormOpts } from '@/features/procurement/utils/form';
+import { withForm } from '@/lib/form';
+import { numberFormat } from '@/lib/helpers/formatters';
+import { cn } from '@/lib/utils';
 
-import { numberFormat } from '@/lib/helpers/formatters'
+export function calculateOrderSummary({
+  details,
+  vatType,
+  vat,
+}: Pick<OrderFormInput, 'details' | 'vatType' | 'vat'>) {
+  let totalItems = 0;
+  let grossTotal = 0;
+  let subTotal = 0;
 
-import { calculateVatValues } from '../../utils/calculators'
+  for (const line of details) {
+    const qty = Number(line.qty) || 0;
+    const rate = Number(line.rate) || 0;
+    const gross = qty * rate;
+    const discounted = calculateDiscount(
+      line.discountType ?? 'NONE',
+      Number(line.discount) || 0,
+      gross
+    );
 
-interface OrderSummaryProps {
-  form: OrderForm['form']
-}
+    totalItems += qty;
+    grossTotal += gross;
+    subTotal += gross - discounted;
+  }
 
-interface SummaryRow {
-  label: string
-  value: string | number
-  isTotal?: boolean
-}
+  const discount = grossTotal - subTotal;
+  const vatValues = calculateVatValues(vatType, subTotal, Number(vat) || 0);
 
-export function OrderSummary({ form }: OrderSummaryProps) {
-  const [vatType, vat, details] = useWatch({
-    control: form.control,
-    name: ['vatType', 'vat', 'details'],
-  })
-
-  const calculations = useMemo(() => {
-    if (!details?.length) {
-      return {
-        totalItems: 0,
-        grossTotal: 0,
-        discountedAmount: 0,
-        discount: 0,
-      }
-    }
-
-    let totalItems = 0
-    let grossTotal = 0
-    let discountedAmount = 0
-
-    for (const item of details) {
-      const qty = Number(item.qty) || 0
-      const rate = Number(item.rate) || 0
-      const itemTotal = qty * rate
-
-      totalItems += qty
-      grossTotal += itemTotal
-
-      const itemDiscountValue =
-        item.discountType === 'PERCENTAGE'
-          ? itemTotal * (Number(item.discount || 0) / 100)
-          : Number(item.discount || 0)
-
-      discountedAmount += itemTotal - itemDiscountValue
-    }
-
-    const discount = grossTotal - discountedAmount
-
-    return {
-      totalItems,
-      grossTotal,
-      discountedAmount,
-      discount,
-    }
-  }, [details])
-
-  const vatValues = useMemo(
-    () =>
-      calculateVatValues(
-        vatType,
-        calculations.discountedAmount,
-        Number(vat) || 0,
-      ),
-    [vatType, calculations.discountedAmount, vat],
-  )
-
-  const summaryRows: Array<SummaryRow> = useMemo(
-    () => [
-      {
-        label: 'Total Items',
-        value: calculations.totalItems,
-      },
-      {
-        label: 'Gross Value',
-        value: `Ksh ${numberFormat(calculations.grossTotal)}`,
-      },
-      {
-        label: 'Discounted Amount',
-        value:
-          calculations.discount > 0
-            ? `Ksh ${numberFormat(calculations.discount)}`
-            : '0.00',
-      },
-      {
-        label: 'SubTotal',
-        value: `Ksh ${numberFormat(calculations.discountedAmount)}`,
-      },
-      {
-        label: 'Amount Exclusive',
-        value: `Ksh ${numberFormat(vatValues.exclusive)}`,
-      },
-      {
-        label: 'VAT',
-        value: `Ksh ${numberFormat(vatValues.vatValue)}`,
-      },
-      {
-        label: 'Amount Inclusive',
-        value: `Ksh ${numberFormat(vatValues.inclusive)}`,
-        isTotal: true,
-      },
-    ],
-    [calculations, vatValues],
-  )
-
-  return (
-    <div className="w-96 shadow-none border p-4 rounded-lg space-y-4 bg-card">
-      <h3 className="text-lg font-semibold mb-4 font-display text-primary border-b pb-2">
-        Order Summary
-      </h3>
-
-      <div className="space-y-3">
-        {summaryRows.map((row, index) => (
-          <SummaryRow
-            key={row.label}
-            label={row.label}
-            value={row.value}
-            isTotal={row.isTotal}
-            isLast={index === summaryRows.length - 1}
-          />
-        ))}
-      </div>
-    </div>
-  )
+  return {
+    totalItems,
+    grossTotal,
+    discount,
+    subTotal,
+    ...vatValues,
+  };
 }
 
 interface SummaryRowProps {
-  label: string
-  value: string | number
-  isTotal?: boolean
-  isLast?: boolean
+  label: string;
+  value: string | number;
+  isTotal?: boolean;
 }
 
-function SummaryRow({ label, value, isTotal, isLast }: SummaryRowProps) {
+function SummaryRow({ label, value, isTotal }: SummaryRowProps) {
   return (
     <div
-      className={`
-      grid grid-cols-2 gap-4 text-sm py-2
-      ${isTotal ? 'border-t pt-3 font-semibold text-base' : ''}
-      ${isLast ? 'border-b-0' : 'border-b border-border/50'}
-    `}
+      className={cn(
+        'flex items-center justify-between border-b border-border/50 py-2.5 text-sm last:border-b-0',
+        isTotal && 'border-b-0'
+      )}
     >
-      <p className={isTotal ? 'font-semibold' : ''}>{label}:</p>
-      <p
-        className={`text-right ${isTotal ? 'font-bold text-primary' : 'font-semibold'}`}
+      <span
+        className={cn(
+          'text-muted-foreground',
+          isTotal && 'font-semibold text-foreground'
+        )}
+      >
+        {label}
+      </span>
+      <span
+        className={cn(
+          'font-medium tabular-nums',
+          isTotal && 'text-base font-bold text-primary'
+        )}
       >
         {value}
-      </p>
+      </span>
     </div>
-  )
+  );
 }
+
+export const OrderSummary = withForm({
+  ...purchaseOrderFormOpts(),
+  render: function Render({ form }) {
+    return (
+      <section className="bg-card border rounded-lg shadow-sm overflow-hidden">
+        <div className="border-b px-5 py-4">
+          <h2 className="text-sm font-semibold text-card-foreground">
+            Summary
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Totals recalculate automatically as lines change.
+          </p>
+        </div>
+        <form.Subscribe
+          selector={state => ({
+            details: state.values.details,
+            vatType: state.values.vatType,
+            vat: state.values.vat,
+          })}
+        >
+          {values => {
+            const summary = calculateOrderSummary(values);
+            return (
+              <div className="grid grid-cols-1 gap-x-8 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <SummaryRow label="Total Items" value={summary.totalItems} />
+                  <SummaryRow
+                    label="Gross Value"
+                    value={`Ksh ${numberFormat(summary.grossTotal)}`}
+                  />
+                </div>
+                <div>
+                  <SummaryRow
+                    label="Discounted Amount"
+                    value={`Ksh ${numberFormat(summary.discount)}`}
+                  />
+                  <SummaryRow
+                    label="Sub Total"
+                    value={`Ksh ${numberFormat(summary.subTotal)}`}
+                  />
+                </div>
+                <div>
+                  <SummaryRow
+                    label="Amount Exclusive"
+                    value={`Ksh ${numberFormat(summary.exclusive)}`}
+                  />
+                  <SummaryRow
+                    label="VAT"
+                    value={`Ksh ${numberFormat(summary.vatValue)}`}
+                  />
+                </div>
+                <div>
+                  <SummaryRow
+                    label="Amount Inclusive"
+                    value={`Ksh ${numberFormat(summary.inclusive)}`}
+                    isTotal
+                  />
+                </div>
+              </div>
+            );
+          }}
+        </form.Subscribe>
+      </section>
+    );
+  },
+});

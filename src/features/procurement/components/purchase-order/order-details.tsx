@@ -1,360 +1,390 @@
 import { Trash2Icon } from 'lucide-react';
-import { useFieldArray, useWatch } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
-import type { OrderForm } from '@/features/procurement/utils/procurement.types';
-import type { IsPending, Option } from '@/types/index.types';
+import type {
+  OrderFormDetailInput,
+  PendingOrder,
+} from '@/features/procurement/utils/procurement.types';
+import type { Option } from '@/types/index.types';
 
-import { MiniSelect } from '@/components/custom/mini-select';
-import { SearchSelect } from '@/components/custom/search-select';
+import { ToastContent } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { FieldGroup } from '@/components/ui/field';
+import { SelectItem } from '@/components/ui/select';
+import { PendingRequests } from '@/features/procurement/components/purchase-order/pending-requests';
+import { useProcurementServices } from '@/features/procurement/hooks/use-procurement-services';
 import { calculateDiscount } from '@/features/procurement/utils/calculators';
+import { purchaseOrderFormOpts } from '@/features/procurement/utils/form';
+import { withForm } from '@/lib/form';
+import { numberFormat } from '@/lib/helpers/formatters';
+import { cn } from '@/lib/utils';
 
-interface OrderDetailsProps extends OrderForm, IsPending {
-  services: Array<Option>;
-  products: Array<Option>;
-  projects: Array<Option>;
-}
-export function OrderDetails({
-  form,
-  services,
-  products,
-  projects,
-}: OrderDetailsProps) {
-  const details = useWatch({ control: form.control, name: 'details' });
-  const { remove } = useFieldArray({
-    control: form.control,
-    name: 'details',
-  });
-
-  return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto pb-4">
-        <table
-          className="w-full"
-          style={{ minWidth: '1800px', tableLayout: 'fixed' }}
-        >
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '384px' }}
-              >
-                Project
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '480px' }}
-              >
-                Product
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium"
-                style={{ width: '128px' }}
-              >
-                Qty
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '156px' }}
-              >
-                Rate
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '156px' }}
-              >
-                Gross
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '156px' }}
-              >
-                Disc Type
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '128px' }}
-              >
-                Discount
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '128px' }}
-              >
-                Discounted
-              </th>
-              <th
-                className="text-left py-2 px-2 font-medium "
-                style={{ width: '128px' }}
-              >
-                Net
-              </th>
-              <th
-                className="text-centre py-2 px-2 font-medium"
-                style={{ width: '128px' }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {details.map((f, index) => (
-              <OrderDetailRow
-                key={f.id}
-                index={index}
-                form={form}
-                projects={projects}
-                products={products}
-                services={services}
-                isPending={form.formState.isSubmitting}
-                onRemove={() => remove(index)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {details.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          No order details added yet. Use &quot;Pending Requests&quot; to add
-          items.
-        </div>
-      )}
-    </div>
+function lineHeaderClass(width: string, align: 'left' | 'center' = 'left') {
+  return cn(
+    'whitespace-nowrap border-b bg-muted px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
+    align === 'center' ? 'text-center' : 'text-left',
+    width
   );
 }
 
-interface OrderDetailRowProps extends OrderForm, IsPending {
-  index: number;
-  projects: Array<Option>;
-  products: Array<Option>;
-  services: Array<Option>;
-  onRemove: () => void;
+function lineCellClass(width: string) {
+  return cn(
+    'flex items-center gap-2 py-1.5 before:w-24 before:shrink-0 before:text-[11px] before:font-semibold before:uppercase before:tracking-[0.04em] before:text-muted-foreground before:content-[attr(data-label)] md:table-cell md:px-2 md:py-1.5 md:align-middle md:before:hidden',
+    width
+  );
 }
 
-function OrderDetailRow({
-  index,
-  form,
-  projects,
-  products,
-  services,
-  isPending,
-  onRemove,
-}: OrderDetailRowProps) {
-  const watchedType = useWatch({
-    control: form.control,
-    name: `details.${index}.type`,
-  });
-  const watchedQty = useWatch({
-    control: form.control,
-    name: `details.${index}.qty`,
-  });
-  const watchedRate = useWatch({
-    control: form.control,
-    name: `details.${index}.rate`,
-  });
-  const gross = (watchedQty || 0) * (watchedRate || 0);
-  const discountType = useWatch({
-    control: form.control,
-    name: `details.${index}.discountType`,
-  }) as 'NONE' | 'PERCENTAGE' | 'AMOUNT';
-  const watchedDiscount =
-    useWatch({
-      control: form.control,
-      name: `details.${index}.discount`,
-    }) || 0;
-  const discountedAmount = calculateDiscount(
-    discountType,
-    watchedDiscount,
+function readonlyCellClass(emphasized = false) {
+  return cn(
+    'w-full text-right text-sm tabular-nums text-muted-foreground md:pr-1',
+    emphasized && 'font-semibold text-foreground'
+  );
+}
+
+function lineDiscount(line: OrderFormDetailInput | undefined) {
+  if (!line) return 0;
+  const gross = (Number(line.qty) || 0) * (Number(line.rate) || 0);
+  return calculateDiscount(
+    line.discountType ?? 'NONE',
+    Number(line.discount) || 0,
     gross
   );
-
-  const netAmount = gross - discountedAmount; // + (watchedVat || 0)
-  return (
-    <tr>
-      <td className="py-2 px-2" style={{ width: '384px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.projectId`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <FormControl>
-                  <SearchSelect
-                    onChange={field.onChange}
-                    value={field.value}
-                    emptyText="Project not found"
-                    placeholder="Select project"
-                    options={projects}
-                    searchText="Search project"
-                    isPending={isPending}
-                  />
-                </FormControl>
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '480px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.itemOrServiceId`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <SearchSelect
-                  onChange={field.onChange}
-                  value={field.value}
-                  emptyText="Product not found"
-                  placeholder="Select product"
-                  isPending={isPending}
-                  options={watchedType === 'item' ? products : services}
-                  searchText="Search product"
-                />
-
-                {/* <FormMessage /> */}
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '128px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.qty`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Qty"
-                    {...field}
-                    value={field.value || ''}
-                    autoFocus={false}
-                    className="w-full"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                {/* <FormMessage /> */}
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '156px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.rate`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Rate"
-                    {...field}
-                    value={field.value || ''}
-                    autoFocus={false}
-                    className="w-full"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                {/* <FormMessage /> */}
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '156px' }}>
-        <Input value={gross} autoFocus={false} className="w-full" disabled />
-      </td>
-      <td className="py-2 px-2" style={{ width: '156px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.discountType`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <FormControl>
-                  <MiniSelect
-                    options={[
-                      { value: 'NONE', label: 'None' },
-                      { value: 'PERCENTAGE', label: 'Percentage' },
-                      { value: 'AMOUNT', label: 'Amount' },
-                    ]}
-                    disabled={isPending}
-                    {...field}
-                    onChange={(value: string) => {
-                      field.onChange(value as 'NONE' | 'PERCENTAGE' | 'AMOUNT');
-                      if (value === 'NONE') {
-                        form.setValue(`details.${index}.discount`, 0);
-                      }
-                    }}
-                  />
-                </FormControl>
-                {/* <FormMessage /> */}
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '128px' }}>
-        <FormField
-          control={form.control}
-          name={`details.${index}.discount`}
-          render={({ field }) => {
-            return (
-              <FormItem className="w-full">
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Discount"
-                    {...field}
-                    value={field.value || ''}
-                    autoFocus={false}
-                    className="w-full"
-                    disabled={discountType === 'NONE'}
-                  />
-                </FormControl>
-                {/* <FormMessage /> */}
-              </FormItem>
-            );
-          }}
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '128px' }}>
-        <Input
-          value={discountedAmount}
-          autoFocus={false}
-          className="w-full"
-          disabled
-        />
-      </td>
-      <td className="py-2 px-2" style={{ width: '128px' }}>
-        <Input
-          value={netAmount}
-          autoFocus={false}
-          className="w-full"
-          disabled
-        />
-      </td>
-      <td className="py-2 px-2 text-center" style={{ width: '128px' }}>
-        <Button
-          variant="ghost"
-          className="h-6 w-6 text-destructive"
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRemove();
-          }}
-          type="button"
-          disabled={isPending}
-        >
-          <Trash2Icon className="h-4 w-4" />
-        </Button>
-      </td>
-    </tr>
-  );
 }
+
+function lineGross(line: OrderFormDetailInput | undefined) {
+  if (!line) return 0;
+  return (Number(line.qty) || 0) * (Number(line.rate) || 0);
+}
+
+export const OrderDetails = withForm({
+  ...purchaseOrderFormOpts(),
+  props: {
+    products: [] as Array<Option>,
+    projects: [] as Array<Option>,
+    services: [] as Array<Option>,
+    pendingOrders: [] as Array<PendingOrder>,
+  },
+  render: function Render({
+    form,
+    products: initialProducts,
+    projects: initialProjects,
+    services: initialServices,
+    pendingOrders,
+  }) {
+    const { products, projects, services } = useProcurementServices({
+      products: initialProducts,
+      projects: initialProjects,
+      services: initialServices,
+      include: ['products', 'projects', 'services'],
+    });
+
+    return (
+      <form.AppField name="details" mode="array">
+        {field => {
+          const handleAddPendingRequests = (
+            selectedRequests: Array<PendingOrder>
+          ) => {
+            selectedRequests.forEach(request => {
+              field.pushValue({
+                id: request.id,
+                requestId: request.requestId,
+                projectId: request.projectId,
+                type: request.type,
+                itemOrServiceId:
+                  (request.type === 'item'
+                    ? request.itemId
+                    : request.serviceId) ?? '',
+                qty: Number(request.qty),
+                rate: Number(request.rate) || 0,
+                discountType: 'NONE',
+                discount: 0,
+              });
+            });
+            toast.success(() => (
+              <ToastContent
+                title="Items added"
+                message={`Added ${selectedRequests.length} pending request(s) to order`}
+              />
+            ));
+          };
+
+          return (
+            <section className="bg-card border rounded-lg shadow-sm overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-card-foreground">
+                    Order Details
+                  </h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Items pulled from pending requisitions.
+                  </p>
+                </div>
+                <PendingRequests
+                  pendingOrders={pendingOrders}
+                  projects={projects ?? initialProjects}
+                  onAddSelected={handleAddPendingRequests}
+                />
+              </div>
+              <FieldGroup className="overflow-x-auto">
+                <table
+                  aria-label="Purchase order line items"
+                  className="w-full border-collapse md:table-fixed md:min-w-[1080px]"
+                >
+                  <thead className="hidden md:table-header-group">
+                    <tr>
+                      <th className={lineHeaderClass('w-10', 'center')}>#</th>
+                      <th className={lineHeaderClass('w-48')}>
+                        Project <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass('w-56')}>
+                        Product <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass('w-20')}>
+                        Qty <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass('w-28')}>
+                        Rate <span className="text-destructive">*</span>
+                      </th>
+                      <th className={lineHeaderClass('w-24')}>Gross</th>
+                      <th className={lineHeaderClass('w-32')}>Disc. Type</th>
+                      <th className={lineHeaderClass('w-24')}>Discount</th>
+                      <th className={lineHeaderClass('w-24')}>Disc. Amt</th>
+                      <th className={lineHeaderClass('w-28')}>Net</th>
+                      <th className="w-11 border-b bg-muted px-2 py-2">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="block w-full md:table-row-group">
+                    {field.state.value.map((line, i) => (
+                      <tr
+                        key={line.id}
+                        className="mb-3 block w-full rounded-lg border bg-card p-3 transition-colors md:mb-0 md:table-row md:rounded-none md:border-0 md:p-0 md:[&>td]:border-b md:[&>td]:border-border md:last:[&>td]:border-b-0 md:hover:[&>td]:bg-muted/40"
+                      >
+                        <td
+                          data-label="#"
+                          className="hidden md:table-cell md:w-10 md:px-2 md:py-1.5 md:text-center md:align-middle md:text-[11px] md:text-muted-foreground"
+                        >
+                          {i + 1}
+                        </td>
+                        <td
+                          data-label="Project"
+                          className={lineCellClass(
+                            'md:w-48 md:max-w-48 md:overflow-hidden'
+                          )}
+                        >
+                          <form.AppField name={`details[${i}].projectId`}>
+                            {field => (
+                              <field.Combobox
+                                label=""
+                                items={projects ?? []}
+                                placeholder="Select project"
+                                emptyMessage="Project not found"
+                              />
+                            )}
+                          </form.AppField>
+                        </td>
+                        <td
+                          data-label="Product"
+                          className={lineCellClass(
+                            'md:w-56 md:max-w-56 md:overflow-hidden'
+                          )}
+                        >
+                          <form.Subscribe
+                            selector={state => state.values.details[i]?.type}
+                          >
+                            {lineType => (
+                              <form.AppField
+                                name={`details[${i}].itemOrServiceId`}
+                              >
+                                {field => (
+                                  <field.Combobox
+                                    key={lineType ?? 'empty'}
+                                    label=""
+                                    items={
+                                      (lineType === 'item'
+                                        ? products
+                                        : services) ?? []
+                                    }
+                                    placeholder="Select product"
+                                    emptyMessage="Product not found"
+                                  />
+                                )}
+                              </form.AppField>
+                            )}
+                          </form.Subscribe>
+                        </td>
+                        <td data-label="Qty" className={lineCellClass('md:w-20')}>
+                          <form.AppField name={`details[${i}].qty`}>
+                            {field => (
+                              <field.Input
+                                label=""
+                                type="number"
+                                className="w-full text-right"
+                              />
+                            )}
+                          </form.AppField>
+                        </td>
+                        <td
+                          data-label="Rate"
+                          className={lineCellClass('md:w-28')}
+                        >
+                          <form.AppField name={`details[${i}].rate`}>
+                            {field => (
+                              <field.Input
+                                label=""
+                                type="number"
+                                placeholder="0.00"
+                                className="w-full text-right"
+                              />
+                            )}
+                          </form.AppField>
+                        </td>
+                        <td
+                          data-label="Gross"
+                          className={lineCellClass('md:w-24')}
+                        >
+                          <form.Subscribe
+                            selector={state =>
+                              lineGross(state.values.details[i])
+                            }
+                          >
+                            {gross => (
+                              <div className={readonlyCellClass()}>
+                                {numberFormat(gross)}
+                              </div>
+                            )}
+                          </form.Subscribe>
+                        </td>
+                        <td
+                          data-label="Disc. Type"
+                          className={lineCellClass('md:w-32')}
+                        >
+                          <form.AppField
+                            name={`details[${i}].discountType`}
+                            listeners={{
+                              onChange: ({ value, fieldApi }) => {
+                                if (value === 'NONE') {
+                                  fieldApi.form.setFieldValue(
+                                    `details[${i}].discount`,
+                                    0
+                                  );
+                                }
+                              },
+                            }}
+                          >
+                            {field => (
+                              <field.Select label="" className="w-full min-w-0">
+                                <SelectItem value="NONE">None</SelectItem>
+                                <SelectItem value="PERCENTAGE">
+                                  Percentage
+                                </SelectItem>
+                                <SelectItem value="AMOUNT">Amount</SelectItem>
+                              </field.Select>
+                            )}
+                          </form.AppField>
+                        </td>
+                        <td
+                          data-label="Discount"
+                          className={lineCellClass('md:w-24')}
+                        >
+                          <form.Subscribe
+                            selector={state =>
+                              state.values.details[i]?.discountType
+                            }
+                          >
+                            {discountType => (
+                              <form.AppField name={`details[${i}].discount`}>
+                                {field => (
+                                  <field.Input
+                                    label=""
+                                    type="number"
+                                    placeholder="0"
+                                    className="w-full text-right"
+                                    disabled={
+                                      !discountType || discountType === 'NONE'
+                                    }
+                                  />
+                                )}
+                              </form.AppField>
+                            )}
+                          </form.Subscribe>
+                        </td>
+                        <td
+                          data-label="Disc. Amt"
+                          className={lineCellClass('md:w-24')}
+                        >
+                          <form.Subscribe
+                            selector={state =>
+                              lineDiscount(state.values.details[i])
+                            }
+                          >
+                            {discountedAmount => (
+                              <div className={readonlyCellClass()}>
+                                {numberFormat(discountedAmount)}
+                              </div>
+                            )}
+                          </form.Subscribe>
+                        </td>
+                        <td data-label="Net" className={lineCellClass('md:w-28')}>
+                          <form.Subscribe
+                            selector={state => {
+                              const line = state.values.details[i];
+                              return lineGross(line) - lineDiscount(line);
+                            }}
+                          >
+                            {net => (
+                              <div className={readonlyCellClass(true)}>
+                                {numberFormat(net)}
+                              </div>
+                            )}
+                          </form.Subscribe>
+                        </td>
+                        <td className="flex justify-end pt-2 md:table-cell md:w-11 md:px-2 md:py-1.5 md:text-center md:align-middle">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => field.removeValue(i)}
+                            aria-label={`Remove line ${i + 1}`}
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2Icon
+                              className="size-3.5"
+                              strokeWidth={2.5}
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {field.state.value.length === 0 && (
+                  <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      No items added yet
+                    </p>
+                    <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                      Select a vendor, then click{' '}
+                      <strong>Pending Requests</strong> to pull in
+                      requisitioned items.
+                    </p>
+                  </div>
+                )}
+                {field.state.value.length > 0 && (
+                  <div className="flex items-center justify-between border-t px-5 py-3">
+                    <p className="text-xs text-muted-foreground">
+                      {field.state.value.length}{' '}
+                      {field.state.value.length === 1 ? 'line' : 'lines'}
+                    </p>
+                  </div>
+                )}
+              </FieldGroup>
+            </section>
+          );
+        }}
+      </form.AppField>
+    );
+  },
+});
