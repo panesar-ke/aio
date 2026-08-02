@@ -25,7 +25,9 @@ export const materialRequisitionFormSchema = z.object({
       itemOrServiceId: requiredStringSchemaEntry("Field is required"),
       qty: requiredNumberSchemaEntry("Qty is required"),
       remarks: optionalStringSchemaEntry(),
-      requestId: z.number({ required_error: "Request ID is required" }),
+      requestId: z.number({
+        error: (issue) => (issue.input === undefined ? "Request ID is required" : undefined),
+      }),
     }),
   ),
 });
@@ -37,7 +39,7 @@ export const orderSchema = z
     vendor: requiredStringSchemaEntry("Vendor is required"),
     invoiceNo: optionalStringSchemaEntry(),
     vatType: z.enum(["NONE", "INCLUSIVE", "EXCLUSIVE"], {
-      required_error: "Select vat",
+      error: (issue) => (issue.input === undefined ? "Select vat" : undefined),
     }),
     vat: optionalStringSchemaEntry(),
     invoiceDate: z.preprocess(
@@ -52,10 +54,7 @@ export const orderSchema = z
           itemOrServiceId: requiredStringSchemaEntry("Field is required"),
           requestId: requiredStringSchemaEntry("Request ID is required"),
           projectId: requiredStringSchemaEntry("Project is required"),
-          qty: z.coerce.number({
-            required_error: "Qty is required",
-            invalid_type_error: "Qty is required",
-          }),
+          qty: z.coerce.number({ error: () => "Qty is required" }),
           rate: optionalNumberSchemaEntry(),
           discountType: z.enum(["NONE", "PERCENTAGE", "AMOUNT"]).optional(),
           discount: optionalNumberSchemaEntry(),
@@ -141,7 +140,7 @@ export const orderRegisterSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     reportType: z.enum(["summary", "items"], {
-      required_error: "Select report type",
+      error: (issue) => (issue.input === undefined ? "Select report type" : undefined),
     }),
     vendorId: requiredStringSchemaEntry("Vendor is required"),
   })
@@ -160,7 +159,7 @@ export const orderByCriteriaSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     criteria: z.enum(["project", "product", "service"], {
-      required_error: "Select report criteria",
+      error: (issue) => (issue.input === undefined ? "Select report criteria" : undefined),
     }),
     option: requiredStringSchemaEntry("Product/Project/Service is required"),
   })
@@ -179,7 +178,7 @@ export const topVendorsSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     criteria: z.enum(["discount", "value"], {
-      required_error: "Select report criteria",
+      error: (issue) => (issue.input === undefined ? "Select report criteria" : undefined),
     }),
     top: requiredStringSchemaEntry("Top N is required"),
   })

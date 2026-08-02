@@ -20,12 +20,12 @@ export const licenseFormSchemaValues = licenseSchema
     name: z.string().min(1, 'Name is required'),
     softwareName: z.string().min(1, 'Name is required'),
     status: z.enum(LICENSE_STATUS, {
-      required_error: 'Select license status',
-      invalid_type_error: 'Invalid license status',
+      error: (issue) =>
+        issue.input === undefined ? 'Select license status' : 'Invalid license status',
     }),
     licenseType: z.enum(LICENSE_TYPE, {
-      required_error: 'Select license type',
-      invalid_type_error: 'Invalid license type',
+      error: (issue) =>
+        issue.input === undefined ? 'Select license type' : 'Invalid license type',
     }),
   })
   .superRefine((data, ctx) => {
