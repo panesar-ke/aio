@@ -1,23 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
-import FormHeader from '@/components/custom/form-header';
-import { FormLoader } from '@/components/custom/loaders';
-import { OrderForm } from '@/features/procurement/components/purchase-order/order-form';
+import { notFound } from "next/navigation";
+
+import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
+import FormHeader from "@/components/custom/form-header";
+import { FormLoader } from "@/components/custom/loaders";
+import { OrderForm } from "@/features/procurement/components/purchase-order/order-form";
 import {
   getSelectableProducts,
   getSelectableProjects,
   getSelectableServices,
-} from '@/features/procurement/services/material-requisitions/data';
+} from "@/features/procurement/services/material-requisitions/data";
 import {
   getActiveVendors,
   getPendingRequests,
   getPurchaseOrder,
-} from '@/features/procurement/services/purchase-orders/data';
+} from "@/features/procurement/services/purchase-orders/data";
 
 export const metadata: Metadata = {
-  title: 'Edit Purchase Order',
-  description: 'Edit an existing purchase order',
+  title: "Edit Purchase Order",
+  description: "Edit an existing purchase order",
 };
 
 type Params = Promise<{ orderId: string }>;
@@ -46,6 +48,8 @@ async function EditPurchaseOrderContent({ params }: { params: Params }) {
       getPendingRequests(),
       getPurchaseOrder(orderId),
     ]);
+
+  if (!order) notFound();
 
   return (
     <>

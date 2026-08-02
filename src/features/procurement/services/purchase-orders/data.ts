@@ -1,9 +1,9 @@
-'use cache';
-import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
-import { cacheTag } from 'next/cache';
-import { notFound } from 'next/navigation';
+"use cache";
+import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { cacheTag } from "next/cache";
+import { notFound } from "next/navigation";
 
-import db from '@/drizzle/db';
+import db from "@/drizzle/db";
 import {
   mrqDetails,
   ordersDetails,
@@ -12,15 +12,15 @@ import {
   services,
   users,
   vendors,
-} from '@/drizzle/schema';
+} from "@/drizzle/schema";
 import {
   getPendingRequestsGlobalTag,
   getPurchaseOrderIdTag,
   getPurchaseOrderNoGlobalTag,
   getPurchaseOrdersGlobalTag,
   getVendorsGlobalTag,
-} from '@/features/procurement/utils/cache';
-import { transformOptions } from '@/lib/helpers/formatters';
+} from "@/features/procurement/utils/cache";
+import { transformOptions } from "@/lib/helpers/formatters";
 
 export const getPurchaseOrderNo = async () => {
   cacheTag(getPurchaseOrderNoGlobalTag());
@@ -107,11 +107,7 @@ export const getPurchaseOrder = async (orderId: string) => {
     },
   });
 
-  if (!order) {
-    notFound();
-  }
-
-  return order;
+  return order ?? null;
 };
 
 export const getPendingRequests = async () => {
@@ -134,9 +130,9 @@ export const getPendingRequests = async () => {
     .leftJoin(products, eq(mrqDetails.itemId, products.id))
     .leftJoin(services, eq(mrqDetails.serviceId, services.id));
 
-  return requests.map(req => ({
+  return requests.map((req) => ({
     id: req.id,
-    type: req.itemName ? 'item' : ('service' as 'item' | 'service'),
+    type: req.itemName ? "item" : ("service" as "item" | "service"),
     itemName: req.itemName || req.serviceName,
     requestId: req.requestId.toString(),
     qty: req.qty,
@@ -156,7 +152,7 @@ export const getActiveVendors = async () => {
     })
     .from(vendors)
     .where(eq(vendors.active, true))
-    .orderBy(asc(vendors.vendorName));
+    .orderBy(asc(sql`lower(${vendors.vendorName})`));
 
   return transformOptions(activeVendors);
 };

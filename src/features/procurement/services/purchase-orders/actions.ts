@@ -1,16 +1,13 @@
 "use server";
 import type { AxiosResponse } from "axios";
+import type { SQL } from "drizzle-orm";
 
 import { createId } from "@paralleldrive/cuid2";
 import { isAxiosError } from "axios";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { redirect } from "next/navigation";
 
-import type {
-  OrderData,
-  OrderFormValues,
-} from "@/features/procurement/utils/procurement.types";
+import type { OrderData } from "@/features/procurement/utils/procurement.types";
 import type {
   ApiFailure,
   ApiFailureWithoutData,
@@ -33,153 +30,188 @@ import {
 } from "@/features/procurement/utils/calculators";
 import { orderSchema } from "@/features/procurement/utils/schemas";
 import { inngest } from "@/inngest/client";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
 import axios from "@/lib/axios";
+import { requireAnyPermission } from "@/lib/permissions/guards";
 import { getCurrentUser } from "@/lib/session";
 import { apiErrorHandler } from "@/lib/utils";
 
-import { getPurchaseOrder, getPurchaseOrderNo } from "./data";
+import { getPurchaseOrder } from "./data";
+
+type PurchaseOrderNoAllocatorTx = {
+  execute: (query: SQL) => Promise<{ rows: Array<Record<string, unknown>> }>;
+};
+
+export const allocatePurchaseOrderNo = async (
+  tx: PurchaseOrderNoAllocatorTx,
+) => {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtext('orders_header_id_allocation'))`,
+  );
+
+  const result = await tx.execute(
+    sql`select coalesce(max(${ordersHeader.id}), 0) + 1 as "orderNo" from ${ordersHeader}`,
+  );
+  const rawOrderNo = result.rows[0]?.orderNo;
+  const orderNo =
+    typeof rawOrderNo === "number" ? rawOrderNo : Number(rawOrderNo);
+
+  if (!Number.isFinite(orderNo) || orderNo < 1) {
+    throw new Error("Unable to allocate purchase order number");
+  }
+
+  return orderNo;
+};
 
 export const createOrder = async ({
   values,
-  submitType,
   id,
 }: {
-  values: OrderFormValues;
-  submitType: "SUBMIT" | "SUBMIT_SEND";
+  values: unknown;
   id?: string;
-}) => {
-  const { success, data, error } = orderSchema.safeParse(values);
-  if (!success) {
-    console.log(error);
-    return {
-      error: true,
-      message: "Validation failed. Check all required fields and try again.",
-    };
-  }
+}) =>
+  runAction("create-order", async () => {
+    await requireAnyPermission(["procurement:admin", "procurement:standard"]);
+    const data = parseOrFail(orderSchema, values);
 
-  const user = await getCurrentUser("action");
+    const user = await getCurrentUser();
 
-  const orderNo = id
-    ? (await getPurchaseOrder(id))?.id
-    : await getPurchaseOrderNo();
-  if (!orderNo)
-    return {
-      error: true,
-      message: "Unable to generate order number",
-    };
+    const existingOrder = id ? await getPurchaseOrder(id) : null;
+    if (id && !existingOrder) {
+      return { error: true, message: "Order not found", data: null };
+    }
+    const existingOrderNo = existingOrder?.id ?? null;
 
-  const {
-    details,
-    documentDate,
-    vendor,
-    invoiceDate,
-    invoiceNo,
-    vat,
-    vatType,
-  } = data;
+    const {
+      details,
+      documentDate,
+      vendor,
+      invoiceDate,
+      invoiceNo,
+      vat,
+      vatType,
+    } = data;
 
-  const reference = await db.transaction(async (tx) => {
-    const ref = await tx
-      .insert(ordersHeader)
-      .values({
+    const vatId = vatType !== "NONE" && vat ? (vat === "16" ? 1 : 2) : null;
+    const requestIds = details.map((detail) => Number(detail.requestId));
+
+    const reference = await db.transaction(async (tx) => {
+      const orderNo = existingOrderNo ?? (await allocatePurchaseOrderNo(tx));
+      const headerValues = {
         id: orderNo,
         reference: createId(),
-        documentDate: documentDate.toISOString(),
+        documentDate,
         vendorId: vendor,
         billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
         billNo: invoiceNo,
         vatType,
-        vatId:
-          vatType !== "NONE" ? (vat ? (vat === "16" ? 1 : 2) : null) : null,
+        vatId,
         createdBy: user.id,
-      })
-      .onConflictDoUpdate({
-        target: ordersHeader.id,
-        set: {
-          documentDate: documentDate.toISOString(),
-          vendorId: vendor,
-          billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
-          billNo: invoiceNo,
-          vatType,
-          fileUrl: null,
-          vatId:
-            vatType !== "NONE" ? (vat ? (vat === "16" ? 1 : 2) : null) : null,
-          // vatId: vatType !== 'NONE' ? 1 : null,
-        },
-      })
-      .returning({ reference: ordersHeader.reference });
+      };
 
-    if (id) {
-      await tx.delete(ordersDetails).where(eq(ordersDetails.headerId, orderNo));
-      details.forEach(async (detail) => {
+      const ref = id
+        ? await tx
+            .insert(ordersHeader)
+            .values(headerValues)
+            .onConflictDoUpdate({
+              target: ordersHeader.id,
+              set: {
+                documentDate,
+                vendorId: vendor,
+                billDate: invoiceDate
+                  ? new Date(invoiceDate).toISOString()
+                  : null,
+                billNo: invoiceNo,
+                vatType,
+                fileUrl: null,
+                vatId,
+              },
+            })
+            .returning({ reference: ordersHeader.reference })
+        : await tx
+            .insert(ordersHeader)
+            .values(headerValues)
+            .returning({ reference: ordersHeader.reference });
+
+      if (id) {
+        const previousDetails = await tx
+          .select({ requestId: ordersDetails.requestId })
+          .from(ordersDetails)
+          .where(eq(ordersDetails.headerId, orderNo));
+        const previousRequestIds = previousDetails
+          .map((detail) => detail.requestId)
+          .filter((requestId): requestId is number => requestId !== null);
+
+        if (previousRequestIds.length > 0) {
+          await tx
+            .update(mrqDetails)
+            .set({ linked: false })
+            .where(inArray(mrqDetails.requestId, previousRequestIds));
+        }
+        await tx
+          .delete(ordersDetails)
+          .where(eq(ordersDetails.headerId, orderNo));
+      }
+
+      if (requestIds.length > 0) {
         await tx
           .update(mrqDetails)
-          .set({ linked: false })
-          .where(eq(mrqDetails.requestId, +detail.requestId));
-      });
-    }
+          .set({ linked: true })
+          .where(inArray(mrqDetails.requestId, requestIds));
+      }
 
-    details.forEach(async (detail) => {
-      await tx
-        .update(mrqDetails)
-        .set({ linked: true })
-        .where(eq(mrqDetails.requestId, +detail.requestId));
-    });
-
-    const formattedDetails = details.map(
-      ({
-        itemOrServiceId,
-        projectId,
-        qty,
-        rate,
-        requestId,
-        discount,
-        discountType,
-        type,
-      }) => {
-        const gross = Number(qty) * parseFloat(rate?.toString() || "0");
-        const discountedAmount = calculateDiscount(
-          discountType ?? "NONE",
-          discount ?? 0,
-          gross,
-        );
-        const subTotal = gross - discountedAmount;
-        const vatValues = calculateVatValues(vatType, subTotal, vat ?? 0);
-        return {
-          headerId: orderNo,
-          requestId: Number(requestId),
+      const formattedDetails = details.map(
+        ({
+          itemOrServiceId,
           projectId,
-          itemId: type === "item" ? itemOrServiceId : null,
-          serviceId: type === "service" ? itemOrServiceId : null,
-          qty: qty.toString(),
-          rate: rate?.toString() || "0",
-          discountType: discountType ?? "NONE",
-          discount: discount ? discount.toString() : "0",
-          discountedAmount: discountedAmount.toString(),
-          amountExclusive: vatValues.exclusive.toString(),
-          vat: vatValues.vatValue.toString(),
-          amountInclusive: vatValues.inclusive.toString(),
-        };
-      },
-    );
+          qty,
+          rate,
+          requestId,
+          discount,
+          discountType,
+          type,
+        }) => {
+          const gross = Number(qty) * parseFloat(rate?.toString() || "0");
+          const discountedAmount = calculateDiscount(
+            discountType ?? "NONE",
+            discount ?? 0,
+            gross,
+          );
+          const subTotal = gross - discountedAmount;
+          const vatValues = calculateVatValues(vatType, subTotal, vat ?? 0);
+          return {
+            headerId: orderNo,
+            requestId: Number(requestId),
+            projectId,
+            itemId: type === "item" ? itemOrServiceId : null,
+            serviceId: type === "service" ? itemOrServiceId : null,
+            qty: qty.toString(),
+            rate: rate?.toString() || "0",
+            discountType: discountType ?? "NONE",
+            discount: discount ? discount.toString() : "0",
+            discountedAmount: discountedAmount.toString(),
+            amountExclusive: vatValues.exclusive.toString(),
+            vat: vatValues.vatValue.toString(),
+            amountInclusive: vatValues.inclusive.toString(),
+          };
+        },
+      );
 
-    await tx.insert(ordersDetails).values(formattedDetails);
+      await tx.insert(ordersDetails).values(formattedDetails);
 
-    return ref[0].reference;
-  });
-
-  if (submitType === "SUBMIT_SEND") {
-    await inngest.send({
-      name: "procurement/supplier.po.email",
-      data: { orderId: reference, userId: user.id },
+      return ref[0].reference;
     });
-  }
-  revalidatePurchaseOrders(reference);
-  revalidateMaterialRequisitions();
-  revalidateTag(getVendorStatsGlobalTag(), "max");
 
-  redirect(`/procurement/purchase-order/${reference}/details`);
-};
+    revalidatePurchaseOrders(reference);
+    revalidateMaterialRequisitions();
+    revalidateTag(getVendorStatsGlobalTag(), "max");
+
+    return {
+      error: false,
+      message: id ? "Order updated successfully" : "Order created successfully",
+      data: reference,
+    };
+  });
 
 export async function updateOrderUrl({
   fileUrl,
@@ -281,7 +313,10 @@ export const sendOrderEmailAction = async (
 };
 
 export const deleteOrder = async (orderId: string) => {
+  await requireAnyPermission(["procurement:admin"]);
   const order = await getPurchaseOrder(orderId);
+
+  if (!order) return { error: true, message: "Order not found", data: null };
 
   const requestIds = order.ordersDetails.map(({ requestId }) => requestId ?? 0);
 
@@ -314,6 +349,14 @@ export const deleteOrder = async (orderId: string) => {
   }
 };
 
+export const sendOrderEmail = async (orderId: string) => {
+  const user = await getCurrentUser();
+  await inngest.send({
+    name: "procurement/supplier.po.email",
+    data: { orderId, userId: user.id },
+  });
+};
+
 export const deletePendingRequests = async (requestIds: Array<string>) => {
   if (requestIds.length === 0) {
     return {
@@ -334,7 +377,7 @@ export const deletePendingRequests = async (requestIds: Array<string>) => {
 
     return {
       error: false,
-      message: "Pending requests successfully",
+      message: "Pending requests deleted successfully",
     };
   } catch (error) {
     console.error("Error deleting pending requests:", error);

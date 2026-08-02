@@ -1,24 +1,24 @@
-'use client';
-import type { ColumnDef } from '@tanstack/react-table';
+"use client";
+import type { ColumnDef } from "@tanstack/react-table";
 
-import Link from 'next/link';
+import Link from "next/link";
 
-import type { OrderTableRow } from '@/features/procurement/utils/procurement.types';
+import type { OrderTableRow } from "@/features/procurement/utils/procurement.types";
 
+import { PermissionGate } from "@/components/auth/client-permission-gate";
 import {
   DeleteAction,
   EditAction,
   ViewDetailsAction,
-} from '@/components/custom/custom-button';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { DataTable } from '@/components/custom/datatable';
-import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
-import { ActionButton } from '@/components/ui/action-button';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { deleteOrder } from '@/features/procurement/services/purchase-orders/actions';
-import { dateFormat, numberFormat } from '@/lib/helpers/formatters';
+} from "@/components/custom/custom-button";
+import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
+import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
+import { DataTable } from "@/components/custom/datatable";
+import { ActionButton } from "@/components/ui/action-button";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { UserAvatar } from "@/features/admin/components/users/users-table";
+import { deleteOrder } from "@/features/procurement/services/purchase-orders/actions";
+import { dateFormat, numberFormat, titleCase } from "@/lib/helpers/formatters";
 
 export function OrdersTable({ orders }: { orders: Array<OrderTableRow> }) {
   async function handleDelete(orderId: string) {
@@ -28,55 +28,40 @@ export function OrdersTable({ orders }: { orders: Array<OrderTableRow> }) {
 
   const columns: Array<ColumnDef<OrderTableRow>> = [
     {
-      accessorKey: 'id',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Order #" />
-      ),
+      accessorKey: "id",
+      header: "Order #",
     },
     {
-      accessorKey: 'orderDate',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Order Date" />
-      ),
-      cell: ({ row }) => dateFormat(row.original.orderDate, 'long'),
+      accessorKey: "orderDate",
+      header: "Order Date",
+      cell: ({ row }) => dateFormat(row.original.orderDate, "long"),
     },
     {
-      accessorKey: 'vendor',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Vendor" />
-      ),
-      cell: ({ row }) => row.original.vendor.toUpperCase(),
+      accessorKey: "vendor",
+      header: "Vendor",
+      cell: ({ row }) => titleCase(row.original.vendor.toLowerCase()),
     },
 
     {
-      accessorKey: 'createdBy',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created By" />
-      ),
+      accessorKey: "createdBy",
+      header: "Created By",
       cell: ({ row }) => (
-        <div className="space-y-1">
-          <div className="text-sm font-medium capitalize">
-            {row.original.createdBy}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {dateFormat(row.original.createdAt, 'long')}
-          </div>
+        <div className="flex items-center gap-2">
+          <UserAvatar userName={row.original.createdBy} />
         </div>
       ),
     },
     {
-      accessorKey: 'totalAmount',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Order Total" />
-      ),
+      accessorKey: "totalAmount",
+      header: () => <div className="text-right">Order Total</div>,
       cell: ({ row }) => (
-        <Badge variant="info" className="font-semibold">
+        <div className="text-right">
           {numberFormat(row.original.totalAmount)}
-        </Badge>
+        </div>
       ),
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({
         row: {
           original: { reference },
@@ -101,14 +86,16 @@ export function OrdersTable({ orders }: { orders: Array<OrderTableRow> }) {
                 <ViewDetailsAction />
               </Link>
             </DropdownMenuItem>
-            <ActionButton
-              variant="ghost"
-              className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
-              action={handleDelete.bind(null, reference)}
-              requireAreYouSure={true}
-            >
-              <DeleteAction />
-            </ActionButton>
+            <PermissionGate permissions={["procurement:admin"]}>
+              <ActionButton
+                variant="ghost"
+                className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
+                action={handleDelete.bind(null, reference)}
+                requireAreYouSure={true}
+              >
+                <DeleteAction />
+              </ActionButton>
+            </PermissionGate>
           </CustomDropdownContent>
         </DropdownMenu>
       ),

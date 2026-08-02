@@ -3,7 +3,9 @@ import { z } from "zod";
 export const paymentMethodSchemaEntry = () =>
   z.enum(["cash", "mpesa", "cheque", "bank"], {
     error: (issue) =>
-      issue.input === undefined ? "Select payment method" : "Select a payment method",
+      issue.input === undefined
+        ? "Select payment method"
+        : "Select a payment method",
   });
 
 export const paymentReferenceSchemaEntry = () =>
@@ -70,12 +72,16 @@ export const requiredDateSchemaEntry = () =>
     return date;
   });
 
+//TODO: TO UPDATE AFTER RHF FULL REPLACEMENT
 export const requiredNumberSchemaEntry = (message?: string) =>
   z
     .unknown()
     .transform((val, ctx) => {
       if (val === undefined) {
-        ctx.addIssue({ code: "custom", message: message || "Field is required" });
+        ctx.addIssue({
+          code: "custom",
+          message: message || "Field is required",
+        });
         return z.NEVER;
       }
       const num = Number(val);

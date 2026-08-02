@@ -1,15 +1,15 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from "react";
 
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { ErrorNotification } from '@/components/custom/error-components';
-import { ReportLoader } from '@/components/custom/loaders';
+import { ErrorNotification } from "@/components/custom/error-components";
+import { ReportLoader } from "@/components/custom/loaders";
 
 type Props = {
   errorMessage?: string;
   loader?: React.ReactNode;
-  loaderType?: 'tableOnly' | 'full';
+  loaderType?: "tableOnly" | "full";
 };
 
 export function ErrorBoundaryWithSuspense({
@@ -21,11 +21,11 @@ export function ErrorBoundaryWithSuspense({
   return (
     <ErrorBoundary
       fallback={
-        <ErrorNotification message={errorMessage || 'Something went wrong'} />
+        <ErrorNotification message={errorMessage || "Something went wrong"} />
       }
     >
       <Suspense
-        fallback={loader || <ReportLoader type={loaderType || 'full'} />}
+        fallback={loader || <ReportLoader type={loaderType || "full"} />}
       >
         {children}
       </Suspense>

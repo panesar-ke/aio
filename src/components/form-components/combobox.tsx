@@ -1,6 +1,6 @@
-import type { Option } from '@/types/index.types';
+import type { Option } from "@/types/index.types";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -10,15 +10,15 @@ import {
   ComboboxList,
   ComboboxTrigger,
   ComboboxValue,
-} from '@/components/ui/combobox';
+} from "@/components/ui/combobox";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
-} from '@/components/ui/field';
-import { useFieldContext } from '@/lib/form';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/field";
+import { useFieldContext } from "@/lib/form";
+import { cn } from "@/lib/utils";
 
 type FormComboboxProps = {
   label: string;
@@ -37,8 +37,8 @@ export function FormCombobox({
   label,
   required,
   placeholder,
-  searchPlaceholder = 'Search',
-  emptyMessage = 'No items found.',
+  searchPlaceholder = "Search",
+  emptyMessage = "No items found.",
   helperText,
   className,
   fieldClassName,
@@ -52,14 +52,16 @@ export function FormCombobox({
 
   return (
     <Field data-invalid={isInvalid} className={fieldClassName}>
-      <FieldLabel htmlFor={field.name}>
-        {label} {required && <span className="text-destructive">*</span>}
-      </FieldLabel>
+      {(label || required) && (
+        <FieldLabel htmlFor={field.name}>
+          {label} {required && <span className="text-destructive">*</span>}
+        </FieldLabel>
+      )}
       <Combobox
         items={items}
         value={selected}
         onValueChange={(value: Option | null) =>
-          field.handleChange(value?.value ?? '')
+          field.handleChange(value?.value ?? "")
         }
         itemToStringLabel={(item: Option) => item.label}
       >
@@ -72,14 +74,14 @@ export function FormCombobox({
             <Button
               variant="outline"
               className={cn(
-                'w-full min-w-0 justify-between font-normal',
+                "w-full min-w-0 justify-between font-normal h-10 border-input shadow-none",
                 className,
               )}
             />
           }
         >
           <span className="min-w-0 flex-1 truncate text-left">
-            <ComboboxValue placeholder={placeholder ?? 'Select an option'} />
+            <ComboboxValue placeholder={placeholder ?? "Select an option"} />
           </span>
         </ComboboxTrigger>
         <ComboboxContent className="max-w-(--anchor-width) min-w-(--anchor-width)">

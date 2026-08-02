@@ -26,7 +26,8 @@ export const materialRequisitionFormSchema = z.object({
       qty: requiredNumberSchemaEntry("Qty is required"),
       remarks: optionalStringSchemaEntry(),
       requestId: z.number({
-        error: (issue) => (issue.input === undefined ? "Request ID is required" : undefined),
+        error: (issue) =>
+          issue.input === undefined ? "Request ID is required" : undefined,
       }),
     }),
   ),
@@ -34,17 +35,18 @@ export const materialRequisitionFormSchema = z.object({
 
 export const orderSchema = z
   .object({
-    documentNo: requiredNumberSchemaEntry("Document no is required."),
-    documentDate: requiredDateSchemaEntry(),
+    documentNo: z.number().min(1, "Document number must be at least 1"), //TODO: REPLACE WITH A ZOD NUMBER HELPER
+    documentDate: z.iso.date({
+      error: (issue) =>
+        issue.input === undefined ? "Select a date" : "Invalid date provided",
+    }), //TODO: REPLACE WITH A ZOD NUMBER HELPER
     vendor: requiredStringSchemaEntry("Vendor is required"),
     invoiceNo: optionalStringSchemaEntry(),
     vatType: z.enum(["NONE", "INCLUSIVE", "EXCLUSIVE"], {
       error: (issue) => (issue.input === undefined ? "Select vat" : undefined),
     }),
     vat: optionalStringSchemaEntry(),
-    invoiceDate: z.coerce.date().optional(),
-    displayOdometerDetails: z.boolean(),
-    vehicle: z.coerce.number().optional(),
+    invoiceDate: z.iso.date().optional(), //TODO: REPLACE WITH A ZOD NUMBER HELPER
     details: z.array(
       z
         .object({
@@ -53,10 +55,10 @@ export const orderSchema = z
           itemOrServiceId: requiredStringSchemaEntry("Field is required"),
           requestId: requiredStringSchemaEntry("Request ID is required"),
           projectId: requiredStringSchemaEntry("Project is required"),
-          qty: z.coerce.number({ error: () => "Qty is required" }),
-          rate: optionalNumberSchemaEntry(),
+          qty: z.coerce.number<number>({ error: () => "Qty is required" }), //TODO: REPLACE WITH A ZOD NUMBER HELPER
+          rate: z.coerce.number<number>({ error: () => "Rate is required" }), //TODO: REPLACE WITH A ZOD NUMBER HELPER
           discountType: z.enum(["NONE", "PERCENTAGE", "AMOUNT"]).optional(),
-          discount: optionalNumberSchemaEntry(),
+          discount: z.coerce.number<number>().optional(), //TODO: REPLACE WITH A ZOD NUMBER HELPER
         })
         .superRefine(({ discount, discountType }, ctx) => {
           if (discountType !== "NONE" && !discount) {
@@ -139,7 +141,8 @@ export const orderRegisterSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     reportType: z.enum(["summary", "items"], {
-      error: (issue) => (issue.input === undefined ? "Select report type" : undefined),
+      error: (issue) =>
+        issue.input === undefined ? "Select report type" : undefined,
     }),
     vendorId: requiredStringSchemaEntry("Vendor is required"),
   })
@@ -158,7 +161,8 @@ export const orderByCriteriaSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     criteria: z.enum(["project", "product", "service"], {
-      error: (issue) => (issue.input === undefined ? "Select report criteria" : undefined),
+      error: (issue) =>
+        issue.input === undefined ? "Select report criteria" : undefined,
     }),
     option: requiredStringSchemaEntry("Product/Project/Service is required"),
   })
@@ -177,7 +181,8 @@ export const topVendorsSchema = z
     from: requiredStringSchemaEntry(),
     to: requiredStringSchemaEntry(),
     criteria: z.enum(["discount", "value"], {
-      error: (issue) => (issue.input === undefined ? "Select report criteria" : undefined),
+      error: (issue) =>
+        issue.input === undefined ? "Select report criteria" : undefined,
     }),
     top: requiredStringSchemaEntry("Top N is required"),
   })

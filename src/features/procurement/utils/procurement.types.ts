@@ -1,4 +1,3 @@
-import type { UseFormReturn } from 'react-hook-form';
 import type z from 'zod';
 
 import type { products, services, vendors } from '@/drizzle/schema';
@@ -45,12 +44,30 @@ export type OrderTableRow = Awaited<
   ReturnType<typeof getPurchaseOrders>
 >[number];
 export type OrderFormValues = z.infer<typeof orderSchema>;
+export type OrderFormDetailInput = {
+  id: string;
+  type: 'item' | 'service';
+  itemOrServiceId: string;
+  requestId: string;
+  projectId: string;
+  qty: number;
+  rate?: number;
+  discountType?: 'NONE' | 'PERCENTAGE' | 'AMOUNT';
+  discount?: number;
+};
+export type OrderFormInput = {
+  documentNo?: number;
+  documentDate: string;
+  vendor: string;
+  invoiceNo?: string;
+  invoiceDate?: string;
+  vatType: OrderFormValues['vatType'];
+  vat?: string;
+  details: Array<OrderFormDetailInput>;
+};
 export type PendingOrder = Awaited<
   ReturnType<typeof getPendingRequests>
 >[number];
-export interface OrderForm {
-  form: UseFormReturn<OrderFormValues>;
-}
 
 export type Order = Awaited<ReturnType<typeof getPurchaseOrder>>;
 
