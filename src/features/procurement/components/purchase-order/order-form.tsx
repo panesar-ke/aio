@@ -1,9 +1,24 @@
-"use client";
-import { useSelector } from "@tanstack/react-store";
-import { CircleXIcon, SaveIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
-import toast from "react-hot-toast";
+'use client';
+import type { ColumnDef } from '@tanstack/react-table';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CircleCheckBigIcon,
+  CircleXIcon,
+  HourglassIcon,
+  MailCheckIcon,
+} from 'lucide-react';
+import {
+  type BaseSyntheticEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
+import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import type {
   Order,
@@ -78,34 +93,9 @@ export function OrderForm({
     () => purchaseOrderFormOpts(orderNo, defaultValues),
     [orderNo, defaultValues],
   );
-  const appForm = useAppForm({
-    ...formOpts,
-    onSubmit: async ({ value }) => {
-      if (value.details.length === 0) {
-        toast.error(() => (
-          <ToastContent
-            title="Validation Error"
-            message="At least one item is required"
-          />
-        ));
-        return;
-      }
-
-      await handleSubmitFeedback({
-        action: () => createOrder({ values: value, id: order?.reference }),
-        errorTitle: `Error ${isEdit ? "updating" : "creating"} order`,
-        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
-        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} order. Please try again.`,
-        onSuccess: (data) => {
-          appForm.reset();
-          router.push(
-            data
-              ? `/procurement/purchase-order/${data}/details`
-              : "/procurement/purchase-order",
-          );
-        },
-      });
-    },
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(orderSchema) as Resolver<OrderFormValues>,
+    defaultValues,
   });
 
   useEffect(() => {

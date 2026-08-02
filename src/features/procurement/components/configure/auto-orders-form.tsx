@@ -1,7 +1,7 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2Icon } from 'lucide-react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type { AutoOrderFormValues } from '@/features/procurement/utils/procurement.types';
@@ -46,7 +46,7 @@ export function AutoOrdersForm({
     defaultValues: {
       items: autoOrdersItems || [INITIAL_VALUES],
     },
-    resolver: zodResolver(autoOrdersSchema),
+    resolver: zodResolver(autoOrdersSchema) as Resolver<AutoOrderFormValues>,
   });
 
   const { fields, append, remove } = useFieldArray({

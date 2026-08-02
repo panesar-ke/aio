@@ -15,8 +15,8 @@ export const userSchema = z.object({
     .max(10, 'Contact cannot exceed 10 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
   userType: z.enum(['ADMIN', 'STANDARD USER', 'SUPER ADMIN'], {
-    required_error: 'User type is required',
-    invalid_type_error: 'Invalid user type',
+    error: (issue) =>
+      issue.input === undefined ? 'User type is required' : 'Invalid user type',
   }),
   active: z.boolean(),
   permissions: z.array(z.enum(PERMISSIONS)),

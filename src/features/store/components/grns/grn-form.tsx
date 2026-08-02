@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import type { UseFormReturn } from 'react-hook-form';
+import type { Resolver, UseFormReturn } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
@@ -82,7 +82,7 @@ export function GrnForm({
       storeId: '',
       items: [],
     },
-    resolver: zodResolver(grnFormSchema),
+    resolver: zodResolver(grnFormSchema) as Resolver<GrnFormValues>,
   });
 
   const isPending = form.formState.isSubmitting;

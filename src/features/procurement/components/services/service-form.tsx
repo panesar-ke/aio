@@ -2,7 +2,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { type Resolver, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 import type {
@@ -47,7 +47,7 @@ export function ServiceForm({
       serviceName: service?.serviceName.toUpperCase() ?? '',
       active: service?.active ?? true,
     },
-    resolver: zodResolver(serviceSchema),
+    resolver: zodResolver(serviceSchema) as Resolver<ServiceFormValues>,
   });
 
   const isPending = form.formState.isSubmitting;

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const paymentMethodSchemaEntry = () =>
   z.enum(["cash", "mpesa", "cheque", "bank"], {
-    required_error: "Select payment method",
-    invalid_type_error: "Select a payment method",
+    error: (issue) =>
+      issue.input === undefined ? "Select payment method" : "Select a payment method",
   });
 
 export const paymentReferenceSchemaEntry = () =>
@@ -50,22 +50,49 @@ export const optionalStringSchemaEntry = () =>
     .transform((val) => val?.trim());
 
 export const optionalNumberSchemaEntry = () => z.coerce.number().optional();
+
+// z.coerce.* runs `Number()`/`new Date()` on the raw input before the schema's
+// `error` map ever sees it, so `issue.input` is always the coerced value (NaN /
+// Invalid Date) — never `undefined` — even when the field was genuinely missing.
+// Checking the raw value inside a `.transform()` (which runs before coercion)
+// is the only way to tell "missing" apart from "present but invalid".
 export const requiredDateSchemaEntry = () =>
-  z.coerce.date({
-    required_error: "Date is required",
-    invalid_type_error: "Date must be a valid date",
+  z.unknown().transform((val, ctx) => {
+    if (val === undefined) {
+      ctx.addIssue({ code: "custom", message: "Date is required" });
+      return z.NEVER;
+    }
+    const date = new Date(val as string | number | Date);
+    if (Number.isNaN(date.getTime())) {
+      ctx.addIssue({ code: "custom", message: "Date must be a valid date" });
+      return z.NEVER;
+    }
+    return date;
   });
 
 export const requiredNumberSchemaEntry = (message?: string) =>
-  z.coerce
-    .number({
-      required_error: message || "Field is required",
-      invalid_type_error: "Field must be a number",
+  z
+    .unknown()
+    .transform((val, ctx) => {
+      if (val === undefined) {
+        ctx.addIssue({ code: "custom", message: message || "Field is required" });
+        return z.NEVER;
+      }
+      const num = Number(val);
+      if (Number.isNaN(num)) {
+        ctx.addIssue({ code: "custom", message: "Field must be a number" });
+        return z.NEVER;
+      }
+      return num;
     })
-    .min(1, { message: message || "Field is required" })
-    .refine((value) => !Number.isNaN(value) && value > 0, {
-      message: "This field must be a valid number greater than 0",
-    });
+    .pipe(
+      z
+        .number()
+        .min(1, { message: message || "Field is required" })
+        .refine((value) => !Number.isNaN(value) && value > 0, {
+          message: "This field must be a valid number greater than 0",
+        }),
+    );
 
 export const searchValidateSchema = z.object({ q: z.string().optional() });
 
