@@ -107,11 +107,7 @@ export const getPurchaseOrder = async (orderId: string) => {
     },
   });
 
-  if (!order) {
-    notFound();
-  }
-
-  return order;
+  return order ?? null;
 };
 
 export const getPendingRequests = async () => {

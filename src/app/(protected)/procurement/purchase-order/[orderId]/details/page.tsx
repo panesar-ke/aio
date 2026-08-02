@@ -1,17 +1,18 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { LoadingSpinner } from '@/components/custom/loaders';
-import PageHeader from '@/components/custom/page-header';
-import { OrderView } from '@/features/procurement/components/purchase-order/order-view';
-import { getPurchaseOrder } from '@/features/procurement/services/purchase-orders/data';
+import { LoadingSpinner } from "@/components/custom/loaders";
+import PageHeader from "@/components/custom/page-header";
+import { OrderView } from "@/features/procurement/components/purchase-order/order-view";
+import { getPurchaseOrder } from "@/features/procurement/services/purchase-orders/data";
 
 type Params = Promise<{ orderId: string }>;
 
 export const metadata: Metadata = {
-  title: 'Purchase Order Details',
+  title: "Purchase Order Details",
 };
 export default function OrderDetailsPage({ params }: { params: Params }) {
   return (
@@ -33,5 +34,7 @@ export default function OrderDetailsPage({ params }: { params: Params }) {
 async function SuspendedComponent({ params }: { params: Params }) {
   const { orderId } = await params;
   const order = await getPurchaseOrder(orderId);
+
+  if (!order) notFound();
   return <OrderView order={order} />;
 }

@@ -26,7 +26,7 @@ import {
 import { formatOrderForFileGeneration } from "@/features/procurement/utils/formatters";
 import { dateFormat, numberFormat, titleCase } from "@/lib/helpers/formatters";
 
-export function OrderView({ order }: { order: Order }) {
+export function OrderView({ order }: { order: NonNullable<Order> }) {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
   const [selectedAction, setSelectedAction] = useState<"GENERATE" | "EMAIL">();
@@ -109,7 +109,7 @@ export function OrderView({ order }: { order: Order }) {
   );
 }
 
-function OrderPrint({ order }: { order: Order }) {
+function OrderPrint({ order }: { order: NonNullable<Order> }) {
   const totals = useMemo(() => {
     return order.ordersDetails.reduce(
       (acc, detail) => {
@@ -231,7 +231,11 @@ function OrderPrint({ order }: { order: Order }) {
   );
 }
 
-function OrderRowPrint({ details }: { details: Order["ordersDetails"] }) {
+function OrderRowPrint({
+  details,
+}: {
+  details: NonNullable<Order>["ordersDetails"];
+}) {
   return (
     <div className="col-span-full">
       <Table className="mt-5 border border-black">
@@ -246,7 +250,7 @@ function OrderRowPrint({ details }: { details: Order["ordersDetails"] }) {
         </TableHeader>
         <TableBody className="divide-y divide-black">
           {details.map((detail) => (
-            <TableRow className="text-lg [&>*]:p-2 " key={detail.id}>
+            <TableRow className="text-lg *:p-2 " key={detail.id}>
               <TableCell className="uppercase">
                 {detail.itemId
                   ? detail?.product?.productName
