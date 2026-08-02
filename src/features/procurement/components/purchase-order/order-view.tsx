@@ -1,5 +1,5 @@
 "use client";
-import { FileScanIcon, MailIcon, PrinterIcon } from "lucide-react";
+import { FileScanIcon, PrinterIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
@@ -19,17 +19,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  generateOrderFile,
-  sendOrderEmail,
-} from "@/features/procurement/services/purchase-orders/actions";
+import { generateOrderFile } from "@/features/procurement/services/purchase-orders/actions";
 import { formatOrderForFileGeneration } from "@/features/procurement/utils/formatters";
 import { dateFormat, numberFormat, titleCase } from "@/lib/helpers/formatters";
 
 export function OrderView({ order }: { order: NonNullable<Order> }) {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
-  const [selectedAction, setSelectedAction] = useState<"GENERATE" | "EMAIL">();
+  const [selectedAction, setSelectedAction] = useState<"GENERATE">();
   const [fileUrl, setFileUrl] = useState(order.fileUrl);
 
   function handleGenerate() {
@@ -53,13 +50,6 @@ export function OrderView({ order }: { order: NonNullable<Order> }) {
 
       setFileUrl(res.data);
       router.refresh();
-    });
-  }
-
-  function handleEmailSending() {
-    setSelectedAction("EMAIL");
-    startTransition(async () => {
-      await sendOrderEmail(order.reference);
     });
   }
 
@@ -88,21 +78,6 @@ export function OrderView({ order }: { order: NonNullable<Order> }) {
             </a>
           </Button>
         )}
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={handleEmailSending}
-          disabled={isLoading}
-        >
-          {isLoading && selectedAction === "EMAIL" ? (
-            <ButtonLoader loadingText="Sending..." />
-          ) : (
-            <>
-              <MailIcon />
-              <span>Email To Supplier</span>
-            </>
-          )}
-        </Button>
       </div>
       <OrderPrint order={order} />
     </div>

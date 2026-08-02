@@ -10,6 +10,7 @@ import type { SessionPayload } from '@/types/index.types';
 import db from '@/drizzle/db';
 import { sessions } from '@/drizzle/schema';
 import { env } from '@/env/server';
+import { UnauthorizedError } from '@/lib/permissions/errors';
 
 const secretKey = env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -138,9 +139,18 @@ export const getCurrentUserOrNull = cache(async () => {
   return { ...user, email: user.email as string };
 });
 
-export const getCurrentUser = cache(async () => {
-  const user = await getCurrentUserOrNull();
-  if (!user) return redirect('/login');
+type GetCurrentUserMode = 'page' | 'action' | 'api';
 
-  return user;
-});
+export const getCurrentUser = cache(
+  async (mode: GetCurrentUserMode = 'page') => {
+    const user = await getCurrentUserOrNull();
+    if (!user) {
+      if (mode === 'action' || mode === 'api') {
+        throw new UnauthorizedError();
+      }
+      return redirect('/login');
+    }
+
+    return user;
+  }
+);

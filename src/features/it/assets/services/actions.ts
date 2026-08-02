@@ -94,7 +94,7 @@ export const createAssetCategory = async (values: unknown) =>
 export const upsertAsset = async (values: unknown) =>
   runAction('upsert asset', async () => {
     await requireAnyPermission(['it:admin', 'it:standard']);
-    const user = await getCurrentUser();
+    const user = await getCurrentUser('action');
     const data = parseOrFail(assetFormSchemaValues, values);
     const normalizedSerialNumber = normalizeNullableString(data.serialNumber);
 
