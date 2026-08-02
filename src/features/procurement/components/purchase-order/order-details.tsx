@@ -116,12 +116,12 @@ export const OrderDetails = withForm({
                 discount: 0,
               });
             });
-            toast.success(() => (
-              <ToastContent
-                title="Items added"
-                message={`Added ${selectedRequests.length} pending request(s) to order`}
-              />
-            ));
+            toast(
+              `Added ${selectedRequests.length} pending request(s) to order`,
+              {
+                position: "bottom-left",
+              },
+            );
           };
 
           return (
