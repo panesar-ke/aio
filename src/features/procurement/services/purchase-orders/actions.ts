@@ -1,43 +1,43 @@
-'use server';
-import type { AxiosResponse } from 'axios';
+"use server";
+import type { AxiosResponse } from "axios";
 
-import { createId } from '@paralleldrive/cuid2';
-import { isAxiosError } from 'axios';
-import { eq, inArray } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { createId } from "@paralleldrive/cuid2";
+import { isAxiosError } from "axios";
+import { eq, inArray } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
 
 import type {
   OrderData,
   OrderFormValues,
-} from '@/features/procurement/utils/procurement.types';
+} from "@/features/procurement/utils/procurement.types";
 import type {
   ApiFailure,
   ApiFailureWithoutData,
   ApiSuccess,
   ApiSuccessWithoutData,
-} from '@/types/index.types';
+} from "@/types/index.types";
 
-import db from '@/drizzle/db';
-import { mrqDetails, ordersDetails, ordersHeader } from '@/drizzle/schema';
+import db from "@/drizzle/db";
+import { mrqDetails, ordersDetails, ordersHeader } from "@/drizzle/schema";
 import {
   getMaterialRequisitionGlobalTag,
   getPendingRequestsGlobalTag,
   getVendorStatsGlobalTag,
   revalidateMaterialRequisitions,
   revalidatePurchaseOrders,
-} from '@/features/procurement/utils/cache';
+} from "@/features/procurement/utils/cache";
 import {
   calculateDiscount,
   calculateVatValues,
-} from '@/features/procurement/utils/calculators';
-import { orderSchema } from '@/features/procurement/utils/schemas';
-import { inngest } from '@/inngest/client';
-import axios from '@/lib/axios';
-import { getCurrentUser } from '@/lib/session';
-import { apiErrorHandler } from '@/lib/utils';
+} from "@/features/procurement/utils/calculators";
+import { orderSchema } from "@/features/procurement/utils/schemas";
+import { inngest } from "@/inngest/client";
+import axios from "@/lib/axios";
+import { getCurrentUser } from "@/lib/session";
+import { apiErrorHandler } from "@/lib/utils";
 
-import { getPurchaseOrder, getPurchaseOrderNo } from './data';
+import { getPurchaseOrder, getPurchaseOrderNo } from "./data";
 
 export const createOrder = async ({
   values,
@@ -45,7 +45,7 @@ export const createOrder = async ({
   id,
 }: {
   values: OrderFormValues;
-  submitType: 'SUBMIT' | 'SUBMIT_SEND';
+  submitType: "SUBMIT" | "SUBMIT_SEND";
   id?: string;
 }) => {
   const { success, data, error } = orderSchema.safeParse(values);
@@ -53,11 +53,11 @@ export const createOrder = async ({
     console.log(error);
     return {
       error: true,
-      message: 'Validation failed. Check all required fields and try again.',
+      message: "Validation failed. Check all required fields and try again.",
     };
   }
 
-  const user = await getCurrentUser();
+  const user = await getCurrentUser("action");
 
   const orderNo = id
     ? (await getPurchaseOrder(id))?.id
@@ -65,7 +65,7 @@ export const createOrder = async ({
   if (!orderNo)
     return {
       error: true,
-      message: 'Unable to generate order number',
+      message: "Unable to generate order number",
     };
 
   const {
@@ -78,7 +78,7 @@ export const createOrder = async ({
     vatType,
   } = data;
 
-  const reference = await db.transaction(async tx => {
+  const reference = await db.transaction(async (tx) => {
     const ref = await tx
       .insert(ordersHeader)
       .values({
@@ -90,7 +90,7 @@ export const createOrder = async ({
         billNo: invoiceNo,
         vatType,
         vatId:
-          vatType !== 'NONE' ? (vat ? (vat === '16' ? 1 : 2) : null) : null,
+          vatType !== "NONE" ? (vat ? (vat === "16" ? 1 : 2) : null) : null,
         createdBy: user.id,
       })
       .onConflictDoUpdate({
@@ -103,7 +103,7 @@ export const createOrder = async ({
           vatType,
           fileUrl: null,
           vatId:
-            vatType !== 'NONE' ? (vat ? (vat === '16' ? 1 : 2) : null) : null,
+            vatType !== "NONE" ? (vat ? (vat === "16" ? 1 : 2) : null) : null,
           // vatId: vatType !== 'NONE' ? 1 : null,
         },
       })
@@ -111,7 +111,7 @@ export const createOrder = async ({
 
     if (id) {
       await tx.delete(ordersDetails).where(eq(ordersDetails.headerId, orderNo));
-      details.forEach(async detail => {
+      details.forEach(async (detail) => {
         await tx
           .update(mrqDetails)
           .set({ linked: false })
@@ -119,7 +119,7 @@ export const createOrder = async ({
       });
     }
 
-    details.forEach(async detail => {
+    details.forEach(async (detail) => {
       await tx
         .update(mrqDetails)
         .set({ linked: true })
@@ -137,9 +137,9 @@ export const createOrder = async ({
         discountType,
         type,
       }) => {
-        const gross = Number(qty) * parseFloat(rate?.toString() || '0');
+        const gross = Number(qty) * parseFloat(rate?.toString() || "0");
         const discountedAmount = calculateDiscount(
-          discountType ?? 'NONE',
+          discountType ?? "NONE",
           discount ?? 0,
           gross,
         );
@@ -149,12 +149,12 @@ export const createOrder = async ({
           headerId: orderNo,
           requestId: Number(requestId),
           projectId,
-          itemId: type === 'item' ? itemOrServiceId : null,
-          serviceId: type === 'service' ? itemOrServiceId : null,
+          itemId: type === "item" ? itemOrServiceId : null,
+          serviceId: type === "service" ? itemOrServiceId : null,
           qty: qty.toString(),
-          rate: rate?.toString() || '0',
-          discountType: discountType ?? 'NONE',
-          discount: discount ? discount.toString() : '0',
+          rate: rate?.toString() || "0",
+          discountType: discountType ?? "NONE",
+          discount: discount ? discount.toString() : "0",
           discountedAmount: discountedAmount.toString(),
           amountExclusive: vatValues.exclusive.toString(),
           vat: vatValues.vatValue.toString(),
@@ -168,15 +168,15 @@ export const createOrder = async ({
     return ref[0].reference;
   });
 
-  if (submitType === 'SUBMIT_SEND') {
+  if (submitType === "SUBMIT_SEND") {
     await inngest.send({
-      name: 'procurement/supplier.po.email',
+      name: "procurement/supplier.po.email",
       data: { orderId: reference, userId: user.id },
     });
   }
   revalidatePurchaseOrders(reference);
   revalidateMaterialRequisitions();
-  revalidateTag(getVendorStatsGlobalTag(), 'max');
+  revalidateTag(getVendorStatsGlobalTag(), "max");
 
   redirect(`/procurement/purchase-order/${reference}/details`);
 };
@@ -197,7 +197,7 @@ export async function updateOrderUrl({
 
   return {
     error: false,
-    message: 'Order URL updated successfully',
+    message: "Order URL updated successfully",
   };
 }
 
@@ -230,7 +230,7 @@ export const generateOrderFile = async (
     return {
       error: false,
       data: res.data.url,
-      message: 'Order file generated successfully',
+      message: "Order file generated successfully",
     } satisfies ApiSuccess;
   } catch (error) {
     if (isAxiosError(error)) {
@@ -249,7 +249,7 @@ export const generateOrderFile = async (
     }
     return {
       error: true,
-      message: 'An unexpected error occurred while generating the order file.',
+      message: "An unexpected error occurred while generating the order file.",
       data: null,
     } satisfies ApiFailure;
   }
@@ -261,7 +261,7 @@ export const sendOrderEmailAction = async (
   fileUrl: string,
 ): Promise<ApiSuccessWithoutData | ApiFailureWithoutData> => {
   try {
-    await axios.post('/send-order-mail', {
+    await axios.post("/send-order-mail", {
       supplierEmail: email,
       orderNumber: orderNo,
       s3Url: fileUrl,
@@ -269,13 +269,13 @@ export const sendOrderEmailAction = async (
 
     return {
       error: false,
-      message: 'Email sent successfully',
+      message: "Email sent successfully",
     } satisfies ApiSuccessWithoutData;
   } catch (error) {
-    console.error('Error sending order email:', error);
+    console.error("Error sending order email:", error);
     return {
       error: true,
-      message: 'Failed to send order email',
+      message: "Failed to send order email",
     } satisfies ApiFailureWithoutData;
   }
 };
@@ -286,7 +286,7 @@ export const deleteOrder = async (orderId: string) => {
   const requestIds = order.ordersDetails.map(({ requestId }) => requestId ?? 0);
 
   try {
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       await tx
         .delete(ordersDetails)
         .where(eq(ordersDetails.headerId, order.id));
@@ -301,54 +301,46 @@ export const deleteOrder = async (orderId: string) => {
 
     revalidatePurchaseOrders(orderId);
     revalidateMaterialRequisitions();
-    revalidateTag(getVendorStatsGlobalTag(), 'max');
+    revalidateTag(getVendorStatsGlobalTag(), "max");
 
-    return { error: false, message: 'Order deleted successfully' };
+    return { error: false, message: "Order deleted successfully" };
   } catch (error) {
-    console.error('Error deleting order:', error);
+    console.error("Error deleting order:", error);
     return {
       error: true,
       message:
-        error instanceof Error ? error.message : 'Failed to delete order',
+        error instanceof Error ? error.message : "Failed to delete order",
     };
   }
-};
-
-export const sendOrderEmail = async (orderId: string) => {
-  const user = await getCurrentUser();
-  await inngest.send({
-    name: 'procurement/supplier.po.email',
-    data: { orderId, userId: user.id },
-  });
 };
 
 export const deletePendingRequests = async (requestIds: Array<string>) => {
   if (requestIds.length === 0) {
     return {
       error: false,
-      message: 'No pending requests to delete',
+      message: "No pending requests to delete",
     };
   }
 
   try {
-    const formattedRequisitionIds = requestIds.map(r => Number(r));
+    const formattedRequisitionIds = requestIds.map((r) => Number(r));
 
     await db
       .delete(mrqDetails)
       .where(inArray(mrqDetails.requestId, formattedRequisitionIds));
 
-    revalidateTag(getMaterialRequisitionGlobalTag(), 'max');
-    revalidateTag(getPendingRequestsGlobalTag(), 'max');
+    revalidateTag(getMaterialRequisitionGlobalTag(), "max");
+    revalidateTag(getPendingRequestsGlobalTag(), "max");
 
     return {
       error: false,
-      message: 'Pending requests successfully',
+      message: "Pending requests successfully",
     };
   } catch (error) {
-    console.error('Error deleting pending requests:', error);
+    console.error("Error deleting pending requests:", error);
     return {
       error: true,
-      message: 'Failed to delete pending requests',
+      message: "Failed to delete pending requests",
     };
   }
 };

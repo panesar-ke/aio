@@ -80,7 +80,7 @@ export const createRequisition = async (values: unknown) =>
     try {
       reference = await db.transaction(async (tx) => {
         const { details, documentDate } = data;
-        const user = await getCurrentUser();
+        const user = await getCurrentUser('action');
 
         const formattedDetails = details.map((detail) => ({
           id: detail.id,
