@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { ErrorBoundaryWithSuspense } from "@/components/custom/error-boundary-with-suspense";
 import FormHeader from "@/components/custom/form-header";
-import { FormLoader } from "@/components/custom/loaders";
+import { LoadingSpinner } from "@/components/custom/loaders";
 import { OrderForm } from "@/features/procurement/components/purchase-order/order-form";
 import {
   getSelectableProducts,
@@ -16,6 +17,7 @@ import {
   getPendingRequests,
   getPurchaseOrder,
 } from "@/features/procurement/services/purchase-orders/data";
+import { rethrowIfNextNotFoundError } from "@/lib/next-http-errors";
 
 export const metadata: Metadata = {
   title: "Edit Purchase Order",
@@ -27,12 +29,17 @@ type Params = Promise<{ orderId: string }>;
 export default function NewOrderPage({ params }: { params: Params }) {
   return (
     <div className="space-y-6">
-      <ErrorBoundaryWithSuspense
-        errorMessage="Failed to load the purchase order"
-        loader={<FormLoader />}
+      <ErrorBoundary
+        fallbackRender={({ error }) => {
+          rethrowIfNextNotFoundError(error);
+
+          return <div className="text-center">Error loading order details</div>;
+        }}
       >
-        <EditPurchaseOrderContent params={params} />
-      </ErrorBoundaryWithSuspense>
+        <Suspense fallback={<LoadingSpinner />}>
+          <EditPurchaseOrderContent params={params} />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

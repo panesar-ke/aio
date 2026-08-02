@@ -5,6 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { ErrorNotification } from '@/components/custom/error-components';
 import { ReportLoader } from '@/components/custom/loaders';
+import { rethrowIfNextNotFoundError } from '@/lib/next-http-errors';
 
 type Props = {
   errorMessage?: string;
@@ -20,9 +21,13 @@ export function ErrorBoundaryWithSuspense({
 }: PropsWithChildren<Props>) {
   return (
     <ErrorBoundary
-      fallback={
-        <ErrorNotification message={errorMessage || 'Something went wrong'} />
-      }
+      fallbackRender={({ error }) => {
+        rethrowIfNextNotFoundError(error);
+
+        return (
+          <ErrorNotification message={errorMessage || 'Something went wrong'} />
+        );
+      }}
     >
       <Suspense
         fallback={loader || <ReportLoader type={loaderType || 'full'} />}

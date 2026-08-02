@@ -76,7 +76,11 @@ export const createOrder = async ({
 
     const user = await getCurrentUser();
 
-    const existingOrderNo = id ? (await getPurchaseOrder(id))?.id : null;
+    const existingOrder = id ? await getPurchaseOrder(id) : null;
+    if (id && !existingOrder) {
+      return { error: true, message: "Order not found", data: null };
+    }
+    const existingOrderNo = existingOrder?.id ?? null;
 
     const {
       details,

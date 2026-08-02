@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/custom/loaders";
 import PageHeader from "@/components/custom/page-header";
 import { OrderView } from "@/features/procurement/components/purchase-order/order-view";
 import { getPurchaseOrder } from "@/features/procurement/services/purchase-orders/data";
+import { rethrowIfNextNotFoundError } from "@/lib/next-http-errors";
 
 type Params = Promise<{ orderId: string }>;
 
@@ -19,9 +20,13 @@ export default function OrderDetailsPage({ params }: { params: Params }) {
     <div className="space-y-6">
       <PageHeader title="View order details" />
       <ErrorBoundary
-        fallback={
-          <div className="text-center">Error loading order details</div>
-        }
+        fallbackRender={({ error }) => {
+          rethrowIfNextNotFoundError(error);
+
+          return (
+            <div className="text-center">Error loading order details</div>
+          );
+        }}
       >
         <Suspense fallback={<LoadingSpinner />}>
           <SuspendedComponent params={params} />
