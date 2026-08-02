@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 
 import { getSelectableProducts } from '@/features/procurement/services/material-requisitions/data';
-import { getCurrentUser } from '@/lib/session';
+import { getCurrentUserOrNull } from '@/lib/session';
 
 export async function GET() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserOrNull();
 
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -5,14 +5,17 @@ import { NextResponse } from 'next/server';
 import z from 'zod';
 
 import db from '@/drizzle/db';
-import { getCurrentUser } from '@/lib/session';
+import { getCurrentUserOrNull } from '@/lib/session';
 
 const bodySchema = z.object({
   currentPassword: z.string().min(1),
 });
 
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserOrNull();
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const body = await req.json();
 
   try {
