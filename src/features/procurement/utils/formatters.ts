@@ -1,6 +1,6 @@
-import type { Order } from '@/features/procurement/utils/procurement.types';
+import type { Order } from "@/features/procurement/utils/procurement.types";
 
-export const formatOrderForFileGeneration = (data: Order) => {
+export const formatOrderForFileGeneration = (data: NonNullable<Order>) => {
   return {
     orderDate: new Date(data.documentDate),
     orderNumber: data.id.toString(),
@@ -18,13 +18,13 @@ export const formatOrderForFileGeneration = (data: Order) => {
           ? product?.productName
           : service?.serviceName) as string,
         quantity: parseFloat(qty),
-        unit: itemId ? (product?.uom?.abbreviation as string) : 'DEF',
+        unit: itemId ? (product?.uom?.abbreviation as string) : "DEF",
         unitPrice: parseFloat(rate),
         discount: parseFloat(discountedAmount) ?? 0,
         totalPrice:
           parseFloat(rate) * parseFloat(qty) -
           (parseFloat(discountedAmount) ?? 0),
-      })
+      }),
     ),
     userName: data.user.name,
   };
