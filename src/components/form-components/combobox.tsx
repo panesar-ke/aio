@@ -52,9 +52,11 @@ export function FormCombobox({
 
   return (
     <Field data-invalid={isInvalid} className={fieldClassName}>
-      <FieldLabel htmlFor={field.name}>
-        {label} {required && <span className="text-destructive">*</span>}
-      </FieldLabel>
+      {(label || required) && (
+        <FieldLabel htmlFor={field.name}>
+          {label} {required && <span className="text-destructive">*</span>}
+        </FieldLabel>
+      )}
       <Combobox
         items={items}
         value={selected}
