@@ -1,43 +1,43 @@
-import { Trash2Icon } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Trash2Icon } from "lucide-react";
+import toast from "react-hot-toast";
 
 import type {
   OrderFormDetailInput,
   PendingOrder,
-} from '@/features/procurement/utils/procurement.types';
-import type { Option } from '@/types/index.types';
+} from "@/features/procurement/utils/procurement.types";
+import type { Option } from "@/types/index.types";
 
-import { ToastContent } from '@/components/custom/toast';
-import { Button } from '@/components/ui/button';
-import { FieldGroup } from '@/components/ui/field';
-import { SelectItem } from '@/components/ui/select';
-import { PendingRequests } from '@/features/procurement/components/purchase-order/pending-requests';
-import { useProcurementServices } from '@/features/procurement/hooks/use-procurement-services';
-import { calculateDiscount } from '@/features/procurement/utils/calculators';
-import { purchaseOrderFormOpts } from '@/features/procurement/utils/form';
-import { withForm } from '@/lib/form';
-import { numberFormat } from '@/lib/helpers/formatters';
-import { cn } from '@/lib/utils';
+import { ToastContent } from "@/components/custom/toast";
+import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
+import { SelectItem } from "@/components/ui/select";
+import { PendingRequests } from "@/features/procurement/components/purchase-order/pending-requests";
+import { useProcurementServices } from "@/features/procurement/hooks/use-procurement-services";
+import { calculateDiscount } from "@/features/procurement/utils/calculators";
+import { purchaseOrderFormOpts } from "@/features/procurement/utils/form";
+import { withForm } from "@/lib/form";
+import { numberFormat } from "@/lib/helpers/formatters";
+import { cn } from "@/lib/utils";
 
-function lineHeaderClass(width: string, align: 'left' | 'center' = 'left') {
+function lineHeaderClass(width: string, align: "left" | "center" = "left") {
   return cn(
-    'whitespace-nowrap border-b bg-muted px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
-    align === 'center' ? 'text-center' : 'text-left',
-    width
+    "whitespace-nowrap border-b bg-muted px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+    align === "center" ? "text-center" : "text-left",
+    width,
   );
 }
 
 function lineCellClass(width: string) {
   return cn(
-    'flex items-center gap-2 py-1.5 before:w-24 before:shrink-0 before:text-[11px] before:font-semibold before:uppercase before:tracking-[0.04em] before:text-muted-foreground before:content-[attr(data-label)] md:table-cell md:px-2 md:py-1.5 md:align-middle md:before:hidden',
-    width
+    "flex items-center gap-2 py-1.5 before:w-24 before:shrink-0 before:text-[11px] before:font-semibold before:uppercase before:tracking-[0.04em] before:text-muted-foreground before:content-[attr(data-label)] md:table-cell md:px-2 md:py-1.5 md:align-middle md:before:hidden",
+    width,
   );
 }
 
 function readonlyCellClass(emphasized = false) {
   return cn(
-    'w-full text-right text-sm tabular-nums text-muted-foreground md:pr-1',
-    emphasized && 'font-semibold text-foreground'
+    "flex h-10 w-full items-center justify-end border border-transparent px-3 text-sm tabular-nums text-muted-foreground",
+    emphasized && "font-semibold text-foreground",
   );
 }
 
@@ -45,9 +45,9 @@ function lineDiscount(line: OrderFormDetailInput | undefined) {
   if (!line) return 0;
   const gross = (Number(line.qty) || 0) * (Number(line.rate) || 0);
   return calculateDiscount(
-    line.discountType ?? 'NONE',
+    line.discountType ?? "NONE",
     Number(line.discount) || 0,
-    gross
+    gross,
   );
 }
 
@@ -75,28 +75,44 @@ export const OrderDetails = withForm({
       products: initialProducts,
       projects: initialProjects,
       services: initialServices,
-      include: ['products', 'projects', 'services'],
+      include: ["products", "projects", "services"],
     });
 
     return (
       <form.AppField name="details" mode="array">
-        {field => {
+        {(field) => {
           const handleAddPendingRequests = (
-            selectedRequests: Array<PendingOrder>
+            selectedRequests: Array<PendingOrder>,
           ) => {
-            selectedRequests.forEach(request => {
+            const existingIds = new Set(
+              field.state.value.map((line) => line.id),
+            );
+            const newRequests = selectedRequests.filter(
+              (request) => !existingIds.has(request.id),
+            );
+            if (newRequests.length === 0) {
+              toast.error(() => (
+                <ToastContent
+                  title="Already added"
+                  message="The selected pending request(s) are already on this order"
+                />
+              ));
+              return;
+            }
+
+            newRequests.forEach((request) => {
               field.pushValue({
                 id: request.id,
                 requestId: request.requestId,
                 projectId: request.projectId,
                 type: request.type,
                 itemOrServiceId:
-                  (request.type === 'item'
+                  (request.type === "item"
                     ? request.itemId
-                    : request.serviceId) ?? '',
+                    : request.serviceId) ?? "",
                 qty: Number(request.qty),
                 rate: Number(request.rate) || 0,
-                discountType: 'NONE',
+                discountType: "NONE",
                 discount: 0,
               });
             });
@@ -125,31 +141,31 @@ export const OrderDetails = withForm({
                   onAddSelected={handleAddPendingRequests}
                 />
               </div>
-              <FieldGroup className="overflow-x-auto">
+              <FieldGroup className="overflow-x-auto gap-0">
                 <table
                   aria-label="Purchase order line items"
-                  className="w-full border-collapse md:table-fixed md:min-w-[1080px]"
+                  className="w-full border-collapse md:table-fixed md:min-w-270"
                 >
                   <thead className="hidden md:table-header-group">
                     <tr>
-                      <th className={lineHeaderClass('w-10', 'center')}>#</th>
-                      <th className={lineHeaderClass('w-48')}>
+                      <th className={lineHeaderClass("w-10", "center")}>#</th>
+                      <th className={lineHeaderClass("w-48")}>
                         Project <span className="text-destructive">*</span>
                       </th>
-                      <th className={lineHeaderClass('w-56')}>
+                      <th className={lineHeaderClass("w-56")}>
                         Product <span className="text-destructive">*</span>
                       </th>
-                      <th className={lineHeaderClass('w-20')}>
+                      <th className={lineHeaderClass("w-20")}>
                         Qty <span className="text-destructive">*</span>
                       </th>
-                      <th className={lineHeaderClass('w-28')}>
+                      <th className={lineHeaderClass("w-28")}>
                         Rate <span className="text-destructive">*</span>
                       </th>
-                      <th className={lineHeaderClass('w-24')}>Gross</th>
-                      <th className={lineHeaderClass('w-32')}>Disc. Type</th>
-                      <th className={lineHeaderClass('w-24')}>Discount</th>
-                      <th className={lineHeaderClass('w-24')}>Disc. Amt</th>
-                      <th className={lineHeaderClass('w-28')}>Net</th>
+                      <th className={lineHeaderClass("w-24")}>Gross</th>
+                      <th className={lineHeaderClass("w-32")}>Disc. Type</th>
+                      <th className={lineHeaderClass("w-24")}>Discount</th>
+                      <th className={lineHeaderClass("w-24")}>Disc. Amt</th>
+                      <th className={lineHeaderClass("w-28")}>Net</th>
                       <th className="w-11 border-b bg-muted px-2 py-2">
                         <span className="sr-only">Actions</span>
                       </th>
@@ -170,11 +186,11 @@ export const OrderDetails = withForm({
                         <td
                           data-label="Project"
                           className={lineCellClass(
-                            'md:w-48 md:max-w-48 md:overflow-hidden'
+                            "md:w-48 md:max-w-48 md:overflow-hidden",
                           )}
                         >
                           <form.AppField name={`details[${i}].projectId`}>
-                            {field => (
+                            {(field) => (
                               <field.Combobox
                                 label=""
                                 items={projects ?? []}
@@ -187,22 +203,22 @@ export const OrderDetails = withForm({
                         <td
                           data-label="Product"
                           className={lineCellClass(
-                            'md:w-56 md:max-w-56 md:overflow-hidden'
+                            "md:w-56 md:max-w-56 md:overflow-hidden",
                           )}
                         >
                           <form.Subscribe
-                            selector={state => state.values.details[i]?.type}
+                            selector={(state) => state.values.details[i]?.type}
                           >
-                            {lineType => (
+                            {(lineType) => (
                               <form.AppField
                                 name={`details[${i}].itemOrServiceId`}
                               >
-                                {field => (
+                                {(field) => (
                                   <field.Combobox
-                                    key={lineType ?? 'empty'}
+                                    key={lineType ?? "empty"}
                                     label=""
                                     items={
-                                      (lineType === 'item'
+                                      (lineType === "item"
                                         ? products
                                         : services) ?? []
                                     }
@@ -214,9 +230,12 @@ export const OrderDetails = withForm({
                             )}
                           </form.Subscribe>
                         </td>
-                        <td data-label="Qty" className={lineCellClass('md:w-20')}>
+                        <td
+                          data-label="Qty"
+                          className={lineCellClass("md:w-20")}
+                        >
                           <form.AppField name={`details[${i}].qty`}>
-                            {field => (
+                            {(field) => (
                               <field.Input
                                 label=""
                                 type="number"
@@ -227,10 +246,10 @@ export const OrderDetails = withForm({
                         </td>
                         <td
                           data-label="Rate"
-                          className={lineCellClass('md:w-28')}
+                          className={lineCellClass("md:w-28")}
                         >
                           <form.AppField name={`details[${i}].rate`}>
-                            {field => (
+                            {(field) => (
                               <field.Input
                                 label=""
                                 type="number"
@@ -242,14 +261,14 @@ export const OrderDetails = withForm({
                         </td>
                         <td
                           data-label="Gross"
-                          className={lineCellClass('md:w-24')}
+                          className={lineCellClass("md:w-24")}
                         >
                           <form.Subscribe
-                            selector={state =>
+                            selector={(state) =>
                               lineGross(state.values.details[i])
                             }
                           >
-                            {gross => (
+                            {(gross) => (
                               <div className={readonlyCellClass()}>
                                 {numberFormat(gross)}
                               </div>
@@ -258,22 +277,22 @@ export const OrderDetails = withForm({
                         </td>
                         <td
                           data-label="Disc. Type"
-                          className={lineCellClass('md:w-32')}
+                          className={lineCellClass("md:w-32")}
                         >
                           <form.AppField
                             name={`details[${i}].discountType`}
                             listeners={{
                               onChange: ({ value, fieldApi }) => {
-                                if (value === 'NONE') {
+                                if (value === "NONE") {
                                   fieldApi.form.setFieldValue(
                                     `details[${i}].discount`,
-                                    0
+                                    0,
                                   );
                                 }
                               },
                             }}
                           >
-                            {field => (
+                            {(field) => (
                               <field.Select label="" className="w-full min-w-0">
                                 <SelectItem value="NONE">None</SelectItem>
                                 <SelectItem value="PERCENTAGE">
@@ -286,23 +305,23 @@ export const OrderDetails = withForm({
                         </td>
                         <td
                           data-label="Discount"
-                          className={lineCellClass('md:w-24')}
+                          className={lineCellClass("md:w-24")}
                         >
                           <form.Subscribe
-                            selector={state =>
+                            selector={(state) =>
                               state.values.details[i]?.discountType
                             }
                           >
-                            {discountType => (
+                            {(discountType) => (
                               <form.AppField name={`details[${i}].discount`}>
-                                {field => (
+                                {(field) => (
                                   <field.Input
                                     label=""
                                     type="number"
                                     placeholder="0"
                                     className="w-full text-right"
                                     disabled={
-                                      !discountType || discountType === 'NONE'
+                                      !discountType || discountType === "NONE"
                                     }
                                   />
                                 )}
@@ -312,28 +331,31 @@ export const OrderDetails = withForm({
                         </td>
                         <td
                           data-label="Disc. Amt"
-                          className={lineCellClass('md:w-24')}
+                          className={lineCellClass("md:w-24")}
                         >
                           <form.Subscribe
-                            selector={state =>
+                            selector={(state) =>
                               lineDiscount(state.values.details[i])
                             }
                           >
-                            {discountedAmount => (
+                            {(discountedAmount) => (
                               <div className={readonlyCellClass()}>
                                 {numberFormat(discountedAmount)}
                               </div>
                             )}
                           </form.Subscribe>
                         </td>
-                        <td data-label="Net" className={lineCellClass('md:w-28')}>
+                        <td
+                          data-label="Net"
+                          className={lineCellClass("md:w-28")}
+                        >
                           <form.Subscribe
-                            selector={state => {
+                            selector={(state) => {
                               const line = state.values.details[i];
                               return lineGross(line) - lineDiscount(line);
                             }}
                           >
-                            {net => (
+                            {(net) => (
                               <div className={readonlyCellClass(true)}>
                                 {numberFormat(net)}
                               </div>
@@ -366,17 +388,17 @@ export const OrderDetails = withForm({
                       No items added yet
                     </p>
                     <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                      Select a vendor, then click{' '}
-                      <strong>Pending Requests</strong> to pull in
-                      requisitioned items.
+                      Select a vendor, then click{" "}
+                      <strong>Pending Requests</strong> to pull in requisitioned
+                      items.
                     </p>
                   </div>
                 )}
                 {field.state.value.length > 0 && (
                   <div className="flex items-center justify-between border-t px-5 py-3">
                     <p className="text-xs text-muted-foreground">
-                      {field.state.value.length}{' '}
-                      {field.state.value.length === 1 ? 'line' : 'lines'}
+                      {field.state.value.length}{" "}
+                      {field.state.value.length === 1 ? "line" : "lines"}
                     </p>
                   </div>
                 )}

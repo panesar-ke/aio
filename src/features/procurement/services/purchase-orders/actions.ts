@@ -1,9 +1,10 @@
 "use server";
 import type { AxiosResponse } from "axios";
+import type { SQL } from "drizzle-orm";
 
 import { createId } from "@paralleldrive/cuid2";
 import { isAxiosError } from "axios";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
 import type { OrderData } from "@/features/procurement/utils/procurement.types";
@@ -35,7 +36,30 @@ import { requireAnyPermission } from "@/lib/permissions/guards";
 import { getCurrentUser } from "@/lib/session";
 import { apiErrorHandler } from "@/lib/utils";
 
-import { getPurchaseOrder, getPurchaseOrderNo } from "./data";
+import { getPurchaseOrder } from "./data";
+
+type PurchaseOrderNoAllocatorTx = {
+  execute: (query: SQL) => Promise<{ rows: Array<Record<string, unknown>> }>;
+};
+
+export const allocatePurchaseOrderNo = async (
+  tx: PurchaseOrderNoAllocatorTx,
+) => {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtext('orders_header_id_allocation'))`,
+  );
+
+  const result = await tx.execute(
+    sql`select coalesce(max(${ordersHeader.id}), 0) + 1 as "orderNo" from ${ordersHeader}`,
+  );
+  const orderNo = result.rows[0]?.orderNo;
+
+  if (typeof orderNo !== "number") {
+    throw new Error("Unable to allocate purchase order number");
+  }
+
+  return orderNo;
+};
 
 export const createOrder = async ({
   values,
@@ -50,14 +74,7 @@ export const createOrder = async ({
 
     const user = await getCurrentUser();
 
-    const orderNo = id
-      ? (await getPurchaseOrder(id))?.id
-      : await getPurchaseOrderNo();
-    if (!orderNo)
-      return {
-        error: true,
-        message: "Unable to generate order number",
-      };
+    const existingOrderNo = id ? (await getPurchaseOrder(id))?.id : null;
 
     const {
       details,
@@ -73,32 +90,42 @@ export const createOrder = async ({
     const requestIds = details.map((detail) => Number(detail.requestId));
 
     const reference = await db.transaction(async (tx) => {
-      const ref = await tx
-        .insert(ordersHeader)
-        .values({
-          id: orderNo,
-          reference: createId(),
-          documentDate: documentDate.toISOString(),
-          vendorId: vendor,
-          billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
-          billNo: invoiceNo,
-          vatType,
-          vatId,
-          createdBy: user.id,
-        })
-        .onConflictDoUpdate({
-          target: ordersHeader.id,
-          set: {
-            documentDate: documentDate.toISOString(),
-            vendorId: vendor,
-            billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
-            billNo: invoiceNo,
-            vatType,
-            fileUrl: null,
-            vatId,
-          },
-        })
-        .returning({ reference: ordersHeader.reference });
+      const orderNo = existingOrderNo ?? (await allocatePurchaseOrderNo(tx));
+      const headerValues = {
+        id: orderNo,
+        reference: createId(),
+        documentDate,
+        vendorId: vendor,
+        billDate: invoiceDate ? new Date(invoiceDate).toISOString() : null,
+        billNo: invoiceNo,
+        vatType,
+        vatId,
+        createdBy: user.id,
+      };
+
+      const ref = id
+        ? await tx
+            .insert(ordersHeader)
+            .values(headerValues)
+            .onConflictDoUpdate({
+              target: ordersHeader.id,
+              set: {
+                documentDate,
+                vendorId: vendor,
+                billDate: invoiceDate
+                  ? new Date(invoiceDate).toISOString()
+                  : null,
+                billNo: invoiceNo,
+                vatType,
+                fileUrl: null,
+                vatId,
+              },
+            })
+            .returning({ reference: ordersHeader.reference })
+        : await tx
+            .insert(ordersHeader)
+            .values(headerValues)
+            .returning({ reference: ordersHeader.reference });
 
       if (id) {
         const previousDetails = await tx
@@ -283,6 +310,8 @@ export const deleteOrder = async (orderId: string) => {
   await requireAnyPermission(["procurement:admin"]);
   const order = await getPurchaseOrder(orderId);
 
+  if (!order) return { error: true, message: "Order not found", data: null };
+
   const requestIds = order.ordersDetails.map(({ requestId }) => requestId ?? 0);
 
   try {
@@ -342,7 +371,7 @@ export const deletePendingRequests = async (requestIds: Array<string>) => {
 
     return {
       error: false,
-      message: "Pending requests successfully",
+      message: "Pending requests deleted successfully",
     };
   } catch (error) {
     console.error("Error deleting pending requests:", error);
