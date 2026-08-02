@@ -57,4 +57,20 @@ describe('allocatePurchaseOrderNo', () => {
     expect(calls[0]).toContain('pg_advisory_xact_lock');
     expect(calls[1]).toContain('max');
   });
+
+  it('coerces the allocated order number when the database returns a string', async () => {
+    const tx = {
+      execute: vi.fn(async (query: { queryChunks: Array<unknown> }) => {
+        const queryText = getQueryText(query);
+
+        if (queryText.includes('max')) {
+          return { rows: [{ orderNo: '42' }] };
+        }
+
+        return { rows: [] };
+      }),
+    };
+
+    await expect(allocatePurchaseOrderNo(tx)).resolves.toBe(42);
+  });
 });

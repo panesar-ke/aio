@@ -52,9 +52,11 @@ export const allocatePurchaseOrderNo = async (
   const result = await tx.execute(
     sql`select coalesce(max(${ordersHeader.id}), 0) + 1 as "orderNo" from ${ordersHeader}`,
   );
-  const orderNo = result.rows[0]?.orderNo;
+  const rawOrderNo = result.rows[0]?.orderNo;
+  const orderNo =
+    typeof rawOrderNo === "number" ? rawOrderNo : Number(rawOrderNo);
 
-  if (typeof orderNo !== "number") {
+  if (!Number.isFinite(orderNo) || orderNo < 1) {
     throw new Error("Unable to allocate purchase order number");
   }
 
