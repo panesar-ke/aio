@@ -73,22 +73,39 @@ export function OrderForm({
       }),
     [order, orderNo, requisitionData],
   );
-<<<<<<<<< Temporary merge branch 1
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderSchema) as Resolver<OrderFormValues>,
-    defaultValues,
-  });
-  const lastSeedKey = useRef(seedKey);
-=========
->>>>>>>>> Temporary merge branch 2
 
   const formOpts = useMemo(
     () => purchaseOrderFormOpts(orderNo, defaultValues),
     [orderNo, defaultValues],
   );
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderSchema) as Resolver<OrderFormValues>,
-    defaultValues,
+  const appForm = useAppForm({
+    ...formOpts,
+    onSubmit: async ({ value }) => {
+      if (value.details.length === 0) {
+        toast.error(() => (
+          <ToastContent
+            title="Validation Error"
+            message="At least one item is required"
+          />
+        ));
+        return;
+      }
+
+      await handleSubmitFeedback({
+        action: () => createOrder({ values: value, id: order?.reference }),
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} order`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} order. Please try again.`,
+        onSuccess: (data) => {
+          appForm.reset();
+          router.push(
+            data
+              ? `/procurement/purchase-order/${data}/details`
+              : "/procurement/purchase-order",
+          );
+        },
+      });
+    },
   });
 
   useEffect(() => {

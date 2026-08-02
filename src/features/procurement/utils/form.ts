@@ -45,7 +45,6 @@ export const purchaseOrderFormOpts = (
         documentDate: dateFormat(new Date()),
         vendor: "",
         invoiceNo: "",
-        invoiceDate: "",
         vatType: "NONE",
         vat: "",
         details: [],
