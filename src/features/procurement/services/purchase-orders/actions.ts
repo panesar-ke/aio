@@ -29,7 +29,6 @@ import {
   calculateVatValues,
 } from "@/features/procurement/utils/calculators";
 import { orderSchema } from "@/features/procurement/utils/schemas";
-import { inngest } from "@/inngest/client";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
 import axios from "@/lib/axios";
 import { requireAnyPermission } from "@/lib/permissions/guards";
@@ -74,7 +73,7 @@ export const createOrder = async ({
     await requireAnyPermission(["procurement:admin", "procurement:standard"]);
     const data = parseOrFail(orderSchema, values);
 
-    const user = await getCurrentUser();
+    const user = await getCurrentUser("action");
 
     const existingOrder = id ? await getPurchaseOrder(id) : null;
     if (id && !existingOrder) {
@@ -347,14 +346,6 @@ export const deleteOrder = async (orderId: string) => {
         error instanceof Error ? error.message : "Failed to delete order",
     };
   }
-};
-
-export const sendOrderEmail = async (orderId: string) => {
-  const user = await getCurrentUser();
-  await inngest.send({
-    name: "procurement/supplier.po.email",
-    data: { orderId, userId: user.id },
-  });
 };
 
 export const deletePendingRequests = async (requestIds: Array<string>) => {
