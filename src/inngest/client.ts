@@ -1,13 +1,7 @@
-import { EventSchemas, Inngest } from 'inngest';
+import { EventSchemas, Inngest } from "inngest";
 
 type Events = {
-  'procurement/supplier.po.email': {
-    data: {
-      orderId: string;
-      userId: string;
-    };
-  };
-  'user/send.new.password': {
+  "user/send.new.password": {
     data: {
       contact: string;
       password: string;
@@ -17,6 +11,6 @@ type Events = {
 };
 
 export const inngest = new Inngest({
-  id: 'pkl-aio',
+  id: "pkl-aio",
   schemas: new EventSchemas().fromRecord<Events>(),
 });
