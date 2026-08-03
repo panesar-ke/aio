@@ -69,6 +69,11 @@ To run background jobs locally (e.g. license renewal reminders), start the Innge
 pnpm inngest
 ```
 
+Vercel Cron also invokes production-only HTTP endpoints:
+
+- `/api/cron/store-product-deactivation` runs every Monday at 06:00 UTC.
+- Set `CRON_SECRET` in Vercel so cron routes require `Authorization: Bearer <CRON_SECRET>`.
+
 ## Scripts
 
 | Command | Purpose |

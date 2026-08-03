@@ -59,8 +59,16 @@ describe('buildDeactivationItemRow', () => {
 
 describe('buildProductDeactivationNotificationEventId', () => {
   it('is stable per batch and admin', () => {
-    expect(
-      buildProductDeactivationNotificationEventId('batch-1', 'user-7'),
-    ).toBe('product-deactivation:batch-1:user-7');
+    const first = buildProductDeactivationNotificationEventId(
+      'batch-1',
+      'user-7',
+    );
+    const second = buildProductDeactivationNotificationEventId(
+      'batch-1',
+      'user-7',
+    );
+
+    expect(first).toBe('product-deactivation:batch-1:user-7');
+    expect(second).toBe(first);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const { insert, values, onConflictDoNothing } = vi.hoisted(() => {
+const { insert, onConflictDoNothing } = vi.hoisted(() => {
   const onConflictDoNothing = vi.fn(async () => undefined);
   const values = vi.fn(() => ({
     onConflictDoNothing,
@@ -11,7 +11,6 @@ const { insert, values, onConflictDoNothing } = vi.hoisted(() => {
 
   return {
     insert,
-    values,
     onConflictDoNothing,
   };
 });
