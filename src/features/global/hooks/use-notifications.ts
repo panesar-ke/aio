@@ -1,9 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from '@/features/global/services/actions';
+} from "@/features/global/services/actions";
 
 export interface NotificationItem {
   id: string;
@@ -25,29 +25,30 @@ export interface NotificationsResponse {
 
 export function useRecentNotifications() {
   return useQuery<NotificationsResponse>({
-    queryKey: ['notifications', 'recent'],
+    queryKey: ["notifications", "recent"],
     queryFn: async () => {
-      const res = await fetch('/api/notifications/recent');
+      const res = await fetch("/api/notifications/recent");
       if (!res.ok) {
-        throw new Error('Failed to fetch notifications');
+        throw new Error("Failed to fetch notifications");
       }
       return res.json();
     },
-    refetchInterval: 30000,
+    refetchInterval: 10 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 }
 
-export function useAllNotifications(filter: 'all' | 'unread' = 'all') {
+export function useAllNotifications(filter: "all" | "unread" = "all") {
   return useQuery<NotificationsResponse>({
-    queryKey: ['notifications', 'list', filter],
+    queryKey: ["notifications", "list", filter],
     queryFn: async () => {
       const res = await fetch(`/api/notifications?filter=${filter}`);
       if (!res.ok) {
-        throw new Error('Failed to fetch notifications');
+        throw new Error("Failed to fetch notifications");
       }
       return res.json();
     },
-    refetchInterval: 30000,
+    refetchInterval: false,
   });
 }
 
@@ -59,7 +60,7 @@ export function useMarkNotificationAsRead() {
       await markNotificationAsRead(notificationId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -72,7 +73,7 @@ export function useMarkAllNotificationsAsRead() {
       await markAllNotificationsAsRead();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

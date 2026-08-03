@@ -1,6 +1,4 @@
-import type { GetStepTools } from 'inngest';
-
-import { inArray } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 
 import type { ProductUsageAggregate } from '@/features/store/services/product-deactivation/eligibility';
 
@@ -13,13 +11,13 @@ import {
 import { createNotification } from '@/features/global/services/actions';
 import { getStoreAdminUserIds } from '@/features/store/services/product-deactivation/admins';
 import { sumProductBalanceAcrossStores } from '@/features/store/services/product-deactivation/balance';
-import { PRODUCT_DEACTIVATION_THRESHOLD_DAYS } from '@/features/store/services/product-deactivation/constants';
+import {
+  PRODUCT_DEACTIVATION_ADVISORY_LOCK,
+  PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
+} from '@/features/store/services/product-deactivation/constants';
 import { getEligibleCandidates } from '@/features/store/services/product-deactivation/eligibility';
 import { revalidateProductDeactivation } from '@/features/store/utils/cache';
-import { type inngest } from '@/inngest/client';
 import { dateFormat } from '@/lib/helpers/formatters';
-
-type StepTools = GetStepTools<typeof inngest>;
 
 export function buildDeactivationItemRow(
   candidate: ProductUsageAggregate,
@@ -35,19 +33,31 @@ export function buildDeactivationItemRow(
   };
 }
 
+export function buildProductDeactivationNotificationEventId(
+  batchId: string,
+  userId: string,
+) {
+  return `product-deactivation:${batchId}:${userId}`;
+}
+
 export async function deactivateAndLogStaleProducts(
   asOf: Date = new Date(),
 ): Promise<{ batchId: string; totalCount: number } | null> {
-  const candidates = await getEligibleCandidates(
-    PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
-    asOf,
-  );
+  const result = await db.transaction(async tx => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${PRODUCT_DEACTIVATION_ADVISORY_LOCK})`,
+    );
 
-  if (candidates.length === 0) {
-    return null;
-  }
+    const candidates = await getEligibleCandidates(
+      PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
+      asOf,
+      tx,
+    );
 
-  const batchId = await db.transaction(async tx => {
+    if (candidates.length === 0) {
+      return null;
+    }
+
     const [{ id }] = await tx
       .insert(productDeactivationBatches)
       .values({
@@ -78,34 +88,41 @@ export async function deactivateAndLogStaleProducts(
       });
     }
 
-    return id;
+    return { batchId: id, totalCount: candidates.length };
   });
 
-  revalidateProductDeactivation(batchId);
+  if (!result) {
+    return null;
+  }
 
-  return { batchId, totalCount: candidates.length };
+  revalidateProductDeactivation(result.batchId);
+
+  return result;
 }
 
 export async function notifyStoreAdminsOfDeactivation(
   batchId: string,
   totalCount: number,
-  eventId: string,
-  step: StepTools,
-): Promise<void> {
+): Promise<{ notifiedCount: number }> {
   const adminUserIds = await getStoreAdminUserIds();
+  let notifiedCount = 0;
 
   for (const adminUserId of adminUserIds) {
-    await step.run(`notify-admin-${adminUserId}`, async () => {
-      await createNotification({
-        title: 'Products auto-deactivated',
-        message: `${totalCount} unused stock product${
-          totalCount === 1 ? '' : 's'
-        } were automatically deactivated for review.`,
-        path: `/store/deactivated-items/${batchId}`,
-        userId: adminUserId,
-        notificationType: 'PRODUCT_DEACTIVATION',
-        eventId,
-      });
+    await createNotification({
+      title: 'Products auto-deactivated',
+      message: `${totalCount} unused stock product${
+        totalCount === 1 ? '' : 's'
+      } were automatically deactivated for review.`,
+      path: `/store/deactivated-items/${batchId}`,
+      userId: adminUserId,
+      notificationType: 'PRODUCT_DEACTIVATION',
+      eventId: buildProductDeactivationNotificationEventId(
+        batchId,
+        adminUserId,
+      ),
     });
+    notifiedCount += 1;
   }
+
+  return { notifiedCount };
 }

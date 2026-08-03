@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import db from '@/drizzle/db';
 import { notifications } from '@/drizzle/schema';
@@ -14,7 +14,7 @@ export const createNotification = async (data: {
   notificationType: string;
   eventId?: string;
 }) => {
-  await db.insert(notifications).values({
+  const query = db.insert(notifications).values({
     title: data.title,
     path: data.path,
     message: data.message,
@@ -22,6 +22,20 @@ export const createNotification = async (data: {
     notificationType: data.notificationType,
     eventId: data.eventId,
   });
+
+  if (data.eventId) {
+    await query.onConflictDoNothing({
+      target: [
+        notifications.addressedTo,
+        notifications.notificationType,
+        notifications.eventId,
+      ],
+      where: sql`${notifications.eventId} is not null`,
+    });
+    return;
+  }
+
+  await query;
 };
 
 export const markNotificationAsRead = async (notificationId: string) => {
@@ -48,4 +62,3 @@ export const markAllNotificationsAsRead = async () => {
     .set({ isRead: true })
     .where(eq(notifications.addressedTo, currentUser.id));
 };
-

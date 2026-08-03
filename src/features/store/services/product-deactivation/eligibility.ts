@@ -118,10 +118,12 @@ type ProductUsageAggregateRow = {
   last_used_source: LastUsedSource;
 };
 
-export async function getProductUsageAggregates(): Promise<
-  Array<ProductUsageAggregate>
-> {
-  const result = await db.execute<ProductUsageAggregateRow>(
+export type QueryExecutor = Pick<typeof db, "execute">;
+
+export async function getProductUsageAggregates(
+  client: QueryExecutor = db,
+): Promise<Array<ProductUsageAggregate>> {
+  const result = await client.execute<ProductUsageAggregateRow>(
     buildProductUsageAggregatesQuery(),
   );
 
@@ -136,8 +138,9 @@ export async function getProductUsageAggregates(): Promise<
 export async function getEligibleCandidates(
   thresholdDays: number,
   asOf: Date,
+  client: QueryExecutor = db,
 ): Promise<Array<ProductUsageAggregate>> {
-  const aggregates = await getProductUsageAggregates();
+  const aggregates = await getProductUsageAggregates(client);
 
   return aggregates.filter((aggregate) =>
     isEligibleForDeactivation(aggregate, thresholdDays, asOf),

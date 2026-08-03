@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "notifications_addressed_type_event_unique" ON "notifications" USING btree ("addressed_to","notification_type","event_id") WHERE "notifications"."event_id" is not null;
