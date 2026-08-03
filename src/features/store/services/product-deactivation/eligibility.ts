@@ -77,7 +77,7 @@ export function buildProductUsageAggregatesQuery() {
       GROUP BY md.item_id
     ),
     orders_usage AS (
-      SELECT od.item_id AS product_id, MAX(oh.document_date) AS last_date
+      SELECT od.item_id AS product_id, MAX(oh.document_date)::date AS last_date
       FROM ${ordersDetails} od
       INNER JOIN ${ordersHeader} oh ON oh.id = od.header_id
       WHERE od.item_id IS NOT NULL
@@ -113,8 +113,8 @@ export function buildProductUsageAggregatesQuery() {
 
 type ProductUsageAggregateRow = {
   product_id: string;
-  created_on: Date | null;
-  last_used_date: Date | null;
+  created_on: string | null;
+  last_used_date: string | null;
   last_used_source: LastUsedSource;
 };
 
@@ -127,8 +127,8 @@ export async function getProductUsageAggregates(): Promise<
 
   return result.rows.map((row) => ({
     productId: row.product_id,
-    createdOn: row.created_on,
-    lastUsedDate: row.last_used_date,
+    createdOn: row.created_on ? new Date(row.created_on) : null,
+    lastUsedDate: row.last_used_date ? new Date(row.last_used_date) : null,
     lastUsedSource: row.last_used_source,
   }));
 }
