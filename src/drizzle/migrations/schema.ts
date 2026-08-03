@@ -1025,6 +1025,9 @@ export const notifications = pgTable(
     eventId: text('event_id'),
   },
   table => [
+    uniqueIndex('notifications_addressed_type_event_unique')
+      .on(table.addressedTo, table.notificationType, table.eventId)
+      .where(sql`${table.eventId} is not null`),
     foreignKey({
       columns: [table.addressedTo],
       foreignColumns: [users.id],
