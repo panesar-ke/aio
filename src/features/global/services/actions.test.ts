@@ -1,7 +1,14 @@
+import type { SQL } from 'drizzle-orm';
+
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { describe, expect, it, vi } from 'vitest';
 
 const { insert, onConflictDoNothing } = vi.hoisted(() => {
-  const onConflictDoNothing = vi.fn(async () => undefined);
+  const onConflictDoNothing = vi.fn(
+    async (config: { target: unknown; where: SQL }) => {
+      void config;
+    },
+  );
   const values = vi.fn(() => ({
     onConflictDoNothing,
   }));
@@ -39,5 +46,10 @@ describe('createNotification', () => {
     });
 
     expect(onConflictDoNothing).toHaveBeenCalledOnce();
+    const [config] = onConflictDoNothing.mock.calls[0]!;
+    const dialect = new PgDialect();
+    expect(dialect.sqlToQuery(config.where).sql).toContain(
+      '"event_id" is not null',
+    );
   });
 });

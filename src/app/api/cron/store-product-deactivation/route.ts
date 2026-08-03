@@ -6,9 +6,6 @@ import {
   notifyStoreAdminsOfDeactivation,
 } from '@/features/store/services/product-deactivation/actions';
 
-export const runtime = 'nodejs';
-export const maxDuration = 60;
-
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get('authorization');
   if (!auth) return null;
@@ -17,7 +14,14 @@ function getCronSecret(request: NextRequest): string | null {
 }
 
 export async function GET(request: NextRequest) {
-  if (env.CRON_SECRET) {
+  if (!env.CRON_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { message: 'Server misconfigured: CRON_SECRET is not set' },
+        { status: 500 },
+      );
+    }
+  } else {
     const token = getCronSecret(request);
     if (!token || token !== env.CRON_SECRET) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import db from '@/drizzle/db';
 import { notifications } from '@/drizzle/schema';
@@ -30,6 +30,7 @@ export const createNotification = async (data: {
         notifications.notificationType,
         notifications.eventId,
       ],
+      where: sql`${notifications.eventId} is not null`,
     });
     return;
   }
