@@ -23,12 +23,7 @@ export const deactivateStaleProducts = inngest.createFunction(
       return { batchId: null, totalCount: 0 };
     }
 
-    await notifyStoreAdminsOfDeactivation(
-      batch.batchId,
-      batch.totalCount,
-      event.id,
-      step,
-    );
+    await notifyStoreAdminsOfDeactivation(batch.batchId, batch.totalCount);
 
     return batch;
   },

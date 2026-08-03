@@ -12,7 +12,10 @@ vi.mock('@/lib/permissions/service', () => ({
   ADMIN_USER_TYPES: new Set(),
 }));
 
-import { buildDeactivationItemRow } from '@/features/store/services/product-deactivation/actions';
+import {
+  buildDeactivationItemRow,
+  buildProductDeactivationNotificationEventId,
+} from '@/features/store/services/product-deactivation/actions';
 
 describe('buildDeactivationItemRow', () => {
   it('formats a real-usage candidate with its balance', () => {
@@ -51,5 +54,13 @@ describe('buildDeactivationItemRow', () => {
       lastUsedSource: 'never_referenced',
       balanceAtDeactivation: '0',
     });
+  });
+});
+
+describe('buildProductDeactivationNotificationEventId', () => {
+  it('is stable per batch and admin', () => {
+    expect(
+      buildProductDeactivationNotificationEventId('batch-1', 'user-7'),
+    ).toBe('product-deactivation:batch-1:user-7');
   });
 });

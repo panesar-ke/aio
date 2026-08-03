@@ -1,5 +1,3 @@
-import type { GetStepTools } from 'inngest';
-
 import { inArray } from 'drizzle-orm';
 
 import type { ProductUsageAggregate } from '@/features/store/services/product-deactivation/eligibility';
@@ -16,10 +14,7 @@ import { sumProductBalanceAcrossStores } from '@/features/store/services/product
 import { PRODUCT_DEACTIVATION_THRESHOLD_DAYS } from '@/features/store/services/product-deactivation/constants';
 import { getEligibleCandidates } from '@/features/store/services/product-deactivation/eligibility';
 import { revalidateProductDeactivation } from '@/features/store/utils/cache';
-import { type inngest } from '@/inngest/client';
 import { dateFormat } from '@/lib/helpers/formatters';
-
-type StepTools = GetStepTools<typeof inngest>;
 
 export function buildDeactivationItemRow(
   candidate: ProductUsageAggregate,
@@ -33,6 +28,13 @@ export function buildDeactivationItemRow(
     lastUsedSource: candidate.lastUsedSource,
     balanceAtDeactivation: balance.toString(),
   };
+}
+
+export function buildProductDeactivationNotificationEventId(
+  batchId: string,
+  userId: string,
+) {
+  return `product-deactivation:${batchId}:${userId}`;
 }
 
 export async function deactivateAndLogStaleProducts(
@@ -89,23 +91,26 @@ export async function deactivateAndLogStaleProducts(
 export async function notifyStoreAdminsOfDeactivation(
   batchId: string,
   totalCount: number,
-  eventId: string,
-  step: StepTools,
-): Promise<void> {
+): Promise<{ notifiedCount: number }> {
   const adminUserIds = await getStoreAdminUserIds();
+  let notifiedCount = 0;
 
   for (const adminUserId of adminUserIds) {
-    await step.run(`notify-admin-${adminUserId}`, async () => {
-      await createNotification({
-        title: 'Products auto-deactivated',
-        message: `${totalCount} unused stock product${
-          totalCount === 1 ? '' : 's'
-        } were automatically deactivated for review.`,
-        path: `/store/deactivated-items/${batchId}`,
-        userId: adminUserId,
-        notificationType: 'PRODUCT_DEACTIVATION',
-        eventId,
-      });
+    await createNotification({
+      title: 'Products auto-deactivated',
+      message: `${totalCount} unused stock product${
+        totalCount === 1 ? '' : 's'
+      } were automatically deactivated for review.`,
+      path: `/store/deactivated-items/${batchId}`,
+      userId: adminUserId,
+      notificationType: 'PRODUCT_DEACTIVATION',
+      eventId: buildProductDeactivationNotificationEventId(
+        batchId,
+        adminUserId,
+      ),
     });
+    notifiedCount += 1;
   }
+
+  return { notifiedCount };
 }
