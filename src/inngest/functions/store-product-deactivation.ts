@@ -18,7 +18,7 @@ export const runStoreProductDeactivation = inngest.createFunction(
     });
 
     const batch = await step.run('deactivate-and-log-stale-products', async () => {
-      const result = await deactivateAndLogStaleProducts();
+      const result = await deactivateAndLogStaleProducts(undefined, requestId);
 
       console.info('Finished deactivation batch step', {
         eventId: event.id,
