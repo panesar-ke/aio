@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { env } from '@/env/server';
-import {
-  deactivateAndLogStaleProducts,
-  notifyStoreAdminsOfDeactivation,
-} from '@/features/store/services/product-deactivation/actions';
+import { inngest } from '@/inngest/client';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get('authorization');
@@ -28,24 +28,33 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const batch = await deactivateAndLogStaleProducts();
+  const requestId = crypto.randomUUID();
 
-  if (!batch) {
-    return NextResponse.json({
-      batchId: null,
-      totalCount: 0,
-      notifiedCount: 0,
+  try {
+    await inngest.send({
+      name: 'store/run.product-deactivation',
+      data: {
+        requestId,
+        source: 'vercel-cron',
+        triggeredAt: new Date().toISOString(),
+      },
     });
+
+    return NextResponse.json({
+      queued: true,
+      requestId,
+      source: 'vercel-cron',
+      trigger: 'store/run.product-deactivation',
+    });
+  } catch (error) {
+    console.error('Failed to queue store product deactivation job', {
+      requestId,
+      error,
+    });
+
+    return NextResponse.json(
+      { message: 'Failed to queue product deactivation job' },
+      { status: 500 },
+    );
   }
-
-  const { notifiedCount } = await notifyStoreAdminsOfDeactivation(
-    batch.batchId,
-    batch.totalCount,
-  );
-
-  return NextResponse.json({
-    batchId: batch.batchId,
-    totalCount: batch.totalCount,
-    notifiedCount,
-  });
 }
