@@ -3,9 +3,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env/server';
 import { inngest } from '@/inngest/client';
 
-export const runtime = 'nodejs';
-export const maxDuration = 60;
-
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get('authorization');
   if (!auth) return null;
