@@ -12,6 +12,13 @@ type Events = {
     data: {
       batchId: string;
     };
+  }; 
+  "store/run.product-deactivation": {
+    data: {
+      requestId: string;
+      source: "vercel-cron";
+      triggeredAt: string;
+    };
   };
 };
 

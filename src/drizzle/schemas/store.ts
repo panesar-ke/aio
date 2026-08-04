@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -140,7 +140,13 @@ export const productDeactivationBatches = pgTable(
     deactivationDate: timestamp('deactivation_date').notNull().defaultNow(),
     thresholdDays: integer('threshold_days').notNull(),
     totalCount: integer('total_count').notNull(),
+    triggerRequestId: uuid('trigger_request_id'),
   },
+  table => [
+    uniqueIndex('product_deactivation_batches_trigger_request_id_idx')
+      .on(table.triggerRequestId)
+      .where(sql`${table.triggerRequestId} is not null`),
+  ],
 );
 
 export const productDeactivationBatchesRelations = relations(
