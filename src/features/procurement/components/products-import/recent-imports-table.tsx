@@ -12,6 +12,7 @@ import {
   type ImportBatchListItem,
   useImportBatches,
 } from "@/features/procurement/hooks/use-import-batches";
+import { dateFormat, titleCase } from "@/lib/helpers/formatters";
 
 const STATUS_VARIANT: Record<
   ImportBatchListItem["status"],
@@ -42,20 +43,24 @@ export function RecentImportsTable({ initialData }: RecentImportsTableProps) {
 
   const columns: Array<ColumnDef<ImportBatchListItem>> = [
     {
-      accessorKey: "fileName",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
-    },
-    {
       accessorKey: "storeName",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Store" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Store" />
+      ),
+      cell: ({ row }) => titleCase(row.original.storeName.toLowerCase()),
     },
     {
       accessorKey: "asOfDate",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="As-Of Date" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="As-Of Date" />
+      ),
+      cell: ({ row }) => dateFormat(row.original.asOfDate, "long"),
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
       cell: ({ row }) => (
         <CustomStatusBadge
           variant={STATUS_VARIANT[row.original.status]}
@@ -71,11 +76,16 @@ export function RecentImportsTable({ initialData }: RecentImportsTableProps) {
     },
     {
       accessorKey: "uploadedByName",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Uploaded By" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Uploaded By" />
+      ),
+      cell: ({ row }) => titleCase(row.original.uploadedByName.toLowerCase()),
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Uploaded At" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Uploaded At" />
+      ),
       cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
     },
     {
@@ -83,7 +93,10 @@ export function RecentImportsTable({ initialData }: RecentImportsTableProps) {
       cell: ({ row }) =>
         row.original.failedRows > 0 ? (
           <Button variant="ghost" size="sm" asChild>
-            <a href={`/api/procurement/products/import/${row.original.id}/errors`} download>
+            <a
+              href={`/api/procurement/products/import/${row.original.id}/errors`}
+              download
+            >
               <DownloadIcon className="size-4" />
               Error report
             </a>
