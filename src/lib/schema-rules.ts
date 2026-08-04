@@ -51,7 +51,8 @@ export const optionalStringSchemaEntry = () =>
     .optional()
     .transform((val) => val?.trim());
 
-export const optionalNumberSchemaEntry = () => z.coerce.number().optional();
+export const optionalNumberSchemaEntry = () =>
+  z.coerce.number<number>().optional();
 
 // z.coerce.* runs `Number()`/`new Date()` on the raw input before the schema's
 // `error` map ever sees it, so `issue.input` is always the coerced value (NaN /

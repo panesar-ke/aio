@@ -119,7 +119,8 @@ export const productsSchema = z.object({
 });
 
 export const serviceSchema = z.object({
-  serviceName: requiredStringSchemaEntry("Service name is required"),
+  id: nullableTrimmedString,
+  serviceName: requiredTrimmedStringSchemaEntry("Service name is required"),
   serviceFee: optionalNumberSchemaEntry(),
   active: z.boolean(),
 });
