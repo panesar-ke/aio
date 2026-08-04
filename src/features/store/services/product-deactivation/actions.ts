@@ -45,6 +45,11 @@ interface ProductDeactivationBatchResult {
   totalCount: number;
 }
 
+export interface ProductDeactivationChunkResult
+  extends ProductDeactivationBatchResult {
+  processedCount: number;
+}
+
 export async function findDeactivationBatchByTriggerRequestId(
   triggerRequestId: string,
   client: Pick<typeof db, 'query'>,
@@ -133,6 +138,102 @@ export async function deactivateAndLogStaleProducts(
 
   if (!result) {
     return null;
+  }
+
+  revalidateProductDeactivation(result.batchId);
+
+  return result;
+}
+
+export async function deactivateNextStaleProductsChunk(
+  limit: number,
+  asOf: Date = new Date(),
+  triggerRequestId?: string,
+): Promise<ProductDeactivationChunkResult | null> {
+  const result = await db.transaction(async tx => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${PRODUCT_DEACTIVATION_ADVISORY_LOCK})`,
+    );
+
+    let batch = triggerRequestId
+      ? await findDeactivationBatchByTriggerRequestId(triggerRequestId, tx)
+      : null;
+
+    const candidates = await getEligibleCandidates(
+      PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
+      asOf,
+      tx,
+    );
+
+    if (candidates.length === 0) {
+      if (!batch) {
+        return null;
+      }
+
+      return {
+        batchId: batch.batchId,
+        processedCount: 0,
+        totalCount: batch.totalCount,
+      };
+    }
+
+    if (!batch) {
+      const [{ id }] = await tx
+        .insert(productDeactivationBatches)
+        .values({
+          thresholdDays: PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
+          totalCount: 0,
+          triggerRequestId: triggerRequestId ?? null,
+        })
+        .returning({ id: productDeactivationBatches.id });
+
+      batch = {
+        batchId: id,
+        totalCount: 0,
+      };
+    }
+
+    const chunk = candidates.slice(0, limit);
+
+    await tx
+      .update(products)
+      .set({ active: false })
+      .where(
+        inArray(
+          products.id,
+          chunk.map(candidate => candidate.productId),
+        ),
+      );
+
+    for (const candidate of chunk) {
+      const balance = await sumProductBalanceAcrossStores(
+        candidate.productId,
+        asOf,
+      );
+
+      await tx.insert(productDeactivationItems).values({
+        batchId: batch.batchId,
+        ...buildDeactivationItemRow(candidate, balance),
+      });
+    }
+
+    const [updatedBatch] = await tx
+      .update(productDeactivationBatches)
+      .set({
+        totalCount: sql`${productDeactivationBatches.totalCount} + ${chunk.length}`,
+      })
+      .where(eq(productDeactivationBatches.id, batch.batchId))
+      .returning({ totalCount: productDeactivationBatches.totalCount });
+
+    return {
+      batchId: batch.batchId,
+      processedCount: chunk.length,
+      totalCount: updatedBatch.totalCount,
+    };
+  });
+
+  if (!result || result.processedCount === 0) {
+    return result;
   }
 
   revalidateProductDeactivation(result.batchId);
