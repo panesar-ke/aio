@@ -5,6 +5,12 @@ vi.mock('@/env/server', () => ({
   env: { CRON_SECRET: 'secret' },
 }));
 
+vi.mock('@/inngest/client', () => ({
+  inngest: {
+    send: vi.fn(),
+  },
+}));
+
 vi.mock('@/features/store/services/product-deactivation/actions', () => ({
   deactivateAndLogStaleProducts: vi.fn(),
   notifyStoreAdminsOfDeactivation: vi.fn(),
@@ -15,6 +21,7 @@ import {
   deactivateAndLogStaleProducts,
   notifyStoreAdminsOfDeactivation,
 } from '@/features/store/services/product-deactivation/actions';
+import { inngest } from '@/inngest/client';
 
 describe('GET /api/cron/store-product-deactivation', () => {
   it('returns 401 for an invalid bearer token', async () => {
@@ -29,7 +36,7 @@ describe('GET /api/cron/store-product-deactivation', () => {
   });
 
   it('returns an empty result when no stale products are found', async () => {
-    vi.mocked(deactivateAndLogStaleProducts).mockResolvedValueOnce(null);
+    vi.mocked(inngest.send).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(
       'https://example.com/api/cron/store-product-deactivation',
@@ -40,20 +47,25 @@ describe('GET /api/cron/store-product-deactivation', () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      batchId: null,
-      totalCount: 0,
-      notifiedCount: 0,
+      queued: true,
+      source: 'vercel-cron',
+      trigger: 'store/run.product-deactivation',
+      requestId: expect.any(String),
     });
+    expect(inngest.send).toHaveBeenCalledWith({
+      name: 'store/run.product-deactivation',
+      data: {
+        requestId: expect.any(String),
+        source: 'vercel-cron',
+        triggeredAt: expect.any(String),
+      },
+    });
+    expect(deactivateAndLogStaleProducts).not.toHaveBeenCalled();
+    expect(notifyStoreAdminsOfDeactivation).not.toHaveBeenCalled();
   });
 
-  it('returns batch and notification counts after a successful run', async () => {
-    vi.mocked(deactivateAndLogStaleProducts).mockResolvedValueOnce({
-      batchId: 'batch-1',
-      totalCount: 3,
-    });
-    vi.mocked(notifyStoreAdminsOfDeactivation).mockResolvedValueOnce({
-      notifiedCount: 2,
-    });
+  it('returns 500 when the background job cannot be queued', async () => {
+    vi.mocked(inngest.send).mockRejectedValueOnce(new Error('queue failed'));
 
     const request = new NextRequest(
       'https://example.com/api/cron/store-product-deactivation',
@@ -62,11 +74,9 @@ describe('GET /api/cron/store-product-deactivation', () => {
 
     const response = await GET(request);
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
-      batchId: 'batch-1',
-      totalCount: 3,
-      notifiedCount: 2,
+      message: 'Failed to queue product deactivation job',
     });
   });
 });

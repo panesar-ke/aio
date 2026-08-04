@@ -1,4 +1,4 @@
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 
 import type { ProductUsageAggregate } from '@/features/store/services/product-deactivation/eligibility';
 
@@ -40,13 +40,52 @@ export function buildProductDeactivationNotificationEventId(
   return `product-deactivation:${batchId}:${userId}`;
 }
 
+interface ProductDeactivationBatchResult {
+  batchId: string;
+  totalCount: number;
+}
+
+export async function findDeactivationBatchByTriggerRequestId(
+  triggerRequestId: string,
+  client: Pick<typeof db, 'query'>,
+): Promise<ProductDeactivationBatchResult | null> {
+  const existingBatch = await client.query.productDeactivationBatches.findFirst({
+    where: eq(productDeactivationBatches.triggerRequestId, triggerRequestId),
+    columns: {
+      id: true,
+      totalCount: true,
+    },
+  });
+
+  if (!existingBatch) {
+    return null;
+  }
+
+  return {
+    batchId: existingBatch.id,
+    totalCount: existingBatch.totalCount,
+  };
+}
+
 export async function deactivateAndLogStaleProducts(
   asOf: Date = new Date(),
-): Promise<{ batchId: string; totalCount: number } | null> {
+  triggerRequestId?: string,
+): Promise<ProductDeactivationBatchResult | null> {
   const result = await db.transaction(async tx => {
     await tx.execute(
       sql`select pg_advisory_xact_lock(${PRODUCT_DEACTIVATION_ADVISORY_LOCK})`,
     );
+
+    if (triggerRequestId) {
+      const existingBatch = await findDeactivationBatchByTriggerRequestId(
+        triggerRequestId,
+        tx,
+      );
+
+      if (existingBatch) {
+        return existingBatch;
+      }
+    }
 
     const candidates = await getEligibleCandidates(
       PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
@@ -63,6 +102,7 @@ export async function deactivateAndLogStaleProducts(
       .values({
         thresholdDays: PRODUCT_DEACTIVATION_THRESHOLD_DAYS,
         totalCount: candidates.length,
+        triggerRequestId: triggerRequestId ?? null,
       })
       .returning({ id: productDeactivationBatches.id });
 
