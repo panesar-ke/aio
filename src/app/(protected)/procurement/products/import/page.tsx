@@ -9,18 +9,16 @@ import { getStores } from "@/features/store/services/stores/data";
 export const metadata: Metadata = { title: "Product Import" };
 
 export default async function ProductImportPage() {
-  const [stores, rawBatches] = await Promise.all([getStores(), getRecentImportBatches()]);
+  const [stores, rawBatches] = await Promise.all([
+    getStores(),
+    getRecentImportBatches(),
+  ]);
 
   const storeOptions = stores.map((store) => ({
     value: store.id,
     label: store.storeName.toUpperCase(),
   }));
 
-  // `createdAt` comes back as a real `Date` from Drizzle. React Server Component →
-  // Client Component props preserve Date instances as-is (no JSON serialization), but
-  // useImportBatches' polling path goes through `fetch().json()`, which turns it into
-  // an ISO string. Normalize here so `ImportBatchListItem.createdAt` is always a string,
-  // matching both the initial SSR data and every subsequent poll.
   const batches = rawBatches.map((batch) => ({
     ...batch,
     createdAt: batch.createdAt.toISOString(),
@@ -29,10 +27,12 @@ export default async function ProductImportPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Import Products</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Import Products
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Bulk-load products and opening stock balances for a store using the standard Excel
-          template.
+          Bulk-load products and opening stock balances for a store using the
+          standard Excel template.
         </p>
       </div>
 
