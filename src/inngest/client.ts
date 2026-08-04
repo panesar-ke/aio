@@ -8,6 +8,11 @@ type Events = {
       name: string;
     };
   };
+  "products/import.requested": {
+    data: {
+      batchId: string;
+    };
+  }; 
   "store/run.product-deactivation": {
     data: {
       requestId: string;

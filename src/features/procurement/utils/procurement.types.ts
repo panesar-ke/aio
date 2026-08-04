@@ -162,4 +162,5 @@ export type ProcurementCacheTag =
   | 'vendors_stats'
   | 'purchase-order-no'
   | 'auto-orders'
-  | 'pending-requests';
+  | 'pending-requests'
+  | 'product-import-batches';

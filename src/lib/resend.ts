@@ -1,8 +1,8 @@
-import { jsx } from 'react/jsx-runtime';
-import { Resend } from 'resend';
+import { jsx } from "react/jsx-runtime";
+import { Resend } from "resend";
 
-import { SubscriptionExpirationReminder } from '@/emails/subscription-reminder';
-import { env } from '@/env/server';
+import { SubscriptionExpirationReminder } from "@/emails/subscription-reminder";
+import { env } from "@/env/server";
 
 const resend = new Resend(env.RESEND_API_KEY);
 

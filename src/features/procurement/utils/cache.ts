@@ -122,3 +122,18 @@ export function revalidateProjects(id?: string) {
   }
   revalidateTag(getProjectsGlobalTag(), 'max');
 }
+
+export function getProductImportBatchesGlobalTag() {
+  return getGlobalTag('product-import-batches');
+}
+
+export function getProductImportBatchIdTag(id: string) {
+  return getIdTag('product-import-batches', id);
+}
+
+export function revalidateProductImportBatches(id?: string) {
+  if (id) {
+    revalidateTag(getProductImportBatchIdTag(id), 'max');
+  }
+  revalidateTag(getProductImportBatchesGlobalTag(), 'max');
+}
