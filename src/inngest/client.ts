@@ -8,6 +8,11 @@ type Events = {
       name: string;
     };
   };
+  "products/import.requested": {
+    data: {
+      batchId: string;
+    };
+  };
 };
 
 export const inngest = new Inngest({
