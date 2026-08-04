@@ -102,6 +102,7 @@ export const deleteService = async (serviceId: string) =>
   });
 
 export const toggleServiceState = async (serviceId: string) => {
+  await requireAnyPermission(["procurement:admin", "procurement:standard"]);
   try {
     if (!serviceId) {
       return {
