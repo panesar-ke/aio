@@ -1,50 +1,50 @@
-'use server';
+"use server";
 
-import ExcelJS from 'exceljs';
+import ExcelJS from "exceljs";
 
-import db from '@/drizzle/db';
-import { productImportBatches } from '@/drizzle/schema';
+import db from "@/drizzle/db";
+import { productImportBatches } from "@/drizzle/schema";
 import {
   IMPORT_FILE_EXTENSION,
   IMPORT_TEMPLATE_HEADERS,
   MAX_IMPORT_FILE_SIZE_BYTES,
   MAX_IMPORT_ROWS,
   PRODUCTS_IMPORT_EVENT,
-} from '@/features/procurement/services/products-import/constants';
+} from "@/features/procurement/services/products-import/constants";
 import {
   headersMatchTemplate,
   readWorksheetHeaders,
-} from '@/features/procurement/services/products-import/template-validation';
-import { revalidateProductImportBatches } from '@/features/procurement/utils/cache';
-import { productImportHeaderSchema } from '@/features/procurement/utils/products-import/schemas';
-import { inngest } from '@/inngest/client';
-import { parseOrFail, runAction } from '@/lib/actions/safe-action';
-import { requireAnyPermission } from '@/lib/permissions/guards';
-import { getCurrentUser } from '@/lib/session';
+} from "@/features/procurement/services/products-import/template-validation";
+import { revalidateProductImportBatches } from "@/features/procurement/utils/cache";
+import { productImportHeaderSchema } from "@/features/procurement/utils/products-import/schemas";
+import { inngest } from "@/inngest/client";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import { requireAnyPermission } from "@/lib/permissions/guards";
+import { getCurrentUser } from "@/lib/session";
 
 const IMPORT_ACTION_PERMISSIONS = [
-  'procurement:admin',
-  'procurement:standard',
-  'store:admin',
-  'store:standard',
+  "procurement:admin",
+  "procurement:standard",
+  "store:admin",
+  "store:standard",
 ] as const;
 
 export const queueProductImport = async (formData: FormData) =>
-  runAction('queueProductImport', async () => {
+  runAction("queueProductImport", async () => {
     await requireAnyPermission([...IMPORT_ACTION_PERMISSIONS]);
 
     const header = parseOrFail(productImportHeaderSchema, {
-      storeId: formData.get('storeId'),
-      asOfDate: formData.get('asOfDate'),
+      storeId: formData.get("storeId"),
+      asOfDate: formData.get("asOfDate"),
     });
 
-    const file = formData.get('file');
+    const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
-      return { error: true, message: 'Please select a file to import.' };
+      return { error: true, message: "Please select a file to import." };
     }
 
     if (!file.name.toLowerCase().endsWith(IMPORT_FILE_EXTENSION)) {
-      return { error: true, message: 'Only .xlsx files are accepted.' };
+      return { error: true, message: "Only .xlsx files are accepted." };
     }
 
     if (file.size > MAX_IMPORT_FILE_SIZE_BYTES) {
@@ -60,24 +60,27 @@ export const queueProductImport = async (formData: FormData) =>
     try {
       await workbook.xlsx.load(arrayBuffer);
     } catch {
-      return { error: true, message: 'The uploaded file is not a valid .xlsx workbook.' };
+      return {
+        error: true,
+        message: "The uploaded file is not a valid .xlsx workbook.",
+      };
     }
 
     const worksheet = workbook.worksheets[0];
     if (!worksheet) {
-      return { error: true, message: 'The uploaded file has no worksheet.' };
+      return { error: true, message: "The uploaded file has no worksheet." };
     }
 
     if (!headersMatchTemplate(readWorksheetHeaders(worksheet))) {
       return {
         error: true,
-        message: `Headers must exactly match the template: ${IMPORT_TEMPLATE_HEADERS.join(', ')}.`,
+        message: `Headers must exactly match the template: ${IMPORT_TEMPLATE_HEADERS.join(", ")}.`,
       };
     }
 
     const rowCount = worksheet.rowCount - 1;
     if (rowCount <= 0) {
-      return { error: true, message: 'The uploaded file has no data rows.' };
+      return { error: true, message: "The uploaded file has no data rows." };
     }
     if (rowCount > MAX_IMPORT_ROWS) {
       return {
@@ -86,8 +89,8 @@ export const queueProductImport = async (formData: FormData) =>
       };
     }
 
-    const user = await getCurrentUser('action');
-    const fileData = Buffer.from(arrayBuffer).toString('base64');
+    const user = await getCurrentUser("action");
+    const fileData = Buffer.from(arrayBuffer).toString("base64");
 
     const [{ id: batchId }] = await db
       .insert(productImportBatches)
@@ -97,7 +100,7 @@ export const queueProductImport = async (formData: FormData) =>
         uploadedBy: user.id,
         fileName: file.name,
         fileData,
-        status: 'queued',
+        status: "queued",
         totalRows: rowCount,
       })
       .returning({ id: productImportBatches.id });
@@ -108,7 +111,7 @@ export const queueProductImport = async (formData: FormData) =>
 
     return {
       error: false,
-      message: 'Import queued. You will be notified when it completes.',
+      message: "Import queued. You will be notified when it completes.",
       data: { batchId },
     };
   });
