@@ -11,6 +11,10 @@ import {
   MAX_IMPORT_ROWS,
   PRODUCTS_IMPORT_EVENT,
 } from '@/features/procurement/services/products-import/constants';
+import {
+  headersMatchTemplate,
+  readWorksheetHeaders,
+} from '@/features/procurement/services/products-import/template-validation';
 import { revalidateProductImportBatches } from '@/features/procurement/utils/cache';
 import { productImportHeaderSchema } from '@/features/procurement/utils/products-import/schemas';
 import { inngest } from '@/inngest/client';
@@ -24,21 +28,6 @@ const IMPORT_ACTION_PERMISSIONS = [
   'store:admin',
   'store:standard',
 ] as const;
-
-export function readWorksheetHeaders(worksheet: ExcelJS.Worksheet): Array<string> {
-  const headerRow = worksheet.getRow(1);
-  return IMPORT_TEMPLATE_HEADERS.map((_, index) =>
-    String(headerRow.getCell(index + 1).value ?? '')
-      .trim()
-      .toLowerCase(),
-  );
-}
-
-export function headersMatchTemplate(headers: Array<string>): boolean {
-  return IMPORT_TEMPLATE_HEADERS.every(
-    (expected, index) => headers[index]?.trim().toLowerCase() === expected,
-  );
-}
 
 export const queueProductImport = async (formData: FormData) =>
   runAction('queueProductImport', async () => {

@@ -1,11 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-// Same pattern used in src/features/store/services/product-deactivation/actions.test.ts —
-// mock session/permissions so importing this file doesn't pull in `server-only` guards.
-vi.mock('@/lib/session', () => ({ getCurrentUser: vi.fn() }));
-vi.mock('@/lib/permissions/guards', () => ({ requireAnyPermission: vi.fn() }));
-
-import { headersMatchTemplate } from '@/features/procurement/services/products-import/actions';
+import { headersMatchTemplate } from '@/features/procurement/services/products-import/template-validation';
 
 describe('headersMatchTemplate', () => {
   it('accepts the exact template headers', () => {
