@@ -1,7 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
+import type { ServiceFormValues } from "@/features/procurement/utils/procurement.types";
 
 import db from "@/drizzle/db";
 import { services } from "@/drizzle/schema";
@@ -12,20 +14,18 @@ import {
 import { revalidateServices } from "@/features/procurement/utils/cache";
 import { serviceSchema } from "@/features/procurement/utils/schemas";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
-import { toDecimalNumber } from "@/lib/helpers/numbers";
+import { toNumber } from "@/lib/helpers/numbers";
 import {
   requireAnyPermission,
   requirePermission,
 } from "@/lib/permissions/guards";
 import { normalizeString } from "@/lib/string-normalizers";
 
-import type { ServiceFormValues } from "../../utils/procurement.types";
-
 const buildServicePayload = (values: ServiceFormValues) => {
   return {
     id: values.id ?? crypto.randomUUID(),
     serviceName: normalizeString(values.serviceName),
-    serviceFee: toDecimalNumber(values.serviceFee),
+    serviceFee: toNumber(values.serviceFee),
     active: values.id ? values.active : true,
   };
 };
@@ -36,31 +36,37 @@ export const upsertService = async (values: unknown) =>
     const data = parseOrFail(serviceSchema, values);
 
     if (data.id) {
-      const service = await getService(data.id);
-      if (!service) {
+      const [updated] = await db
+        .update(services)
+        .set(buildServicePayload(data))
+        .where(eq(services.id, data.id))
+        .returning({ id: services.id });
+
+      if (!updated) {
         return {
           error: true,
           message: "Service not found.",
         };
       }
+
+      revalidateServices(updated.id);
+
+      return {
+        error: false,
+        message: "Service updated successfully.",
+      };
     }
 
     const [{ id }] = await db
       .insert(services)
       .values(buildServicePayload(data))
-      .onConflictDoUpdate({
-        target: services.id,
-        set: buildServicePayload(data),
-      })
       .returning({ id: services.id });
 
     revalidateServices(id);
 
     return {
       error: false,
-      message: data.id
-        ? "Service updated successfully."
-        : "Service created successfully.",
+      message: "Service created successfully.",
     };
   });
 
@@ -104,25 +110,25 @@ export const toggleServiceState = async (serviceId: string) => {
       };
     }
 
-    const service = await getService(serviceId);
-    if (!service) {
+    const [updated] = await db
+      .update(services)
+      .set({ active: sql`not ${services.active}` })
+      .where(eq(services.id, serviceId))
+      .returning({ active: services.active });
+
+    if (!updated) {
       return {
         error: true,
         message: "Service not found.",
       };
     }
 
-    await db
-      .update(services)
-      .set({ active: !service.active })
-      .where(eq(services.id, serviceId));
-
     revalidateServices(serviceId);
 
     return {
       error: false,
       message: `Service ${
-        service.active ? "deactivated" : "activated"
+        updated.active ? "activated" : "deactivated"
       } successfully.`,
     };
   } catch (error) {
