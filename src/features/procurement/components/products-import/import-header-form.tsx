@@ -1,7 +1,7 @@
 "use client";
 
 import { useSelector } from "@tanstack/react-store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import type { Option } from "@/types/index.types";
@@ -49,6 +49,10 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
       });
     },
   });
+
+  useEffect(() => {
+    form.reset();
+  }, [form]);
 
   const [isSubmitting, storeId, asOfDate] = useSelector(form.store, (state) => [
     state.isSubmitting,
@@ -102,7 +106,9 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
       </div>
 
       <div className="space-y-3 rounded-lg border bg-card p-6 shadow-sm">
-        <p className="text-sm font-semibold text-card-foreground">Download Template</p>
+        <p className="text-sm font-semibold text-card-foreground">
+          Download Template
+        </p>
         <Button
           type="button"
           variant="outline"
@@ -114,7 +120,9 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
       </div>
 
       <div className="space-y-3 rounded-lg border bg-card p-6 shadow-sm">
-        <p className="text-sm font-semibold text-card-foreground">Upload Completed Template</p>
+        <p className="text-sm font-semibold text-card-foreground">
+          Upload Completed Template
+        </p>
         <UploadDropzone
           disabled={!isConfigured}
           file={file}
@@ -122,7 +130,10 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
           onFileCleared={() => setFile(null)}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={!isConfigured || !file || isSubmitting}>
+          <Button
+            type="submit"
+            disabled={!isConfigured || !file || isSubmitting}
+          >
             {isSubmitting ? "Validating…" : "Validate & Import"}
           </Button>
         </div>
