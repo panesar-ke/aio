@@ -1,18 +1,21 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { DownloadIcon } from "lucide-react";
+import Link from "next/link";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import PageHeader from '@/components/custom/page-header';
-import Search from '@/components/custom/search';
-import { TableSkeleton } from '@/components/custom/table-skeleton';
-import { ProductsDataTable } from '@/features/procurement/components/products/products-datatable';
-import { getProducts } from '@/features/procurement/services/products/data';
+import PageHeader from "@/components/custom/page-header";
+import Search from "@/components/custom/search";
+import { TableSkeleton } from "@/components/custom/table-skeleton";
+import { Button } from "@/components/ui/button";
+import { ProductsDataTable } from "@/features/procurement/components/products/products-datatable";
+import { getProducts } from "@/features/procurement/services/products/data";
 
 type SearchParams = Promise<{ search?: string }>;
 
 export const metadata: Metadata = {
-  title: 'Products',
+  title: "Products",
 };
 
 export default function ProductsPage({
@@ -26,6 +29,14 @@ export default function ProductsPage({
         title="Products"
         description="Create and Manage your products."
         path="/procurement/products/new"
+        content={
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/procurement/products/import" prefetch={false}>
+              <DownloadIcon />
+              Import Products from Excel
+            </Link>
+          </Button>
+        }
       />
       <Search placeholder="Search products..." />
       <ErrorBoundary
@@ -34,7 +45,7 @@ export default function ProductsPage({
         <Suspense
           fallback={
             <TableSkeleton
-              columnWidths={['w-24', 'w-24', 'w-56', 'w-1']}
+              columnWidths={["w-24", "w-24", "w-56", "w-1"]}
               rowCount={10}
             />
           }
