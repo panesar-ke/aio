@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { revalidateTag } from "next/cache";
 
@@ -44,7 +44,45 @@ function parseCellNumber(value: ExcelJS.CellValue): number | null {
 }
 
 export const processProductImport = inngest.createFunction(
-  { id: "process-product-import" },
+  {
+    id: "process-product-import",
+    onFailure: async ({ event }) => {
+      const { batchId } = event.data.event.data;
+
+      const batch = await db.query.productImportBatches.findFirst({
+        where: (model, { eq: eqOp }) => eqOp(model.id, batchId),
+      });
+      if (
+        !batch ||
+        batch.status === "completed" ||
+        batch.status === "completed_with_errors" ||
+        batch.status === "failed"
+      ) {
+        return;
+      }
+
+      const rows = await db.query.productImportBatchRows.findMany({
+        where: (model, { eq: eqOp }) => eqOp(model.batchId, batchId),
+        columns: { status: true },
+      });
+      const successCount = rows.filter((row) => row.status === "success").length;
+      const failedCount = rows.length > 0 ? rows.length - successCount : batch.totalRows;
+
+      await db
+        .update(productImportBatches)
+        .set({
+          status: "failed",
+          completedAt: new Date(),
+          successRows: successCount,
+          failedRows: failedCount,
+        })
+        .where(eq(productImportBatches.id, batchId));
+
+      revalidateProductImportBatches(batchId);
+      revalidateTag(getProductsGlobalTag(), "max");
+      revalidateTag("stock-balance", "max");
+    },
+  },
   { event: PRODUCTS_IMPORT_EVENT },
   async ({ event, step }) => {
     const { batchId } = event.data;
@@ -57,12 +95,28 @@ export const processProductImport = inngest.createFunction(
       return record;
     });
 
-    await step.run("mark-processing", async () => {
-      await db
+    const claimed = await step.run("mark-processing", async () => {
+      const claimedRows = await db
         .update(productImportBatches)
         .set({ status: "processing", startedAt: new Date() })
-        .where(eq(productImportBatches.id, batchId));
+        .where(
+          and(
+            eq(productImportBatches.id, batchId),
+            eq(productImportBatches.status, "queued"),
+          ),
+        )
+        .returning({ id: productImportBatches.id });
+      return claimedRows.length > 0;
     });
+
+    // Inngest guarantees at-least-once event delivery, so a duplicate
+    // "products/import.requested" event can start a second, fully independent
+    // run for the same batch. The conditional update above only succeeds for
+    // whichever run gets there first; a second run finds the batch already
+    // out of "queued" and must stop here instead of double-processing rows.
+    if (!claimed) {
+      return { batchId, status: "skipped-duplicate" as const };
+    }
 
     const defaultsExist = await step.run("verify-defaults", async () => {
       const [category, uom] = await Promise.all([

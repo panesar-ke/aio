@@ -1,6 +1,8 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import ExcelJS from "exceljs";
+import { revalidateTag } from "next/cache";
 
 import db from "@/drizzle/db";
 import { productImportBatches } from "@/drizzle/schema";
@@ -15,7 +17,10 @@ import {
   headersMatchTemplate,
   readWorksheetHeaders,
 } from "@/features/procurement/services/products-import/template-validation";
-import { revalidateProductImportBatches } from "@/features/procurement/utils/cache";
+import {
+  getProductsGlobalTag,
+  revalidateProductImportBatches,
+} from "@/features/procurement/utils/cache";
 import { productImportHeaderSchema } from "@/features/procurement/utils/products-import/schemas";
 import { inngest } from "@/inngest/client";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
@@ -105,9 +110,30 @@ export const queueProductImport = async (formData: FormData) =>
       })
       .returning({ id: productImportBatches.id });
 
-    await inngest.send({ name: PRODUCTS_IMPORT_EVENT, data: { batchId } });
+    try {
+      await inngest.send({ name: PRODUCTS_IMPORT_EVENT, data: { batchId } });
+    } catch (error) {
+      console.error("Error dispatching product import event:", error);
+      await db
+        .update(productImportBatches)
+        .set({
+          status: "failed",
+          completedAt: new Date(),
+          failedRows: rowCount,
+        })
+        .where(eq(productImportBatches.id, batchId));
+
+      revalidateProductImportBatches(batchId);
+
+      return {
+        error: true,
+        message: "Failed to queue the import. Please try again.",
+      };
+    }
 
     revalidateProductImportBatches(batchId);
+    revalidateTag(getProductsGlobalTag(), "max");
+    revalidateTag("stock-balance", "max");
 
     return {
       error: false,
