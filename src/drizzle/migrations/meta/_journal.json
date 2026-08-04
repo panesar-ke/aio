@@ -225,6 +225,13 @@
       "when": 1785740708793,
       "tag": "0031_productive_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1785833832747,
+      "tag": "0032_worthless_overlord",
+      "breakpoints": true
     }
   ]
 }
