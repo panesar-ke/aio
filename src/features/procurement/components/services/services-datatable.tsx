@@ -1,19 +1,20 @@
-'use client';
-import type { ColumnDef } from '@tanstack/react-table';
+"use client";
+import type { ColumnDef } from "@tanstack/react-table";
 
-import Link from 'next/link';
+import Link from "next/link";
 
-import type { Service } from '@/features/procurement/utils/procurement.types';
+import type { Service } from "@/features/procurement/utils/procurement.types";
 
-import { DeleteAction, EditAction } from '@/components/custom/custom-button';
-import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
-import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
-import { DataTable } from '@/components/custom/datatable';
-import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
-import { CustomStatusBadge } from '@/components/custom/status-badges';
-import { ActionButton } from '@/components/ui/action-button';
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { deleteService } from '@/features/procurement/services/services/actions';
+import { PermissionGate } from "@/components/auth/client-permission-gate";
+import { DeleteAction, EditAction } from "@/components/custom/custom-button";
+import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
+import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
+import { DataTable } from "@/components/custom/datatable";
+import { DataTableColumnHeader } from "@/components/custom/datatable-column-header";
+import { CustomStatusBadge } from "@/components/custom/status-badges";
+import { ActionButton } from "@/components/ui/action-button";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { deleteService } from "@/features/procurement/services/services/actions";
 
 export function ServicesDataTable({ services }: { services: Array<Service> }) {
   async function handleDelete(serviceId: string) {
@@ -23,7 +24,7 @@ export function ServicesDataTable({ services }: { services: Array<Service> }) {
 
   const columns: Array<ColumnDef<Service>> = [
     {
-      accessorKey: 'serviceName',
+      accessorKey: "serviceName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Service Name" />
       ),
@@ -34,7 +35,7 @@ export function ServicesDataTable({ services }: { services: Array<Service> }) {
       }) => serviceName.toUpperCase(),
     },
     {
-      accessorKey: 'active',
+      accessorKey: "active",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
@@ -42,14 +43,14 @@ export function ServicesDataTable({ services }: { services: Array<Service> }) {
         const isActive = Boolean(row.original.active);
         return (
           <CustomStatusBadge
-            variant={isActive ? 'success' : 'warning'}
-            text={isActive ? 'Active' : 'Inactive'}
+            variant={isActive ? "success" : "warning"}
+            text={isActive ? "Active" : "Inactive"}
           />
         );
       },
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({
         row: {
           original: { id },
@@ -63,15 +64,16 @@ export function ServicesDataTable({ services }: { services: Array<Service> }) {
                 <EditAction />
               </Link>
             </DropdownMenuItem>
-
-            <ActionButton
-              variant="ghost"
-              className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
-              action={handleDelete.bind(null, id)}
-              requireAreYouSure={true}
-            >
-              <DeleteAction />
-            </ActionButton>
+            <PermissionGate permissions={["procurement:admin"]}>
+              <ActionButton
+                variant="ghost"
+                className="px-1.5 py-1.5 justify-start h-auto w-full flex transition-colors hover:bg-destructive/20 focus:outline-0"
+                action={handleDelete.bind(null, id)}
+                requireAreYouSure={true}
+              >
+                <DeleteAction />
+              </ActionButton>
+            </PermissionGate>
           </CustomDropdownContent>
         </DropdownMenu>
       ),

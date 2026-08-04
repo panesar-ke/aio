@@ -1,35 +1,21 @@
-'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { type Resolver, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+"use client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
+import { SaveIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import type {
   Service,
   ServiceFormValues,
-} from '@/features/procurement/utils/procurement.types';
+} from "@/features/procurement/utils/procurement.types";
 
-import { FormActions } from '@/components/custom/form-actions';
-import { ToastContent } from '@/components/custom/toast';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useModal } from '@/features/integrations/modal-provider';
-import {
-  createService,
-  updateService,
-} from '@/features/procurement/services/services/actions';
-import { serviceSchema } from '@/features/procurement/utils/schemas';
-import { cn } from '@/lib/utils';
+import { FormSectionHeader } from "@/components/custom/form-header";
+import { useModal } from "@/features/integrations/modal-provider";
+import { upsertService } from "@/features/procurement/services/services/actions";
+import { serviceSchema } from "@/features/procurement/utils/schemas";
+import { useAppForm } from "@/lib/form";
+import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
+import { cn } from "@/lib/utils";
 
 export function ServiceForm({
   service,
@@ -41,119 +27,99 @@ export function ServiceForm({
   const queryClient = useQueryClient();
   const { setClose } = useModal();
   const router = useRouter();
-  const form = useForm<ServiceFormValues>({
-    defaultValues: {
-      serviceFee: service?.serviceFee ?? 0,
-      serviceName: service?.serviceName.toUpperCase() ?? '',
-      active: service?.active ?? true,
+  const isEdit = !!service?.id;
+
+  const form = useAppForm({
+    defaultValues:
+      service ??
+      ({
+        serviceName: "",
+        active: true,
+        id: null,
+      } as ServiceFormValues),
+    validators: {
+      onSubmit: serviceSchema,
     },
-    resolver: zodResolver(serviceSchema) as Resolver<ServiceFormValues>,
+
+    onSubmit: async ({ value }) => {
+      await handleSubmitFeedback({
+        action: () => upsertService(value),
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} service`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} service. Please try again.`,
+        onSuccess: () => {
+          form.reset();
+          queryClient.invalidateQueries({ queryKey: ["services"] });
+          if (!fromModal) {
+            router.push("/procurement/services");
+          } else {
+            setClose();
+          }
+        },
+      });
+    },
   });
 
-  const isPending = form.formState.isSubmitting;
-
-  async function onSubmit(values: ServiceFormValues) {
-    const action = service
-      ? updateService.bind(null, service.id)
-      : createService;
-
-    const res = await action(values);
-    if (res.error) {
-      return toast.error(() => (
-        <ToastContent message={res.message} title="Something went wrong" />
-      ));
-    }
-    queryClient.invalidateQueries({ queryKey: ['services'] });
-    if (!fromModal && !service) {
-      router.push('/procurement/services');
-    }
-    if (fromModal) {
-      setClose();
-    }
-  }
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
     <div
-      className={cn('', {
-        'bg-card max-w-2xl mx-auto p-6 shadow-sm rounded-lg': !fromModal,
+      className={cn("", {
+        "bg-card max-w-2xl shadow-sm rounded-lg border": !fromModal,
       })}
     >
-      <Form {...form}>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <FormField
-            control={form.control}
-            name="serviceName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Service Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter service name"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Search for existing services first to avoid duplicates in the
-                  services list.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="serviceFee"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Service Fee</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    placeholder="Enter service fee"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {service && (
-            <FormField
-              control={form.control}
-              name="active"
-              render={({ field }) => (
-                <FormItem className="col-span-full flex items-center gap-2">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel>Active</FormLabel>
-                  <FormDescription>
-                    {!field.value
-                      ? 'Check if the service is active.'
-                      : 'Uncheck if the service is inactive.'}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+      {!fromModal && (
+        <FormSectionHeader
+          title="Services"
+          description="Enter the service details for this service."
+        />
+      )}
+      <form
+        className={cn("space-y-6", { "p-6": !fromModal })}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <form.AppField name="serviceName">
+          {(field) => (
+            <field.Input
+              required
+              label="Service Name"
+              placeholder="Enter service name"
             />
           )}
-          <FormActions
-            className="col-span-full"
-            resetFn={() => {
+        </form.AppField>
+        <form.AppField name="serviceFee">
+          {(field) => (
+            <field.Input type="number" label="Service Fee" placeholder="0.00" />
+          )}
+        </form.AppField>
+        {service && (
+          <form.AppField name="active">
+            {(field) => (
+              <field.Checkbox
+                label="Active"
+                helperText="Check if the service is active. Uncheck if the service is inactive."
+              />
+            )}
+          </form.AppField>
+        )}
+        <form.AppForm>
+          <form.SubmitButton
+            buttonText={service ? "Update Service" : "Create Service"}
+            icon={<SaveIcon />}
+            isLoading={isPending}
+            withReset
+            onReset={() => {
               form.reset();
               if (fromModal) {
                 setClose();
               }
             }}
-            isPending={isPending}
           />
-        </form>
-      </Form>
+        </form.AppForm>
+      </form>
     </div>
   );
 }
