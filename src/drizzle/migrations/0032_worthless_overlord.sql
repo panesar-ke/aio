@@ -1,0 +1,2 @@
+ALTER TABLE "product_deactivation_batches" ADD COLUMN "trigger_request_id" uuid;--> statement-breakpoint
+CREATE UNIQUE INDEX "product_deactivation_batches_trigger_request_id_idx" ON "product_deactivation_batches" USING btree ("trigger_request_id") WHERE "product_deactivation_batches"."trigger_request_id" is not null;

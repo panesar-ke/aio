@@ -8,6 +8,13 @@ type Events = {
       name: string;
     };
   };
+  "store/run.product-deactivation": {
+    data: {
+      requestId: string;
+      source: "vercel-cron";
+      triggeredAt: string;
+    };
+  };
 };
 
 export const inngest = new Inngest({
