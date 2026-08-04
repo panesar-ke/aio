@@ -7,6 +7,10 @@ import { sendUserNewPassword } from "@/inngest/functions/users";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [sendUserNewPassword, processProductImport, runStoreProductDeactivation],
+  functions: [
+    sendUserNewPassword,
+    processProductImport,
+    runStoreProductDeactivation,
+  ],
   streaming: "allow",
 });
