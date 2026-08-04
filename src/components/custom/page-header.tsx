@@ -1,10 +1,10 @@
-import type { LucideIcon } from 'lucide-react';
-import type { Route } from 'next';
+import type { LucideIcon } from "lucide-react";
+import type { Route } from "next";
 
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
   title: string;
@@ -33,19 +33,21 @@ export default function PageHeader({
           <p className="text-muted-foreground text-sm">{description}</p>
         )}
       </div>
-      {path && (
-        <Button size="lg" asChild className="sm:w-max">
-          <Link
-            href={path}
-            prefetch={false}
-            className="flex items-center gap-x-2"
-          >
-            {<Icon />}
-            <span>{buttonText || 'Create New'}</span>
-          </Link>
-        </Button>
-      )}
-      {content && content}
+      <div className="flex items-center gap-x-2">
+        {path && (
+          <Button size="lg" asChild className="sm:w-max">
+            <Link
+              href={path}
+              prefetch={false}
+              className="flex items-center gap-x-2"
+            >
+              {<Icon />}
+              <span>{buttonText || "Create New"}</span>
+            </Link>
+          </Button>
+        )}
+        {content && content}
+      </div>
     </header>
   );
 }
