@@ -3,7 +3,7 @@
   "crons": [
     { "path": "/api/cron/it-license-renewals", "schedule": "0 5 * * *" },
     { "path": "/api/cron/stock-balance-snapshot", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/store-product-deactivation", "schedule": "0 10 * * 2" }
+    { "path": "/api/cron/store-product-deactivation", "schedule": "0 11 * * 2" }
   ],
   "git": {
     "deploymentEnabled": {
