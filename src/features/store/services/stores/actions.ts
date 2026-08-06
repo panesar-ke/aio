@@ -1,29 +1,28 @@
-"use server";
+'use server';
 
-import { count, eq } from "drizzle-orm";
+import { count, eq } from 'drizzle-orm';
 
-import type { StoreFormValues } from "@/features/store/utils/store.types";
+import type { StoreFormValues } from '@/features/store/utils/store.types';
 
-import db from "@/drizzle/db";
-import { stockMovements, stores } from "@/drizzle/schema";
-import { getStore } from "@/features/store/services/stores/data";
-import { revalidateStoresTag } from "@/features/store/utils/cache";
-import { storeFormSchema } from "@/features/store/utils/schema";
-import { parseOrFail, runAction } from "@/lib/actions/safe-action";
-import { requireAnyPermission } from "@/lib/permissions/guards";
-import { normalizeString } from "@/lib/string-normalizers";
+import db from '@/drizzle/db';
+import { stockMovements, stores } from '@/drizzle/schema';
+import { getStore } from '@/features/store/services/stores/data';
+import { revalidateStoresTag } from '@/features/store/utils/cache';
+import { storeFormSchema } from '@/features/store/utils/schema';
+import { parseOrFail, runAction } from '@/lib/actions/safe-action';
+import { requireAnyPermission } from '@/lib/permissions/guards';
+import { normalizeString } from '@/lib/string-normalizers';
 
 const buildStorePayload = (values: StoreFormValues) => {
   return {
-    id: values.id ?? crypto.randomUUID(),
     storeName: normalizeString(values.storeName),
     description: normalizeString(values.description),
   };
 };
 
 export const upsertStore = async (values: unknown) =>
-  runAction("upsert-store", async () => {
-    await requireAnyPermission(["store:admin", "store:standard"]);
+  runAction('upsert-store', async () => {
+    await requireAnyPermission(['store:admin', 'store:standard']);
     const data = parseOrFail(storeFormSchema, values);
 
     if (data.id) {
@@ -31,37 +30,39 @@ export const upsertStore = async (values: unknown) =>
       if (!store) {
         return {
           error: true,
-          message: "Store not found. It may have been deleted.",
+          message: 'Store not found. It may have been deleted.',
         };
       }
+
+      await db
+        .update(stores)
+        .set(buildStorePayload(data))
+        .where(eq(stores.id, data.id));
+
+      revalidateStoresTag(data.id);
+      return {
+        error: false,
+        message: 'Store updated successfully.',
+      };
     }
 
     const [{ id }] = await db
       .insert(stores)
       .values(buildStorePayload(data))
-      .onConflictDoUpdate({
-        target: stores.id,
-        set: buildStorePayload(data),
-      })
       .returning({ id: stores.id });
 
     revalidateStoresTag(id);
-    return {
-      error: false,
-      message: data.id
-        ? "Store updated successfully."
-        : "Store created successfully.",
-    };
+    return { error: false, message: 'Store created successfully.' };
   });
 
 export const deleteStore = async (storeId: string) =>
-  runAction("delete-store", async () => {
-    await requireAnyPermission(["store:admin"]);
+  runAction('delete-store', async () => {
+    await requireAnyPermission(['store:admin']);
     const store = await getStore(storeId);
     if (!store) {
       return {
         error: true,
-        message: "Store not found. It may have already been deleted.",
+        message: 'Store not found. It may have already been deleted.',
       };
     }
 
@@ -73,7 +74,7 @@ export const deleteStore = async (storeId: string) =>
     if (totalCount > 0) {
       return {
         error: true,
-        message: "Cannot delete store with existing stock movements.",
+        message: 'Cannot delete store with existing stock movements.',
       };
     }
 
@@ -82,6 +83,6 @@ export const deleteStore = async (storeId: string) =>
 
     return {
       error: false,
-      message: "Store deleted successfully!",
+      message: 'Store deleted successfully!',
     };
   });
