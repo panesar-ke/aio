@@ -1,138 +1,87 @@
-'use server';
+"use server";
 
-import { count, eq } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
+import { count, eq } from "drizzle-orm";
 
-import type { StoreFormValues } from '@/features/store/utils/store.types';
-import type { ActionResult } from '@/lib/actions/types';
+import type { StoreFormValues } from "@/features/store/utils/store.types";
 
-import db from '@/drizzle/db';
-import { stockMovements, stores } from '@/drizzle/schema';
-import { getStore } from '@/features/store/services/stores/data';
-import { revalidateStoresTag } from '@/features/store/utils/cache';
-import { storeFormSchema } from '@/features/store/utils/schema';
-import { validateFields } from '@/lib/action-validator';
-import { redirectActionResult } from '@/lib/actions/results';
+import db from "@/drizzle/db";
+import { stockMovements, stores } from "@/drizzle/schema";
+import { getStore } from "@/features/store/services/stores/data";
+import { revalidateStoresTag } from "@/features/store/utils/cache";
+import { storeFormSchema } from "@/features/store/utils/schema";
+import { parseOrFail, runAction } from "@/lib/actions/safe-action";
+import { requireAnyPermission } from "@/lib/permissions/guards";
+import { normalizeString } from "@/lib/string-normalizers";
 
-const validateStoreData = (values: StoreFormValues) => {
-  const { error, data } = validateFields<StoreFormValues>(
-    values,
-    storeFormSchema
-  );
-
-  if (error !== null) {
-    return {
-      isValid: false,
-      error: {
-        error: true,
-        message: 'Invalid store data. Please check all required fields.',
-      },
-      data: null,
-    };
-  }
-
+const buildStorePayload = (values: StoreFormValues) => {
   return {
-    isValid: true,
-    error: null,
-    data,
+    id: values.id ?? crypto.randomUUID(),
+    storeName: normalizeString(values.storeName),
+    description: normalizeString(values.description),
   };
 };
 
-const handleDatabaseError = (
-  error: unknown,
-  operation: string
-): ActionResult => {
-  console.error(`Failed to ${operation} store:`, error);
-  return {
-    error: true,
-    message: `Failed to ${operation} store. Please try again.`,
-  };
-};
+export const upsertStore = async (values: unknown) =>
+  runAction("upsert-store", async () => {
+    await requireAnyPermission(["store:admin", "store:standard"]);
+    const data = parseOrFail(storeFormSchema, values);
 
-export const createStore = async (
-  values: StoreFormValues
-): Promise<ActionResult> => {
-  const validation = validateStoreData(values);
-  if (!validation.isValid) {
-    return validation.error!;
-  }
+    if (data.id) {
+      const store = await getStore(data.id);
+      if (!store) {
+        return {
+          error: true,
+          message: "Store not found. It may have been deleted.",
+        };
+      }
+    }
 
-  try {
     const [{ id }] = await db
       .insert(stores)
-      .values(validation.data!)
+      .values(buildStorePayload(data))
+      .onConflictDoUpdate({
+        target: stores.id,
+        set: buildStorePayload(data),
+      })
       .returning({ id: stores.id });
 
     revalidateStoresTag(id);
-  } catch (error) {
-    return handleDatabaseError(error, 'create');
-  }
-
-  return redirectActionResult('/store/stores', 'Store created successfully.');
-};
-
-export const updateStore = async (
-  id: string,
-  values: StoreFormValues
-): Promise<ActionResult> => {
-  const validation = validateStoreData(values);
-  if (!validation.isValid) {
-    return validation.error!;
-  }
-
-  const store = await getStore(id);
-  if (!store) {
     return {
-      error: true,
-      message: 'Store not found. It may have been deleted.',
+      error: false,
+      message: data.id
+        ? "Store updated successfully."
+        : "Store created successfully.",
     };
-  }
+  });
 
-  try {
-    await db
-      .update(stores)
-      .set(validation.data!)
-      .where(eq(stores.id, id))
-      .returning({ id: stores.id });
-
-    revalidateStoresTag(id);
-  } catch (error) {
-    return handleDatabaseError(error, 'update');
-  }
-
-  return redirectActionResult('/store/stores', 'Store updated successfully.');
-};
-
-export const deleteStore = async (id: string): Promise<ActionResult> => {
-  try {
-    const store = await getStore(id);
+export const deleteStore = async (storeId: string) =>
+  runAction("delete-store", async () => {
+    await requireAnyPermission(["store:admin"]);
+    const store = await getStore(storeId);
     if (!store) {
       return {
         error: true,
-        message: 'Store not found. It may have already been deleted.',
+        message: "Store not found. It may have already been deleted.",
       };
     }
 
     const [{ count: totalCount }] = await db
       .select({ count: count(stockMovements.id) })
       .from(stockMovements)
-      .where(eq(stockMovements.storeId, id));
+      .where(eq(stockMovements.storeId, storeId));
 
     if (totalCount > 0) {
       return {
         error: true,
-        message: 'Cannot delete store with existing stock movements.',
+        message: "Cannot delete store with existing stock movements.",
       };
     }
 
-    await db.delete(stores).where(eq(stores.id, id));
-    revalidateStoresTag(id);
-  } catch (error) {
-    return handleDatabaseError(
-      error,
-      'Cannot delete store with existing stock movements. Please remove all references first.'
-    );
-  }
+    await db.delete(stores).where(eq(stores.id, storeId));
+    revalidateStoresTag(storeId);
 
-  return redirect('/store/stores');
-};
+    return {
+      error: false,
+      message: "Store deleted successfully!",
+    };
+  });

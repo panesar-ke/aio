@@ -1,16 +1,19 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import {
+  nullableTrimmedString,
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
   requiredDateSchemaEntry,
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
-} from '@/lib/schema-rules';
+  requiredTrimmedStringSchemaEntry,
+} from "@/lib/schema-rules";
 
 export const storeFormSchema = z.object({
-  storeName: requiredStringSchemaEntry('Store name is required'),
-  description: requiredStringSchemaEntry('Description is required'),
+  id: nullableTrimmedString,
+  storeName: requiredTrimmedStringSchemaEntry("Store name is required"),
+  description: requiredTrimmedStringSchemaEntry("Description is required"),
 });
 
 // z.coerce.number() coerces the raw input to NaN before the `error` map sees
@@ -20,12 +23,12 @@ export const storeFormSchema = z.object({
 const requiredQtySchemaEntry = () =>
   z.unknown().transform((val, ctx) => {
     if (val === undefined) {
-      ctx.addIssue({ code: 'custom', message: 'Field is required' });
+      ctx.addIssue({ code: "custom", message: "Field is required" });
       return z.NEVER;
     }
     const num = Number(val);
     if (Number.isNaN(num)) {
-      ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
+      ctx.addIssue({ code: "custom", message: "Field must be a number" });
       return z.NEVER;
     }
     return num;
@@ -33,36 +36,36 @@ const requiredQtySchemaEntry = () =>
 
 export const grnFormSchema = z.object({
   receiptDate: requiredDateSchemaEntry(),
-  orderId: requiredStringSchemaEntry('Order is required'),
+  orderId: requiredStringSchemaEntry("Order is required"),
   invoiceNo: optionalStringSchemaEntry(),
-  vendorId: requiredStringSchemaEntry('Vendor is required'),
-  vendorName: requiredStringSchemaEntry('Vendor is required'),
-  storeId: requiredStringSchemaEntry('Store is required'),
+  vendorId: requiredStringSchemaEntry("Vendor is required"),
+  vendorName: requiredStringSchemaEntry("Vendor is required"),
+  storeId: requiredStringSchemaEntry("Store is required"),
   items: z.array(
     z.object({
-      id: requiredStringSchemaEntry('ID is required'),
-      itemId: requiredStringSchemaEntry('Item is required'),
-      productName: requiredStringSchemaEntry('Item is required'),
+      id: requiredStringSchemaEntry("ID is required"),
+      itemId: requiredStringSchemaEntry("Item is required"),
+      productName: requiredStringSchemaEntry("Item is required"),
       orderedQty: requiredQtySchemaEntry(),
       qty: requiredQtySchemaEntry(),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
-    })
+    }),
   ),
 });
 
 export const materialTransferFormSchema = z
   .object({
     transferDate: requiredDateSchemaEntry(),
-    fromStoreId: requiredStringSchemaEntry('From store is required'),
-    toStoreId: requiredStringSchemaEntry('To store is required'),
+    fromStoreId: requiredStringSchemaEntry("From store is required"),
+    toStoreId: requiredStringSchemaEntry("To store is required"),
     items: z.array(
       z
         .object({
-          id: requiredStringSchemaEntry('ID is required'),
-          itemId: requiredStringSchemaEntry('Item is required'),
+          id: requiredStringSchemaEntry("ID is required"),
+          itemId: requiredStringSchemaEntry("Item is required"),
           transferredQty: requiredNumberSchemaEntry(
-            'Transferred Qty is required'
+            "Transferred Qty is required",
           ),
           stockBalance: optionalNumberSchemaEntry(),
           remarks: optionalStringSchemaEntry(),
@@ -71,52 +74,52 @@ export const materialTransferFormSchema = z
           if (transferredQty > (stockBalance ?? 0)) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: 'Transferred Qty cannot be greater than Stock Balance',
-              path: ['transferredQty'],
+              message: "Transferred Qty cannot be greater than Stock Balance",
+              path: ["transferredQty"],
             });
           }
-        })
+        }),
     ),
   })
   .superRefine(({ fromStoreId, toStoreId, items }, ctx) => {
     if (fromStoreId === toStoreId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'From and To stores must be different',
-        path: ['toStoreId'],
+        message: "From and To stores must be different",
+        path: ["toStoreId"],
       });
     }
     if (items.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'At least one item is required',
-        path: ['items'],
+        message: "At least one item is required",
+        path: ["items"],
       });
     }
-    const itemIds = items.map(item => item.itemId);
+    const itemIds = items.map((item) => item.itemId);
     if (new Set(itemIds).size !== itemIds.length) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Items must have unique IDs',
+        message: "Items must have unique IDs",
       });
     }
   });
 
 export const materialIssueFormSchema = z.object({
-  issueNo: requiredNumberSchemaEntry('Issue No is required'),
+  issueNo: requiredNumberSchemaEntry("Issue No is required"),
   issueDate: requiredDateSchemaEntry(),
-  staffIssued: requiredStringSchemaEntry('Staff is required.'),
-  fromStoreId: requiredStringSchemaEntry('From store is required.'),
+  staffIssued: requiredStringSchemaEntry("Staff is required."),
+  fromStoreId: requiredStringSchemaEntry("From store is required."),
   notes: optionalStringSchemaEntry(),
   jobcardNo: optionalStringSchemaEntry(),
   items: z.array(
     z.object({
-      id: requiredStringSchemaEntry('ID is required'),
-      itemId: requiredStringSchemaEntry('Item is required'),
-      stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
+      id: requiredStringSchemaEntry("ID is required"),
+      itemId: requiredStringSchemaEntry("Item is required"),
+      stockBalance: requiredNumberSchemaEntry("Stock Balance is required"),
       issuedQty: requiredQtySchemaEntry(),
       remarks: optionalStringSchemaEntry(),
-    })
+    }),
   ),
 });
 
@@ -127,16 +130,16 @@ const dateRangeOrderRefinement = (
   if (from && to && from > to) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ['to'],
-      message: 'To date must be later than from date',
+      path: ["to"],
+      message: "To date must be later than from date",
     });
   }
 };
 
 const stockMovementReportFilterFields = {
-  storeId: requiredStringSchemaEntry('Store is required'),
-  from: z.string().date('Start date must be a valid date'),
-  to: z.string().date('End date must be a valid date'),
+  storeId: requiredStringSchemaEntry("Store is required"),
+  from: z.string().date("Start date must be a valid date"),
+  to: z.string().date("End date must be a valid date"),
 };
 
 export const stockMovementReportFilterSchema = z
@@ -148,7 +151,7 @@ export const stockMovementReportSchema = z
     ...stockMovementReportFilterFields,
     page: z.coerce.number().int().min(1),
     pageSize: z.coerce.number().int().min(1).max(100),
-    sortDir: z.enum(['asc', 'desc']),
+    sortDir: z.enum(["asc", "desc"]),
     search: optionalStringSchemaEntry(),
   })
   .superRefine(dateRangeOrderRefinement);
@@ -156,25 +159,28 @@ export const stockMovementReportSchema = z
 export const conversionSchema = z.object({
   conversionDate: z.unknown().transform((val, ctx) => {
     if (val === undefined) {
-      ctx.addIssue({ code: 'custom', message: 'Conversion date is required.' });
+      ctx.addIssue({ code: "custom", message: "Conversion date is required." });
       return z.NEVER;
     }
     const date = new Date(val as string | number | Date);
     if (Number.isNaN(date.getTime())) {
-      ctx.addIssue({ code: 'custom', message: 'Conversion date must be a valid date.' });
+      ctx.addIssue({
+        code: "custom",
+        message: "Conversion date must be a valid date.",
+      });
       return z.NEVER;
     }
     return date;
   }),
-  finalProduct: z.string().min(1, 'Select item converting to.'),
-  convertedQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
+  finalProduct: z.string().min(1, "Select item converting to."),
+  convertedQty: z.coerce.number().min(1, "Enter a valid quantity."),
   convertingItems: z.array(
     z.object({
-      id: z.string().min(1, 'ID is required.'),
-      itemId: z.string().min(1, 'Item is required.'),
+      id: z.string().min(1, "ID is required."),
+      itemId: z.string().min(1, "Item is required."),
       stockBalance: z.coerce.number().optional(),
-      convertingQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
+      convertingQty: z.coerce.number().min(1, "Enter a valid quantity."),
       remarks: z.string().optional(),
-    })
+    }),
   ),
 });

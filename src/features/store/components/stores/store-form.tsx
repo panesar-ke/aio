@@ -1,102 +1,86 @@
-'use client';
+"use client";
 
-import type { Route } from 'next';
+import { useSelector } from "@tanstack/react-store";
+import { SaveIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+import type { Store } from "@/features/store/utils/store.types";
 
-import type {
-  Store,
-  StoreFormValues,
-} from '@/features/store/utils/store.types';
-
-import { FormActions } from '@/components/custom/form-actions';
-import { ToastContent } from '@/components/custom/toast';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  createStore,
-  updateStore,
-} from '@/features/store/services/stores/actions';
-import { storeFormSchema } from '@/features/store/utils/schema';
+import { FormSectionHeader } from "@/components/custom/form-header";
+import { upsertStore } from "@/features/store/services/stores/actions";
+import { storeFormSchema } from "@/features/store/utils/schema";
+import { useAppForm } from "@/lib/form";
+import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
 
 export function StoreForm({ store }: { store?: Store }) {
   const router = useRouter();
-  const form = useForm<StoreFormValues>({
-    defaultValues: store ?? {
-      description: '',
-      storeName: '',
+  const isEdit = !!store;
+  const form = useAppForm({
+    defaultValues: {
+      id: store?.id ?? null,
+      storeName: store?.storeName ?? "",
+      description: store?.description ?? "",
     },
-    resolver: zodResolver(storeFormSchema),
+    validators: {
+      onSubmit: storeFormSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await handleSubmitFeedback({
+        action: () => upsertStore(value),
+        errorTitle: `Error ${isEdit ? "updating" : "creating"} store`,
+        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
+        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} store. Please try again.`,
+        onSuccess: () => {
+          form.reset();
+          router.push("/store/stores");
+        },
+      });
+    },
   });
 
-  const isPending = form.formState.isSubmitting;
-  async function onSubmit(values: StoreFormValues) {
-    const action = store ? updateStore.bind(null, store.id) : createStore;
-    const res = await action(values);
-    if (res.error) {
-      toast.error(() => (
-        <ToastContent title="Error creating store" message={res.message} />
-      ));
-      return;
-    }
-    form.reset();
-    if ('redirectTo' in res && res.redirectTo) {
-      router.push(res.redirectTo as Route);
-    }
-  }
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <div className="rounded-md bg-card p-6 max-w-xl mx-auto shadow-sm">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="storeName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Store Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    disabled={isPending}
-                    placeholder="Enter store name"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <div className="max-w-xl rounded-md border bg-card shadow-sm">
+      <FormSectionHeader
+        title={`${store ? "Edit" : "Add"} Store`}
+        description="Provide store details below"
+      />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="space-y-4  p-6 "
+      >
+        <form.AppField name="storeName">
+          {(field) => (
+            <field.Input
+              required
+              label="Store Name"
+              placeholder="Enter store name"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="description">
+          {(field) => (
+            <field.Textarea
+              required
+              label="Store Description"
+              placeholder="Enter store description"
+              rows={10}
+            />
+          )}
+        </form.AppField>
+        <form.AppForm>
+          <form.SubmitButton
+            buttonText={store ? "Update Store" : "Create Store"}
+            isLoading={isPending}
+            withReset
+            icon={<SaveIcon />}
           />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    disabled={isPending}
-                    placeholder="Enter store description"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormActions resetFn={form.reset} isPending={isPending} />
-        </form>
-      </Form>
+        </form.AppForm>
+      </form>
     </div>
   );
 }
