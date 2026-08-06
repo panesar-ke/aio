@@ -1,16 +1,19 @@
 import { z } from 'zod';
 
 import {
+  nullableTrimmedString,
   optionalNumberSchemaEntry,
   optionalStringSchemaEntry,
   requiredDateSchemaEntry,
   requiredNumberSchemaEntry,
   requiredStringSchemaEntry,
+  requiredTrimmedStringSchemaEntry,
 } from '@/lib/schema-rules';
 
 export const storeFormSchema = z.object({
+  id: nullableTrimmedString,
   storeName: requiredStringSchemaEntry('Store name is required'),
-  description: requiredStringSchemaEntry('Description is required'),
+  description: requiredTrimmedStringSchemaEntry('Description is required'),
 });
 
 // z.coerce.number() coerces the raw input to NaN before the `error` map sees
@@ -47,7 +50,7 @@ export const grnFormSchema = z.object({
       qty: requiredQtySchemaEntry(),
       rate: optionalNumberSchemaEntry(),
       remarks: optionalStringSchemaEntry(),
-    })
+    }),
   ),
 });
 
@@ -62,7 +65,7 @@ export const materialTransferFormSchema = z
           id: requiredStringSchemaEntry('ID is required'),
           itemId: requiredStringSchemaEntry('Item is required'),
           transferredQty: requiredNumberSchemaEntry(
-            'Transferred Qty is required'
+            'Transferred Qty is required',
           ),
           stockBalance: optionalNumberSchemaEntry(),
           remarks: optionalStringSchemaEntry(),
@@ -75,7 +78,7 @@ export const materialTransferFormSchema = z
               path: ['transferredQty'],
             });
           }
-        })
+        }),
     ),
   })
   .superRefine(({ fromStoreId, toStoreId, items }, ctx) => {
@@ -93,7 +96,7 @@ export const materialTransferFormSchema = z
         path: ['items'],
       });
     }
-    const itemIds = items.map(item => item.itemId);
+    const itemIds = items.map((item) => item.itemId);
     if (new Set(itemIds).size !== itemIds.length) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -116,7 +119,7 @@ export const materialIssueFormSchema = z.object({
       stockBalance: requiredNumberSchemaEntry('Stock Balance is required'),
       issuedQty: requiredQtySchemaEntry(),
       remarks: optionalStringSchemaEntry(),
-    })
+    }),
   ),
 });
 
@@ -161,7 +164,10 @@ export const conversionSchema = z.object({
     }
     const date = new Date(val as string | number | Date);
     if (Number.isNaN(date.getTime())) {
-      ctx.addIssue({ code: 'custom', message: 'Conversion date must be a valid date.' });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Conversion date must be a valid date.',
+      });
       return z.NEVER;
     }
     return date;
@@ -175,6 +181,6 @@ export const conversionSchema = z.object({
       stockBalance: z.coerce.number().optional(),
       convertingQty: z.coerce.number().min(1, 'Enter a valid quantity.'),
       remarks: z.string().optional(),
-    })
+    }),
   ),
 });
