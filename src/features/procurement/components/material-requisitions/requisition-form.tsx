@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import toast from "react-hot-toast";
 
 import type {
   MaterialRequisitionFormValues,
@@ -20,7 +19,7 @@ import type {
 import type { Option } from "@/types/index.types";
 
 import FormHeader from "@/components/custom/form-header";
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
 import { LoadingSwap } from "@/components/ui/loading-swap";
@@ -109,12 +108,7 @@ export function RequisitionForm({
     ...formOpts,
     onSubmit: async ({ value }) => {
       if (value.details.length === 0) {
-        toast.error(() => (
-          <ToastContent
-            message="At least one item is required"
-            title="Validation Error"
-          />
-        ));
+        notify.error("Validation Error", "At least one item is required");
         return;
       }
 

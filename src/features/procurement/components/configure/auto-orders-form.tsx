@@ -2,14 +2,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2Icon } from 'lucide-react';
 import { type Resolver, useFieldArray, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { AutoOrderFormValues } from '@/features/procurement/utils/procurement.types';
 import type { Option } from '@/types/index.types';
 
 import { FormActions } from '@/components/custom/form-actions';
 import { SearchSelect } from '@/components/custom/search-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -59,12 +58,10 @@ export function AutoOrdersForm({
   async function onSubmit(values: AutoOrderFormValues) {
     const res = await createAutoOrder(values);
     if (res.error) {
-      return toast.error(() => (
-        <ToastContent
-          message={res.message || 'Auto order created successfully'}
-          title={res.error ? 'Something went wrong' : 'Success'}
-        />
-      ));
+      return notify.error(
+        'Something went wrong',
+        res.message || 'Auto order created successfully'
+      );
     }
   }
 

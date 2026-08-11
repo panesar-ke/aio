@@ -5,10 +5,9 @@ import type z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import { FormActions } from '@/components/custom/form-actions';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import {
   Form,
   FormControl,
@@ -40,13 +39,7 @@ export function ProjectForm() {
   async function onSubmit(values: ProjectFormValues) {
     const res = await createProject(values);
     if (res?.error) {
-      return toast(() => (
-        <ToastContent
-          title="Error processing this request"
-          message={res.message}
-          state="error"
-        />
-      ));
+      return notify.error('Error processing this request', res.message);
     }
     queryClient.invalidateQueries({
       queryKey: ['projects'],

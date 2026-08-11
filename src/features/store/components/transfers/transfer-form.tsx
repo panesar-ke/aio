@@ -9,7 +9,6 @@ import axios, { isAxiosError } from 'axios';
 import { Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { getTransfer } from '@/features/store/services/transfers/data';
 import type { MaterialTransferFormValues } from '@/features/store/utils/store.types';
@@ -18,7 +17,7 @@ import type { Option } from '@/types/index.types';
 import { FormActions } from '@/components/custom/form-actions';
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -75,9 +74,7 @@ export function TransferForm({
 
     const res = await action(data);
     if (res.error) {
-      toast.error(() => (
-        <ToastContent message={res.message} title="Transfer Failed" />
-      ));
+      notify.error('Transfer Failed', res.message);
       return;
     }
     form.reset();
@@ -192,10 +189,10 @@ function TransferDetails({
     } catch (error) {
       if (isAxiosError(error)) {
         const message = error.response?.data?.error || 'Unknown error';
-        toast.error(message);
+        notify.error(message);
       } else {
         console.error(error);
-        toast.error('Unknown error');
+        notify.error('Unknown error');
       }
     }
   }
@@ -261,7 +258,7 @@ function TransferDetails({
                                 item => item.itemId === value
                               );
                               if (productAlreadyAdded) {
-                                toast.error('Product already added');
+                                notify.error('Product already added');
                                 return;
                               }
                               field.onChange(value);
@@ -372,7 +369,7 @@ function TransferDetails({
           type="button"
           onClick={() => {
             if (!fromStoreId || !transferDate) {
-              return toast.error(
+              return notify.error(
                 'Please select From Store and Transfer Date first'
               );
             }

@@ -2,10 +2,10 @@
 
 import { useSelector } from "@tanstack/react-store";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 
 import type { Option } from "@/types/index.types";
 
+import { notify } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
 import { queueProductImport } from "@/features/procurement/services/products-import/actions";
@@ -28,7 +28,7 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
     validators: { onSubmit: productImportHeaderSchema },
     onSubmit: async ({ value }) => {
       if (!file) {
-        toast.error("Please select a file to import.");
+        notify.error("Please select a file to import.");
         return;
       }
 
@@ -67,7 +67,7 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
       `/api/procurement/products/import/template?storeId=${storeId}`,
     );
     if (!response.ok) {
-      toast.error("Failed to download template.");
+      notify.error("Failed to download template.");
       return;
     }
     const blob = await response.blob();
@@ -77,7 +77,10 @@ export function ImportHeaderForm({ stores, onQueued }: ImportHeaderFormProps) {
     link.download = "products_import_template.xlsx";
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Template downloaded. Fill it in, then upload it below.");
+    notify.success(
+      "Template downloaded",
+      "Fill it in, then upload it below.",
+    );
   }
 
   return (

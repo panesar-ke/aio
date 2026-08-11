@@ -1,10 +1,9 @@
 'use client';
-import toast from 'react-hot-toast';
 
 import type { User } from '@/features/admin/utils/admin.types';
 
 import PageHeader from '@/components/custom/page-header';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
 import {
@@ -45,9 +44,7 @@ export function UserForm({ user }: { user?: User }) {
     onSubmit: async ({ value }) => {
       const res = await upsertUser({ ...value, id: user?.id });
       if (res.error) {
-        toast.error(() => (
-          <ToastContent message={res.message} title="Oops! This is akward!" />
-        ));
+        notify.error('Oops! This is akward!', res.message);
         return;
       }
     },

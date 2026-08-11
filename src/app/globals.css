@@ -153,6 +153,16 @@
   --export-foreground: oklch(0% 0 0);
 }
 
+/* Countdown bar on toasts (see src/components/custom/toast.tsx) */
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

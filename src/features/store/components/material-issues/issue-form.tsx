@@ -9,7 +9,6 @@ import axios, { isAxiosError } from 'axios';
 import { Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { getMaterialIssue } from '@/features/store/services/issues/data';
 import type { MaterialIssueFormValues } from '@/features/store/utils/store.types';
@@ -18,7 +17,7 @@ import type { Option } from '@/types/index.types';
 import { FormActions } from '@/components/custom/form-actions';
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -81,12 +80,10 @@ export function IssueMaterialForm({
     const res = await action(values);
 
     if (res.error) {
-      toast.error(() => (
-        <ToastContent
-          title={`Error ${!issue ? 'creating' : 'updating'} issue`}
-          message={res.message}
-        />
-      ));
+      notify.error(
+        `Error ${!issue ? 'creating' : 'updating'} issue`,
+        res.message
+      );
       return;
     }
     form.reset();
@@ -231,10 +228,10 @@ function IssueDetails({
     } catch (error) {
       if (isAxiosError(error)) {
         const message = error.response?.data?.error || 'Unknown error';
-        toast.error(message);
+        notify.error(message);
       } else {
         console.error(error);
-        toast.error('Unknown error');
+        notify.error('Unknown error');
       }
     }
   }
@@ -300,7 +297,7 @@ function IssueDetails({
                                 item => item.itemId === value
                               );
                               if (productAlreadyAdded) {
-                                toast.error('Product already added');
+                                notify.error('Product already added');
                                 return;
                               }
                               field.onChange(value);
@@ -410,7 +407,7 @@ function IssueDetails({
           type="button"
           onClick={() => {
             if (!fromStoreId || !issueDate) {
-              return toast.error(
+              return notify.error(
                 'Please select From Store and Transfer Date first'
               );
             }

@@ -2,14 +2,13 @@
 import type { ColumnDef, RowSelectionState } from '@tanstack/react-table';
 
 import { useState, useTransition } from 'react';
-import toast from 'react-hot-toast';
 
 import type { getDeactivationBatch } from '@/features/store/services/product-deactivation/data';
 
 import { DataTable } from '@/components/custom/datatable';
 import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
 import { CustomStatusBadge } from '@/components/custom/status-badges';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -36,9 +35,7 @@ export function BatchItemsDatatable({ items }: { items: Array<ItemRow> }) {
     startReactivating(async () => {
       const result = await reactivateItems(itemIds);
       if (result.error) {
-        toast.error(() => (
-          <ToastContent title="Something went wrong" message={result.message} />
-        ));
+        notify.error('Something went wrong', result.message);
         return;
       }
       setRowSelection({});
@@ -50,9 +47,7 @@ export function BatchItemsDatatable({ items }: { items: Array<ItemRow> }) {
     const result = await excludeProductFromAutoDeactivation(productId);
     setExcludingId(null);
     if (result.error) {
-      toast.error(() => (
-        <ToastContent title="Something went wrong" message={result.message} />
-      ));
+      notify.error('Something went wrong', result.message);
     }
   }
 

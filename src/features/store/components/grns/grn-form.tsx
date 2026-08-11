@@ -8,7 +8,6 @@ import axios from 'axios';
 import { TrashIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFieldArray, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { GrnFormValues } from '@/features/store/utils/store.types';
 import type { Option } from '@/types/index.types';
@@ -17,7 +16,7 @@ import { FormActions } from '@/components/custom/form-actions';
 import { MiniSelect } from '@/components/custom/mini-select';
 import { SearchSelect } from '@/components/custom/search-select';
 // import { MiniSelect } from '@/components/custom/mini-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -91,9 +90,7 @@ export function GrnForm({
     const action = createGrn;
     const res = await action(values);
     if (res.error) {
-      toast.error(() => (
-        <ToastContent title="Error saving GRN" message={res.message} />
-      ));
+      notify.error('Error saving GRN', res.message);
       return;
     }
     form.reset();
@@ -123,12 +120,7 @@ export function GrnForm({
         }))
       );
     } catch (error) {
-      toast.error(() => (
-        <ToastContent
-          title="Error fetching order details"
-          message={apiErrorHandler(error)}
-        />
-      ));
+      notify.error('Error fetching order details', apiErrorHandler(error));
     }
   }
   return (

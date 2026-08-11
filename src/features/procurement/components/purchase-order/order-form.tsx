@@ -3,7 +3,6 @@ import { useSelector } from "@tanstack/react-store";
 import { CircleXIcon, SaveIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
-import toast from "react-hot-toast";
 
 import type {
   Order,
@@ -11,7 +10,7 @@ import type {
 } from "@/features/procurement/utils/procurement.types";
 import type { Option } from "@/types/index.types";
 
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { OrderDetails } from "@/features/procurement/components/purchase-order/order-details";
@@ -82,12 +81,7 @@ export function OrderForm({
     ...formOpts,
     onSubmit: async ({ value }) => {
       if (value.details.length === 0) {
-        toast.error(() => (
-          <ToastContent
-            title="Validation Error"
-            message="At least one item is required"
-          />
-        ));
+        notify.error("Validation Error", "At least one item is required");
         return;
       }
 

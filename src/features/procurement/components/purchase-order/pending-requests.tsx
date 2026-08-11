@@ -2,13 +2,12 @@ import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
 import { FileTextIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
-import toast from "react-hot-toast";
 
 import type { PendingOrder } from "@/features/procurement/utils/procurement.types";
 import type { Option } from "@/types/index.types";
 
 import { DataTable } from "@/components/custom/datatable";
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -138,27 +137,21 @@ export function PendingRequests({
       try {
         const result = await deletePendingRequests(ids);
         if (result.error) {
-          toast.error(() => (
-            <ToastContent title="Error" message={result.message} />
-          ));
+          notify.error("Error", result.message);
           return;
         }
 
         setRowSelection({});
-        toast.success(() => (
-          <ToastContent
-            title="Success"
-            message={`Deleted ${ids.length} pending request(s).`}
-          />
-        ));
+        notify.success(
+          "Success",
+          `Deleted ${ids.length} pending request(s).`,
+        );
       } catch (error) {
         console.error("Error deleting pending requests:", error);
-        toast.error(() => (
-          <ToastContent
-            title="Error"
-            message="There was a problem while performing this action."
-          />
-        ));
+        notify.error(
+          "Error",
+          "There was a problem while performing this action.",
+        );
       }
     });
   };

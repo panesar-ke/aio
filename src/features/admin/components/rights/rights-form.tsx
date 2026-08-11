@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
 import { useEffect, useTransition } from 'react';
 import { type Resolver, useForm, useWatch } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type {
   CloneUserRightsFormValues,
@@ -16,7 +15,7 @@ import CustomModal from '@/components/custom/custom-modal';
 import { FormActions } from '@/components/custom/form-actions';
 import { ButtonLoader } from '@/components/custom/loaders';
 import { SearchSelect } from '@/components/custom/search-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -112,9 +111,7 @@ export function RightsForm({ forms, users }: Props) {
         const result = await updateUserRights(data);
 
         if (result.error) {
-          toast.error(() => (
-            <ToastContent title="Error" message={result.message} />
-          ));
+          notify.error('Error', result.message);
           return;
         }
 
@@ -123,12 +120,10 @@ export function RightsForm({ forms, users }: Props) {
         });
       } catch (error) {
         console.error('Error updating user rights:', error);
-        toast.error(() => (
-          <ToastContent
-            title="Error"
-            message="There was a problem while performing this action."
-          />
-        ));
+        notify.error(
+          'Error',
+          'There was a problem while performing this action.'
+        );
       }
     });
   };
@@ -252,24 +247,15 @@ function CloneForm({ users }: { users: Array<Option> }) {
     },
     onSuccess: ctx => {
       if (ctx.error) {
-        toast.error(() => (
-          <ToastContent
-            message={ctx.message}
-            title="Error Cloning User Rights"
-          />
-        ));
+        notify.error('Error Cloning User Rights', ctx.message);
         return;
       }
       form.reset();
       setClose();
-      toast.success(() => (
-        <ToastContent message={ctx.message} title="User Rights Cloned" />
-      ));
+      notify.success('User Rights Cloned', ctx.message);
     },
     onError: err => {
-      toast.error(() => (
-        <ToastContent message={err.message} title="Error Cloning User Rights" />
-      ));
+      notify.error('Error Cloning User Rights', err.message);
     },
   });
 
