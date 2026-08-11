@@ -3,12 +3,14 @@ import type { CNCCacheTag } from '@/features/production/cnc/utils/cnc.types';
 import type { StoreCacheTags } from '@/features/store/utils/store.types';
 
 import { type AdminCacheTag } from '@/features/admin/utils/admin.types';
+import { type SalesCacheTag } from '@/features/sales/utils/sales.types';
 
 type CacheTag =
   | ProcurementCacheTag
   | AdminCacheTag
   | StoreCacheTags
-  | CNCCacheTag;
+  | CNCCacheTag
+  | SalesCacheTag;
 
 export function getGlobalTag(tag: CacheTag) {
   return `global:${tag}` as const;
