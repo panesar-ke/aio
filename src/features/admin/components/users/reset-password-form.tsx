@@ -4,11 +4,10 @@ import { useMutation } from '@tanstack/react-query';
 import { ClipboardCheckIcon, ClipboardIcon } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 import type { ResetPasswordFormValues } from '@/features/admin/utils/admin.types';
 
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -51,12 +50,10 @@ export function ResetPasswordForm() {
           form.reset();
         },
         onError: () => {
-          toast.error(() => (
-            <ToastContent
-              title="Error resetting password"
-              message="An error occured while resetting the password."
-            />
-          ));
+          notify.error(
+            'Error resetting password',
+            'An error occured while resetting the password.'
+          );
         },
       });
     },

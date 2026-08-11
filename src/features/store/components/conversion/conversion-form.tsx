@@ -10,14 +10,13 @@ import {
   type UseFormReturn,
   useWatch,
 } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { ConversionFormValues } from '@/features/store/utils/store.types';
 import type { Option } from '@/types/index.types';
 
 import { FormActions } from '@/components/custom/form-actions';
 import { SearchSelect } from '@/components/custom/search-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -59,20 +58,10 @@ export function ConversionForm({
     const res = await action(data);
 
     if (res.error) {
-      toast.error(() => (
-        <ToastContent
-          title={`Error creating conversion!`}
-          message={res.message}
-        />
-      ));
+      notify.error('Error creating conversion!', res.message);
       return;
     }
-    toast.success(() => (
-      <ToastContent
-        title={`Conversion created successfully!`}
-        message={res.message}
-      />
-    ));
+    notify.success('Conversion created successfully!', res.message);
     form.reset();
   }
 
@@ -183,10 +172,10 @@ function ConvertingItems({
     } catch (error) {
       if (isAxiosError(error)) {
         const message = error.response?.data?.error || 'Unknown error';
-        toast.error(message);
+        notify.error(message);
       } else {
         console.error(error);
-        toast.error('Unknown error');
+        notify.error('Unknown error');
       }
     }
   }
@@ -252,7 +241,7 @@ function ConvertingItems({
                                 item => item.itemId === value,
                               );
                               if (productAlreadyAdded) {
-                                toast.error('Product already added');
+                                notify.error('Product already added');
                                 return;
                               }
                               field.onChange(value);
@@ -361,7 +350,7 @@ function ConvertingItems({
           type="button"
           onClick={() => {
             if (!mainStore.value || !conversionDate) {
-              return toast.error(
+              return notify.error(
                 'Please select From Store and Transfer Date first',
               );
             }

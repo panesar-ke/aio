@@ -1,8 +1,6 @@
 "use client";
 
-import toast from "react-hot-toast";
-
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 
 import type { ActionResult } from "./actions/types";
 
@@ -25,19 +23,13 @@ export async function handleSubmitFeedback<T>({
     const res = await action();
 
     if (res.error) {
-      toast.error(() => (
-        <ToastContent title={errorTitle} message={res.message} />
-      ));
+      notify.error(errorTitle, res.message);
       return;
     }
 
-    toast.success(() => (
-      <ToastContent title={successTitle} message={res.message} />
-    ));
+    notify.success(successTitle, res.message);
     onSuccess(res.data);
   } catch {
-    toast.error(() => (
-      <ToastContent title={errorTitle} message={fallbackMessage} />
-    ));
+    notify.error(errorTitle, fallbackMessage);
   }
 }

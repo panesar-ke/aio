@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 import { ModalProvider } from '@/features/integrations/modal-provider';
-// import { Toaster } from '@/components/ui/sonner';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,40 +24,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ModalProvider>{children}</ModalProvider>
       <ReactQueryDevtools initialIsOpen={false} />
-      {/* <Toaster /> */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          // Define default options
-          className: 'p-0',
-          duration: 5000,
-          removeDelay: 1000,
-          style: {
-            background: '#FDF9E4',
-            color: '#3E240F',
-            maxWidth: '600px',
-            // width: '100%',
-          },
-
-          // Default options for specific types
-          success: {
-            duration: 3000,
-            style: {
-              background: '#a3dfb3',
-              color: '#3E240F',
-            },
-            icon: '',
-          },
-          error: {
-            duration: 5000,
-            style: {
-              background: '#f8d7da',
-              color: '#3E240F',
-            },
-            icon: '',
-          },
-        }}
-      />
+      {/* Toasts style themselves — see the `notify` helper in
+          src/components/custom/toast.tsx */}
+      <Toaster position="top-center" gutter={10} />
     </QueryClientProvider>
   );
 }

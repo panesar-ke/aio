@@ -3,10 +3,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { UploadIcon } from 'lucide-react';
 import { useActionState, useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 import { ButtonLoader } from '@/components/custom/loaders';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,9 +44,7 @@ export function ImportBudgetsForm({
 
   useEffect(() => {
     if (state.error) {
-      toast.error(() => (
-        <ToastContent title="Import failed" message={state.error as string} />
-      ));
+      notify.error('Import failed', state.error as string);
       return;
     }
 
@@ -57,32 +54,26 @@ export function ImportBudgetsForm({
     const { created, updated, failed } = state.summary;
 
     if (failed.length === 0) {
-      toast.success(() => (
-        <ToastContent
-          title="✅ Import complete"
-          message={`${created} created, ${updated} updated.`}
-        />
-      ));
+      notify.success(
+        'Import complete',
+        `${created} created, ${updated} updated.`
+      );
       setClose();
       return;
     }
 
     if (created > 0 || updated > 0) {
-      toast.success(() => (
-        <ToastContent
-          title="Partially imported"
-          message={`${created} created, ${updated} updated, ${failed.length} failed. See details below.`}
-        />
-      ));
+      notify.warning(
+        'Partially imported',
+        `${created} created, ${updated} updated, ${failed.length} failed. See details below.`
+      );
       return;
     }
 
-    toast.error(() => (
-      <ToastContent
-        title="Import failed"
-        message={`All ${failed.length} row(s) failed. See details below.`}
-      />
-    ));
+    notify.error(
+      'Import failed',
+      `All ${failed.length} row(s) failed. See details below.`
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 

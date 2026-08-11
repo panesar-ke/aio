@@ -2,13 +2,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type Resolver, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import type { JobTrackerFormValues } from '@/features/production/cnc/utils/cnc.types';
 
 import { FormActions } from '@/components/custom/form-actions';
 import { MiniSelect } from '@/components/custom/mini-select';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import {
   Form,
   FormControl,
@@ -40,7 +39,7 @@ export function JobTrackerForm({ data }: { data?: JobTrackerFormValues }) {
   async function onSubmit(values: JobTrackerFormValues) {
     const res = await upsertJobTrackerEntry(values);
     if (res.error) {
-      toast.error(() => <ToastContent title="Error:" message={res.message} />);
+      notify.error('Error', res.message);
       return;
     }
     form.reset();

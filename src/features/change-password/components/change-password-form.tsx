@@ -4,11 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { isAxiosError } from 'axios';
 import { LockIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
 
 import { ButtonLoader } from '@/components/custom/loaders';
 import { PasswordInput } from '@/components/custom/password-input';
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -38,13 +37,11 @@ export function ChangePasswordForm() {
   async function onSubmit(data: ChangePasswordFormValues) {
     const res = await changePasswordAction(data);
     if (res.error) {
-      toast.error(() => <ToastContent title="Error" message={res.message} />);
+      notify.error('Error', res.message);
       return;
     }
 
-    toast.success(() => (
-      <ToastContent title="Success" message="Password changed successfully!" />
-    ));
+    notify.success('Success', 'Password changed successfully!');
 
     form.reset();
   }

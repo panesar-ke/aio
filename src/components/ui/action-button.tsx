@@ -3,9 +3,8 @@
 import type { ComponentProps, ReactNode } from 'react';
 
 import { useTransition } from 'react';
-import toast from 'react-hot-toast';
 
-import { ToastContent } from '@/components/custom/toast';
+import { notify } from '@/components/custom/toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,12 +37,7 @@ export function ActionButton({
     startTransition(async () => {
       const data = await action();
       if (data.error) {
-        toast.error(() => (
-          <ToastContent
-            title="Something went wrong"
-            message={data.message ?? 'Error'}
-          />
-        ));
+        notify.error('Something went wrong', data.message ?? 'Error');
         return;
       }
 

@@ -7,7 +7,6 @@ import { createAvatar } from "@dicebear/core";
 import { BanIcon, CheckIcon, Undo2Icon, UserLockIcon } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
-import toast from "react-hot-toast";
 
 import type { getUsers } from "@/features/admin/services/data";
 
@@ -15,7 +14,7 @@ import { EditAction } from "@/components/custom/custom-button";
 import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
 import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
 import { DataTable } from "@/components/custom/datatable";
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -31,12 +30,7 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
       console.log("Toggling user:", userId, "Current state:", currentState);
       const response = await toggleUserActiveState(userId, currentState);
       if (response.error) {
-        toast.error(() => (
-          <ToastContent
-            title="Error updating user state"
-            message={response.message}
-          />
-        ));
+        notify.error('Error updating user state', response.message);
         return;
       }
     });

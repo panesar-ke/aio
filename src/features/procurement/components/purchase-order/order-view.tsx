@@ -3,12 +3,11 @@ import { FileScanIcon, PrinterIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import toast from "react-hot-toast";
 
 import type { Order } from "@/features/procurement/utils/procurement.types";
 
 import { ButtonLoader } from "@/components/custom/loaders";
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -38,13 +37,10 @@ export function OrderView({ order }: { order: NonNullable<Order> }) {
       );
 
       if (res.error) {
-        toast(() => (
-          <ToastContent
-            title="Something went wrong"
-            message="There was a problem generating a print for this invoice"
-            state="error"
-          />
-        ));
+        notify.error(
+          "Something went wrong",
+          "There was a problem generating a print for this invoice",
+        );
         return;
       }
 

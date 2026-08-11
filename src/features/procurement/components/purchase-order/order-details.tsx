@@ -1,5 +1,4 @@
 import { Trash2Icon } from "lucide-react";
-import toast from "react-hot-toast";
 
 import type {
   OrderFormDetailInput,
@@ -7,7 +6,7 @@ import type {
 } from "@/features/procurement/utils/procurement.types";
 import type { Option } from "@/types/index.types";
 
-import { ToastContent } from "@/components/custom/toast";
+import { notify } from "@/components/custom/toast";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { SelectItem } from "@/components/ui/select";
@@ -91,12 +90,10 @@ export const OrderDetails = withForm({
               (request) => !existingIds.has(request.id),
             );
             if (newRequests.length === 0) {
-              toast.error(() => (
-                <ToastContent
-                  title="Already added"
-                  message="The selected pending request(s) are already on this order"
-                />
-              ));
+              notify.error(
+                "Already added",
+                "The selected pending request(s) are already on this order",
+              );
               return;
             }
 
@@ -116,11 +113,10 @@ export const OrderDetails = withForm({
                 discount: 0,
               });
             });
-            toast(
+            notify.info(
               `Added ${selectedRequests.length} pending request(s) to order`,
-              {
-                position: "bottom-left",
-              },
+              undefined,
+              { position: "bottom-left" },
             );
           };
 
