@@ -24,7 +24,7 @@ import { LoadConversionForm } from '@/features/sales/components/leads/lead-conve
 import { useLeadsFilters } from '@/features/sales/hooks/leads/use-filters';
 import { deleteLead } from '@/features/sales/services/leads/action';
 import { LEAD_STATUS } from '@/features/sales/utils/constants';
-import { titleCase } from '@/lib/helpers/formatters';
+import { dateFormat, titleCase } from '@/lib/helpers/formatters';
 
 type LeadsPageProps = {
   leads: Array<Lead>;
@@ -90,7 +90,7 @@ export function LeadsClientPage({ leads }: LeadsPageProps) {
     {
       accessorKey: 'createdAt',
       header: 'Created Date',
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+      cell: ({ row }) => dateFormat(row.original.createdAt, 'long'),
     },
     {
       id: 'actions',

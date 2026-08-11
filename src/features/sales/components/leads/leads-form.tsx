@@ -8,6 +8,7 @@ import { FooterFormActions } from '@/components/custom/form-actions';
 import { FormSectionHeader } from '@/components/custom/form-header';
 import { FieldGroup } from '@/components/ui/field';
 import { SelectItem } from '@/components/ui/select';
+import { upsertLead } from '@/features/sales/services/leads/action';
 import {
   LEAD_SOURCE,
   LEAD_STATUS,
@@ -21,13 +22,11 @@ import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
 import { titleCase } from '@/lib/helpers/formatters';
 
-import { upsertLead } from '../../services/leads/action';
-
 const buildDefaultValues = (lead?: Lead): LeadFormValues => {
   return {
     id: lead?.id ?? null,
-    name: lead?.name ? titleCase(lead.name.toLowerCase()) : '',
-    company: lead?.company ? titleCase(lead.company.toLowerCase()) : '',
+    name: lead?.name ? lead.name : '',
+    company: lead?.company ? lead.company : '',
     email: lead?.email ?? null,
     phone: lead?.phone ?? null,
     leadSource: lead?.leadSource ?? null,

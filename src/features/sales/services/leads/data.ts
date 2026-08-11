@@ -13,6 +13,7 @@ import db from '@/drizzle/db';
 import { saleAccounts, users } from '@/drizzle/schema';
 import { getLeadIdTag, getLeadsGlobalTag } from '@/features/sales/utils/cache';
 import { LeadStatus } from '@/features/sales/utils/search-params';
+import { requireAnyPermission } from '@/lib/permissions/guards';
 import { getCurrentUser } from '@/lib/session';
 
 import { isSaleAdmin } from '../../utils/sale-helpers';
@@ -70,6 +71,7 @@ export const getLeads = async ({
   search: string;
   status: LeadStatus;
 }) => {
+  requireAnyPermission(['sales:admin', 'sales:standard'], { mode: 'page' });
   const user = await getCurrentUser('action');
   const isAdmin = await isSaleAdmin();
 
@@ -100,6 +102,7 @@ async function getLeadInternal(
 }
 
 export const getLead = async (leadId: string) => {
+  requireAnyPermission(['sales:admin', 'sales:standard'], { mode: 'page' });
   const user = await getCurrentUser('action');
   const isAdmin = await isSaleAdmin();
   return getLeadInternal(leadId, isAdmin, user.id);

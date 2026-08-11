@@ -31,7 +31,7 @@ export const leadFormSchema = z.object({
   ),
 
   kraPin: nullableTrimmedString.refine(
-    (value) => !value || /^\d{9}[A-Za-z]?$/.test(value),
+    (value) => !value || /^[A-P][0-9]{9}[A-Z]$/.test(value.trim()),
     'Invalid KRA PIN format',
   ),
 });

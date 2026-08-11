@@ -4,7 +4,7 @@ import FormHeader from '@/components/custom/form-header';
 import { LeadForm } from '@/features/sales/components/leads/leads-form';
 
 export const metadata: Metadata = {
-  title: 'Leads',
+  title: 'New Lead',
 };
 
 export default function LeadsNewPage() {
