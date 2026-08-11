@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Route } from 'next';
 
 import {
   ArrowLeftRightIcon,
@@ -10,6 +10,7 @@ import {
   CornerUpLeftIcon,
   FileIcon,
   FileTextIcon,
+  HeartHandshakeIcon,
   LineChartIcon,
   ListCheckIcon,
   ListTreeIcon,
@@ -22,12 +23,12 @@ import {
   Users2Icon,
   WarehouseIcon,
   WrenchIcon,
-} from "lucide-react";
-import Link from "next/link";
+} from 'lucide-react';
+import Link from 'next/link';
 
-import type { Permission } from "@/lib/permissions/catalog";
+import type { Permission } from '@/lib/permissions/catalog';
 
-import Logo from "@/components/layout/logo";
+import Logo from '@/components/layout/logo';
 import {
   Sidebar,
   SidebarContent,
@@ -38,9 +39,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getCurrentUserPermissions } from "@/lib/permissions/service";
+} from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getCurrentUserPermissions } from '@/lib/permissions/service';
 
 export async function AppSidebar({
   ...props
@@ -50,7 +51,7 @@ export async function AppSidebar({
     item.permissions.some((permission) => permissions.has(permission)),
   );
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible='icon' {...props}>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
@@ -64,7 +65,7 @@ export async function AppSidebar({
 
 export function SidebarSkeleton() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible='icon'>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
@@ -73,9 +74,9 @@ export function SidebarSkeleton() {
           {Array.from({ length: 5 }).map((_, index) => (
             <SidebarMenuItem key={index}>
               <SidebarMenuButton>
-                <Skeleton className="size-4" />
-                <Skeleton className="w-56 h-4" />
-                <Skeleton className="size-4" />
+                <Skeleton className='size-4' />
+                <Skeleton className='w-56 h-4' />
+                <Skeleton className='size-4' />
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -97,124 +98,150 @@ type NavItem = {
 };
 const NAV_ITEMS: Array<NavItem> = [
   {
-    title: "Admin",
+    title: 'Admin',
     items: [
-      { icon: Users2, label: "Users", href: "/admin/users" },
-      { icon: ListTreeIcon, label: "User Rights", href: "/admin/rights" },
+      { icon: Users2, label: 'Users', href: '/admin/users' },
+      { icon: ListTreeIcon, label: 'User Rights', href: '/admin/rights' },
     ],
-    permissions: ["admin:admin"],
+    permissions: ['admin:admin'],
   },
   {
-    title: "Procurement",
+    title: 'Procurement',
     items: [
       {
-        label: "Dashboard",
-        href: "/procurement",
+        label: 'Dashboard',
+        href: '/procurement',
         icon: CircleGaugeIcon,
       },
       {
-        label: "Material Requisitions",
-        href: "/procurement/material-requisition",
+        label: 'Material Requisitions',
+        href: '/procurement/material-requisition',
         icon: ClipboardListIcon,
       },
       {
-        label: "Purchase Orders",
-        href: "/procurement/purchase-order",
+        label: 'Purchase Orders',
+        href: '/procurement/purchase-order',
         icon: ListCheckIcon,
       },
       {
-        label: "Vendors",
-        href: "/procurement/vendors",
+        label: 'Vendors',
+        href: '/procurement/vendors',
         icon: Users2Icon,
       },
       {
-        label: "Products",
-        href: "/procurement/products",
+        label: 'Products',
+        href: '/procurement/products',
         icon: PackageIcon,
       },
       {
-        label: "Services",
-        href: "/procurement/services",
+        label: 'Services',
+        href: '/procurement/services',
         icon: WrenchIcon,
       },
       {
-        label: "PO Register",
-        href: "/procurement/order-register",
+        label: 'PO Register',
+        href: '/procurement/order-register',
         icon: FileIcon,
       },
       {
-        label: "Purchase By Product/Project",
-        href: "/procurement/order-by-criteria",
+        label: 'Purchase By Product/Project',
+        href: '/procurement/order-by-criteria',
         icon: FileTextIcon,
       },
       {
-        label: "Top Vendors",
-        href: "/procurement/top-vendors",
+        label: 'Top Vendors',
+        href: '/procurement/top-vendors',
         icon: AwardIcon,
       },
     ],
-    permissions: ["procurement:admin", "procurement:standard"],
+    permissions: ['procurement:admin', 'procurement:standard'],
   },
   {
-    title: "Stores",
-    permissions: ["store:admin", "store:standard"],
+    title: 'Stores',
+    permissions: ['store:admin', 'store:standard'],
     items: [
       {
-        label: "Stores",
-        href: "/store/stores",
+        label: 'Stores',
+        href: '/store/stores',
         icon: WarehouseIcon,
       },
       {
-        label: "Goods Received Note",
-        href: "/store/grn",
+        label: 'Goods Received Note',
+        href: '/store/grn',
         icon: ReceiptIcon,
       },
       {
-        label: "Material Transfer",
-        href: "/store/transfers",
+        label: 'Material Transfer',
+        href: '/store/transfers',
         icon: ArrowLeftRightIcon,
       },
       {
-        label: "Material Issues",
-        href: "/store/issues",
+        label: 'Material Issues',
+        href: '/store/issues',
         icon: CornerUpLeftIcon,
       },
       {
-        label: "Material Conversion",
-        href: "/store/conversion",
+        label: 'Material Conversion',
+        href: '/store/conversion',
         icon: RecycleIcon,
       },
       {
-        label: "Stock Movement Report",
-        href: "/store/stock-movement-report",
+        label: 'Stock Movement Report',
+        href: '/store/stock-movement-report',
         icon: LineChartIcon,
       },
     ],
   },
   {
-    title: "IT",
-    permissions: ["it:admin", "it:standard"],
+    title: 'IT',
+    permissions: ['it:admin', 'it:standard'],
     items: [
       {
-        label: "Dashboard",
-        href: "/it",
+        label: 'Dashboard',
+        href: '/it',
         icon: CircleGaugeIcon,
       },
       {
-        label: "Expenses & Budgeting",
-        href: "/it/expenses-budgeting",
+        label: 'Expenses & Budgeting',
+        href: '/it/expenses-budgeting',
         icon: BanknoteArrowDownIcon,
       },
       {
-        label: "Assets Management",
-        href: "/it/assets",
+        label: 'Assets Management',
+        href: '/it/assets',
         icon: TabletSmartphoneIcon,
       },
       {
-        label: "Licenses",
-        href: "/it/licenses",
+        label: 'Licenses',
+        href: '/it/licenses',
         icon: BadgeIcon,
       },
+    ],
+  },
+  {
+    title: 'Sales',
+    permissions: ['sales:admin', 'sales:standard'],
+    items: [
+      // {
+      //   label: "Dashboard",
+      //   href: "/sales",
+      //   icon: CircleGaugeIcon,
+      // },
+      {
+        label: 'Leads',
+        href: '/sales/leads',
+        icon: HeartHandshakeIcon,
+      },
+      // {
+      //   label: "Assets Management",
+      //   href: "/it/assets",
+      //   icon: TabletSmartphoneIcon,
+      // },
+      // {
+      //   label: "Licenses",
+      //   href: "/it/licenses",
+      //   icon: BadgeIcon,
+      // },
     ],
   },
 ];
@@ -225,15 +252,15 @@ function NavItems({ items }: { items: Array<NavItem> }) {
       {items.map((item, index) => (
         <SidebarGroup
           key={index}
-          className="group-data-[collapsible=icon]:hidden"
+          className='group-data-[collapsible=icon]:hidden'
         >
           <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
           {item.items.map((item, index) => (
             <SidebarMenuItem key={index}>
               <SidebarMenuButton asChild>
                 <Link href={item.href} prefetch={false}>
-                  <item.icon className="size-4" />
-                  <span className="text-[12px] font-medium">{item.label}</span>
+                  <item.icon className='size-4' />
+                  <span className='text-[12px] font-medium'>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
