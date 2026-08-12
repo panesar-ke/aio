@@ -8,15 +8,6 @@ export const SALUTATIONS = [
   'other',
 ] as const;
 
-// export const LEAD_STATUS = [
-//   'new',
-//   'contacted',
-//   'nurturing',
-//   'qualified',
-//   'unqualified',
-//   'lost',
-// ] as const;
-
 export const LEAD_STATUS = [
   { value: 'new', label: 'New' },
   { value: 'contacted', label: 'Contacted' },
@@ -56,3 +47,33 @@ export const LEAD_SOURCE = [
     label: 'Other',
   },
 ];
+
+export const ACCOUNT_TIERS = [
+  {
+    value: 'low',
+    label: 'Low',
+  },
+  {
+    value: 'medium',
+    label: 'Medium',
+  },
+  {
+    value: 'high',
+    label: 'High',
+  },
+] as const;
+
+export const LAST_PURCHASE = [
+  {
+    value: '30',
+    label: 'Purchased in last 30 days',
+  },
+  {
+    value: '90',
+    label: 'Purchased in last 90 days',
+  },
+  {
+    value: 'dormant',
+    label: 'Dormant (12+ months)',
+  },
+] as const;

@@ -37,3 +37,26 @@ export const leadFormSchema = z.object({
 });
 
 export type LeadFormValues = z.infer<typeof leadFormSchema>;
+
+export const accountFormSchema = z.object({
+  id: nullableTrimmedString,
+  salutation: z
+    .enum(SALUTATIONS, {
+      error: (iss) =>
+        iss.input ? 'Invalid salutation' : 'Salutation is required',
+    })
+    .nullable()
+    .transform((value) => (value === undefined ? null : value)),
+  name: requiredTrimmedStringSchemaEntry('Name is required'),
+  company: requiredTrimmedStringSchemaEntry('Company is required'),
+  email: nullableTrimmedString,
+  phone: nullableTrimmedString,
+  title: nullableTrimmedString,
+  description: nullableTrimmedString,
+  kraPin: nullableTrimmedString.refine(
+    (value) => !value || /^[A-P][0-9]{9}[A-Z]$/.test(value.trim()),
+    'Invalid KRA PIN format',
+  ),
+});
+
+export type AccountFormValues = z.infer<typeof accountFormSchema>;

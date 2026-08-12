@@ -7,7 +7,10 @@ import z from 'zod';
 import db from '@/drizzle/db';
 import { saleAccounts } from '@/drizzle/schema';
 import { getLead } from '@/features/sales/services/leads/data';
-import { revalidateLeadsTag } from '@/features/sales/utils/cache';
+import {
+  revalidateAccountsTag,
+  revalidateLeadsTag,
+} from '@/features/sales/utils/cache';
 import {
   leadFormSchema,
   type LeadFormValues,
@@ -108,8 +111,12 @@ export const convertToCustomer = async (
       .update(saleAccounts)
       .set({ state: 'account' })
       .where(eq(saleAccounts.id, validatedFileds.data));
+
     revalidateLeadsTag(validatedFileds.data);
+    revalidateAccountsTag(validatedFileds.data);
     revalidatePath('/sales/leads');
+    revalidatePath('/sales/accounts');
+
     return {
       error: false,
       message: 'Lead converted successfully',

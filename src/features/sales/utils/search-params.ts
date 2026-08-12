@@ -10,6 +10,13 @@ export enum LeadStatus {
   lost = 'lost',
 }
 
+export enum AccountTier {
+  all = 'all',
+  high = 'high',
+  medium = 'medium',
+  low = 'low',
+}
+
 // Describe your search params, and reuse this in useQueryStates / createSerializer:
 export const leadSearchParams = {
   search: parseAsString.withDefault(''),
@@ -18,4 +25,13 @@ export const leadSearchParams = {
   ),
 };
 
+export const accountSearchParams = {
+  search: parseAsString.withDefault(''),
+  tier: parseAsStringEnum<AccountTier>(Object.values(AccountTier)).withDefault(
+    AccountTier.all,
+  ),
+  lastPurchase: parseAsString,
+};
+
 export const loadLeadSearchParams = createLoader(leadSearchParams);
+export const loadAccountSearchParams = createLoader(accountSearchParams);
