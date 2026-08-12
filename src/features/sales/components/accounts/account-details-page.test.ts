@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildSalesOrderLabel,
   getAccountOrderMetrics,
   getRelativeTimeLabel,
 } from '@/features/sales/components/accounts/account-details-page';
 import { createAccountOrderColumns } from '@/features/sales/components/accounts/account-orders-table';
+import { buildSalesOrderLabel } from '@/features/sales/utils/account-helpers';
 
 describe('buildSalesOrderLabel', () => {
   it('builds the sales order label from order year and sale order number', () => {

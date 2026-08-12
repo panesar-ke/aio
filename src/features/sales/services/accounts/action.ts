@@ -1,12 +1,13 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import db from '@/drizzle/db';
 import { saleAccounts } from '@/drizzle/schema';
 import { getAccount } from '@/features/sales/services/accounts/data';
 import { revalidateAccountsTag } from '@/features/sales/utils/cache';
+import { saleUser } from '@/features/sales/utils/sale-helpers';
 import {
   accountFormSchema,
   type AccountFormValues,
@@ -35,6 +36,7 @@ export const upsertAccount = async (values: unknown) =>
   runAction('upsert-account', async () => {
     await requireAnyPermission(['sales:admin', 'sales:standard']);
     const data = parseOrFail(accountFormSchema, values);
+    const { isSalesAdmin, userId } = await saleUser();
 
     if (!data.id) {
       return {
@@ -56,7 +58,13 @@ export const upsertAccount = async (values: unknown) =>
     await db
       .update(saleAccounts)
       .set(buildAccountPayload(data))
-      .where(eq(saleAccounts.id, data.id));
+      .where(
+        and(
+          eq(saleAccounts.id, data.id),
+          eq(saleAccounts.state, 'account'),
+          !isSalesAdmin ? eq(saleAccounts.salesRepId, userId) : undefined,
+        ),
+      );
 
     revalidateAccountsTag(data.id);
     revalidatePath('/sales/accounts');

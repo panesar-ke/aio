@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { format, intervalToDuration, parse } from 'date-fns';
+import { format, intervalToDuration } from 'date-fns';
 import {
   ArrowUpRightIcon,
   CheckIcon,
@@ -25,9 +25,12 @@ import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AccountOrdersTable } from '@/features/sales/components/accounts/account-orders-table';
 import { type getAccountDetails } from '@/features/sales/services/accounts/data';
 import {
+  formatCurrency,
+  getDateValue,
+} from '@/features/sales/utils/account-helpers';
+import {
   compactNumberFormatter,
   getInitials,
-  numberFormat,
   titleCase,
 } from '@/lib/helpers/formatters';
 import { cn } from '@/lib/utils';
@@ -36,10 +39,6 @@ type AccountDetails = NonNullable<
   Awaited<ReturnType<typeof getAccountDetails>>
 >;
 type AccountOrder = AccountDetails['orders'][number];
-
-export function buildSalesOrderLabel(saleOrderNo: number, dateRaised: string) {
-  return `SO-${getDateValue(dateRaised).getFullYear()}-${saleOrderNo}`;
-}
 
 export function getAccountOrderMetrics(orders: Array<AccountOrder>) {
   const totalSpend = orders.reduce(
@@ -77,30 +76,18 @@ export function getRelativeTimeLabel(date: string, now = new Date()) {
     duration.days
       ? `${duration.days} day${duration.days === 1 ? '' : 's'}`
       : null,
-  ].filter(Boolean);
+  ].filter((part): part is string => Boolean(part));
+
+  if (parts.length === 0) {
+    return 'Today';
+  }
 
   return `${(parts.slice(0, 2) as Array<string>).join(', ')} ago`;
-}
-
-function getDateValue(date: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(date)
-    ? parse(date, 'yyyy-MM-dd', new Date())
-    : new Date(date);
 }
 
 function formatDisplayDate(date: string) {
   return format(getDateValue(date), 'dd MMM yyyy');
 }
-
-function formatTableDate(date: string) {
-  return format(getDateValue(date), 'dd MMM yyyy').toUpperCase();
-}
-
-export function formatCurrency(amount: number | string) {
-  return `KES ${numberFormat(amount, 0)}`;
-}
-
-export { formatTableDate };
 
 function getContactPerson(name: string, company: string) {
   const normalizedName = name.trim().toLowerCase();
@@ -208,6 +195,7 @@ export function AccountDetailsPageContent({
         </div>
 
         <div className='flex items-center gap-2'>
+          {/* TODO: TO IMPLEMENT AFTER SALES ORDERS ARE IMPLEMENTED  */}
           <Button type='button' size='lg' className='gap-2'>
             <PlusIcon className='size-4' />
             New Sales Order
@@ -342,6 +330,7 @@ export function AccountDetailsPageContent({
               All orders placed by this account.
             </CardDescription>
           </div>
+          {/* TODO: TO IMPLEMENT AFTER SALES ORDERS ARE IMPLEMENTED  */}
           <Button
             type='button'
             variant='ghost'

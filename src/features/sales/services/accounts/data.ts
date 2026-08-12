@@ -132,22 +132,26 @@ async function getAccountsInternal({
     return query.having(and(...havingFilters));
   }
 
-  return query;
+  return await query;
 }
 
 export async function getAccounts(params: SearchParams) {
-  const { isAdmin, userId } = await saleUser();
+  const { isSalesAdmin, userId } = await saleUser();
 
-  return getAccountsInternal({ isAdmin, userId, searchParams: params });
+  return getAccountsInternal({
+    isAdmin: isSalesAdmin,
+    userId,
+    searchParams: params,
+  });
 }
 
 async function getAccountInternal({
   accountId,
-  isAdmin,
+  isSalesAdmin,
   userId,
 }: {
   accountId: string;
-  isAdmin: boolean;
+  isSalesAdmin: boolean;
   userId: string;
 }) {
   'use cache';
@@ -157,7 +161,7 @@ async function getAccountInternal({
     where: and(
       eq(saleAccounts.id, accountId),
       eq(saleAccounts.state, 'account'),
-      !isAdmin ? eq(saleAccounts.salesRepId, userId) : undefined,
+      !isSalesAdmin ? eq(saleAccounts.salesRepId, userId) : undefined,
     ),
   });
 
@@ -165,18 +169,18 @@ async function getAccountInternal({
 }
 
 export async function getAccount(accountId: string) {
-  const { isAdmin, userId } = await saleUser();
+  const { isSalesAdmin, userId } = await saleUser();
 
-  return getAccountInternal({ accountId, isAdmin, userId });
+  return getAccountInternal({ accountId, isSalesAdmin, userId });
 }
 
 async function getAccountDetailsInternal({
   accountId,
-  isAdmin,
+  isSalesAdmin,
   userId,
 }: {
   accountId: string;
-  isAdmin: boolean;
+  isSalesAdmin: boolean;
   userId: string;
 }) {
   'use cache';
@@ -186,7 +190,7 @@ async function getAccountDetailsInternal({
     where: and(
       eq(saleAccounts.id, accountId),
       eq(saleAccounts.state, 'account'),
-      !isAdmin ? eq(saleAccounts.salesRepId, userId) : undefined,
+      !isSalesAdmin ? eq(saleAccounts.salesRepId, userId) : undefined,
     ),
     columns: {
       id: true,
@@ -242,7 +246,7 @@ async function getAccountDetailsInternal({
 }
 
 export async function getAccountDetails(accountId: string) {
-  const { isAdmin, userId } = await saleUser();
+  const { isSalesAdmin, userId } = await saleUser();
 
-  return getAccountDetailsInternal({ accountId, isAdmin, userId });
+  return getAccountDetailsInternal({ accountId, isSalesAdmin, userId });
 }

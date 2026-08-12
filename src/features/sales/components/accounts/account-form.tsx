@@ -19,7 +19,9 @@ import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
 import { titleCase } from '@/lib/helpers/formatters';
 
-export function buildAccountDefaultValues(account?: Account): AccountFormValues {
+export function buildAccountDefaultValues(
+  account?: Account,
+): AccountFormValues {
   return {
     id: account?.id ?? null,
     name: account?.name ?? '',
@@ -85,7 +87,11 @@ export function AccountForm({ account }: { account: Account }) {
             </form.AppField>
             <form.AppField name='name'>
               {(field) => (
-                <field.Input required label='Name' placeholder='e.g. John Doe' />
+                <field.Input
+                  required
+                  label='Name'
+                  placeholder='e.g. John Doe'
+                />
               )}
             </form.AppField>
             <form.AppField name='company'>
@@ -104,11 +110,7 @@ export function AccountForm({ account }: { account: Account }) {
             </form.AppField>
             <form.AppField name='phone'>
               {(field) => (
-                <field.Input
-                  required
-                  label='Phone'
-                  placeholder='e.g. 0700000000'
-                />
+                <field.Input label='Phone' placeholder='e.g. 0700000000' />
               )}
             </form.AppField>
             <form.AppField name='email'>

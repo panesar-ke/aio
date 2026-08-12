@@ -2,16 +2,16 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 
+import type { getAccountDetails } from '@/features/sales/services/accounts/data';
+
 import { DataTable } from '@/components/custom/datatable';
 import { Badge } from '@/components/ui/badge';
-import { type getAccountDetails } from '@/features/sales/services/accounts/data';
-import { numberFormat } from '@/lib/helpers/formatters';
-
 import {
   buildSalesOrderLabel,
   formatCurrency,
   formatTableDate,
-} from './account-details-page';
+} from '@/features/sales/utils/account-helpers';
+import { numberFormat } from '@/lib/helpers/formatters';
 
 type AccountOrder = NonNullable<
   Awaited<ReturnType<typeof getAccountDetails>>
