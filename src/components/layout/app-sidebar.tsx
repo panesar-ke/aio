@@ -21,6 +21,7 @@ import {
   TabletSmartphoneIcon,
   Users2,
   Users2Icon,
+  UsersIcon,
   WarehouseIcon,
   WrenchIcon,
 } from 'lucide-react';
@@ -231,6 +232,11 @@ const NAV_ITEMS: Array<NavItem> = [
         label: 'Leads',
         href: '/sales/leads',
         icon: HeartHandshakeIcon,
+      },
+      {
+        label: 'Accounts',
+        href: '/sales/accounts',
+        icon: UsersIcon,
       },
       // {
       //   label: "Assets Management",
