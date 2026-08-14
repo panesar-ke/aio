@@ -33,5 +33,14 @@ export const accountSearchParams = {
   lastPurchase: parseAsString,
 };
 
+export const salesOrderSearchParams = {
+  search: parseAsString.withDefault(''),
+  account: parseAsString.withDefault(''),
+  salesPerson: parseAsString.withDefault(''),
+  from: parseAsString,
+  to: parseAsString,
+};
+
 export const loadLeadSearchParams = createLoader(leadSearchParams);
 export const loadAccountSearchParams = createLoader(accountSearchParams);
+export const loadSalesOrderSearchParams = createLoader(salesOrderSearchParams);
