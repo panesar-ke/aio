@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { SearchParams } from 'nuqs/server';
 
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import FormHeader from '@/components/custom/form-header';
@@ -6,14 +7,21 @@ import { FormLoader } from '@/components/custom/loaders';
 import { SalesOrderForm } from '@/features/sales/components/orders/sales-order-form';
 import { getAccounts } from '@/features/sales/services/accounts/data';
 import { getNextSaleOrderNoPreview } from '@/features/sales/services/orders/data';
-import { AccountTier } from '@/features/sales/utils/search-params';
+import {
+  AccountTier,
+  loadNewSalesOrderSearchParams,
+} from '@/features/sales/utils/search-params';
 import { titleCase } from '@/lib/helpers/formatters';
 
 export const metadata: Metadata = {
   title: 'New Sale Order',
 };
 
-export default async function NewSaleOrderPage() {
+type PageProps = {
+  searchParams: Promise<SearchParams>;
+};
+
+export default async function NewSaleOrderPage({ searchParams }: PageProps) {
   return (
     <div className='space-y-6'>
       <FormHeader
@@ -21,13 +29,14 @@ export default async function NewSaleOrderPage() {
         description='Fill in the details below to create a new sales order.'
       />
       <ErrorBoundaryWithSuspense loader={<FormLoader />}>
-        <SuspendedSalesOrder />
+        <SuspendedSalesOrder searchParams={searchParams} />
       </ErrorBoundaryWithSuspense>
     </div>
   );
 }
 
-async function SuspendedSalesOrder() {
+async function SuspendedSalesOrder({ searchParams }: PageProps) {
+  const { account } = await loadNewSalesOrderSearchParams(searchParams);
   const [accounts, saleOrderNoPreview] = await Promise.all([
     getAccounts({
       lastPurchase: null,
@@ -42,6 +51,7 @@ async function SuspendedSalesOrder() {
         value: a.id,
         label: titleCase(a.company.toLowerCase()),
       }))}
+      account={account}
       saleOrderPreviewNo={saleOrderNoPreview}
     />
   );

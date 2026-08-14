@@ -208,10 +208,14 @@ export function AccountDetailsPageContent({
         </div>
 
         <div className='flex items-center gap-2'>
-          {/* TODO: TO IMPLEMENT AFTER SALES ORDERS ARE IMPLEMENTED  */}
-          <Button type='button' size='lg' className='gap-2'>
-            <PlusIcon className='size-4' />
-            New Sales Order
+          <Button type='button' size='lg' className='gap-2' asChild>
+            <Link
+              href={`/sales/orders/new?account=${account.id}`}
+              prefetch={false}
+            >
+              <PlusIcon className='size-4' />
+              New Sales Order
+            </Link>
           </Button>
           <DropdownMenu>
             <CustomDropdownTrigger />
@@ -346,15 +350,16 @@ export function AccountDetailsPageContent({
               All orders placed by this account.
             </CardDescription>
           </div>
-          {/* TODO: TO IMPLEMENT AFTER SALES ORDERS ARE IMPLEMENTED  */}
-          <Button
-            type='button'
-            variant='ghost'
-            className='gap-2 px-0 text-muted-foreground'
-          >
-            View All in Sales Orders
-            <ArrowUpRightIcon className='size-4' />
-          </Button>
+          <Link href={`/sales/orders?account=${account.id}`} prefetch={false}>
+            <Button
+              type='button'
+              variant='ghost'
+              className='gap-2 px-0 text-muted-foreground'
+            >
+              View All in Sales Orders
+              <ArrowUpRightIcon className='size-4' />
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent className='px-0 py-5'>
           <AccountOrdersTable orders={orders} />

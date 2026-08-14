@@ -6,14 +6,17 @@ import {
 } from '@/features/sales/utils/schemas';
 import { dateFormat } from '@/lib/helpers/formatters';
 
-export const saleOrderFormOpts = (order?: SaleOrderFormValues) => {
+export const saleOrderFormOpts = (
+  order?: SaleOrderFormValues,
+  account?: string | null,
+) => {
   return formOptions({
     defaultValues:
       order ??
       ({
         id: null,
         orderDate: dateFormat(new Date()),
-        accountId: '',
+        accountId: account ?? '',
         vatType: 'INCLUSIVE',
         details: [],
         currency: 'KES',
