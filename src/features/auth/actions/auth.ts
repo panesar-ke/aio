@@ -3,11 +3,14 @@
 import type { Route } from 'next';
 import type z from 'zod';
 
-import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
 import db from '@/drizzle/db';
+import { users } from '@/drizzle/schema';
+import { hashPassword } from '@/features/admin/utils/helpers';
 import { loginSchema } from '@/features/auth/actions/schema';
+import { verifyPassword } from '@/features/auth/utils/password';
 import { createSession, deleteSession } from '@/lib/session';
 
 export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
@@ -34,10 +37,19 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
     return { success: false, message: 'Account is deactivated', status: 403 };
   }
 
-  const isValid = await bcrypt.compare(data.password, user.password);
+  const verification = await verifyPassword(data.password, user.password);
 
-  if (!isValid) {
+  if (!verification.ok) {
     return { success: false, message: 'Invalid credentials', status: 401 };
+  }
+
+  // TRANSITIONAL: this hash predates the casing fix and is a hash of
+  // lowercased input. Re-store it as typed so the account self-heals.
+  if (verification.needsRehash) {
+    await db
+      .update(users)
+      .set({ password: await hashPassword(data.password) })
+      .where(eq(users.id, user.id));
   }
 
   await createSession(user.id);

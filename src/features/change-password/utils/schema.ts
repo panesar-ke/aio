@@ -1,15 +1,16 @@
 import { z } from 'zod';
 
-import { requiredStringSchemaEntry } from '@/lib/schema-rules';
+import { requiredTrimmedStringSchemaEntry } from '@/lib/schema-rules';
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: requiredStringSchemaEntry('Current password is required'),
-    newPassword: requiredStringSchemaEntry('New password is required').min(
-      8,
-      'New password must be at least 8 characters long'
+    currentPassword: requiredTrimmedStringSchemaEntry(
+      'Current password is required'
     ),
-    confirmPassword: requiredStringSchemaEntry(
+    newPassword: requiredTrimmedStringSchemaEntry(
+      'New password is required'
+    ).min(8, 'New password must be at least 8 characters long'),
+    confirmPassword: requiredTrimmedStringSchemaEntry(
       'Password confirmation is required'
     ),
   })
