@@ -45,11 +45,16 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
 
   // TRANSITIONAL: this hash predates the casing fix and is a hash of
   // lowercased input. Re-store it as typed so the account self-heals.
+  // Opportunistic only: a failure here must never block a valid login.
   if (verification.needsRehash) {
-    await db
-      .update(users)
-      .set({ password: await hashPassword(data.password) })
-      .where(eq(users.id, user.id));
+    try {
+      await db
+        .update(users)
+        .set({ password: await hashPassword(data.password) })
+        .where(eq(users.id, user.id));
+    } catch (rehashError) {
+      console.error('Failed to self-heal password hash:', rehashError);
+    }
   }
 
   await createSession(user.id);
