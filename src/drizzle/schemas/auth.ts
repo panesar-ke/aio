@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { users } from '@/drizzle/migrations/schema';
@@ -20,14 +19,4 @@ export const passwordResetTokens = pgTable(
   table => [
     index('password_reset_tokens_user_id_idx').on(table.userId),
   ]
-);
-
-export const passwordResetTokensRelations = relations(
-  passwordResetTokens,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [passwordResetTokens.userId],
-      references: [users.id],
-    }),
-  })
 );
