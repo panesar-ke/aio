@@ -55,7 +55,9 @@ export function useAccountsFilters() {
     setFilters({
       search: '',
       tier: AccountTier.all,
-      lastPurchase: undefined,
+      // nuqs skips undefined entries entirely, so clearing a param means
+      // writing its default ('' here) or null - never undefined.
+      lastPurchase: null,
     });
   }
 
@@ -96,10 +98,13 @@ export function useSalesOrdersFilters() {
   function onReset() {
     setFilters({
       search: '',
-      salesPerson: undefined,
-      account: undefined,
-      from: undefined,
-      to: undefined,
+      // `salesPerson` and `account` carry withDefault(''), so '' clears them;
+      // `from`/`to` have no default, so null removes them from the URL.
+      // Passing undefined would make nuqs skip them and leave the filter on.
+      salesPerson: '',
+      account: '',
+      from: null,
+      to: null,
     });
   }
 

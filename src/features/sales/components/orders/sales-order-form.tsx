@@ -12,24 +12,28 @@ import { notify } from '@/components/custom/toast';
 import { SaleOrderSummary } from '@/features/sales/components/orders/order-summary';
 import { SaleOrderDetails } from '@/features/sales/components/orders/sale-order-details';
 import { SaleOrderHeader } from '@/features/sales/components/orders/sale-order-header';
+import { upsertSaleOrder } from '@/features/sales/services/orders/actions';
 import { saleOrderFormOpts } from '@/features/sales/utils/form';
 import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
-
-import { upsertSaleOrder } from '../../services/orders/actions';
 
 type PageProps = {
   accounts: Array<Option>;
   saleOrderPreviewNo: number;
   order?: SaleOrderFormValues;
+  account?: string | null;
 };
 export function SalesOrderForm({
   accounts,
   saleOrderPreviewNo,
   order,
+  account,
 }: PageProps) {
   const router = useRouter();
-  const formOpts = useMemo(() => saleOrderFormOpts(order), [order]);
+  const formOpts = useMemo(
+    () => saleOrderFormOpts(order, account),
+    [order, account],
+  );
   const isEditing = Boolean(order?.id);
   const form = useAppForm({
     ...formOpts,

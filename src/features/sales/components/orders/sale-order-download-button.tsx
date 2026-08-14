@@ -52,7 +52,8 @@ export function SaleOrderDownloadButton({
       document.body.append(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(url);
+      // URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (error) {
       console.error('Failed to generate sale order PDF:', error);
       notify.error(

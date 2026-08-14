@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import type { Option } from '@/types/index.types';
 
 import { FormSectionHeader } from '@/components/custom/form-header';
+import { notify } from '@/components/custom/toast';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { SelectItem } from '@/components/ui/select';
@@ -11,30 +12,18 @@ import { saleOrderFormOpts } from '@/features/sales/utils/form';
 import { formatSaleOrderNo } from '@/features/sales/utils/sale-order-format';
 import { withForm } from '@/lib/form';
 
-type ExchangeRateResponse = {
-  result: 'success' | 'error';
-  documentation: string;
-  terms_of_use: string;
-  time_last_update_unix: number;
-  time_last_update_utc: string;
-  time_next_update_unix: number;
-  time_next_update_utc: string;
-  base_code: string;
-  conversion_rates: Record<string, number>;
-};
-
+// Routed through our own API so the provider key stays on the server - a
+// NEXT_PUBLIC_ key is inlined into the client bundle and readable by anyone.
 const exchangeRateOptions = () =>
   queryOptions({
     queryKey: ['exchange-rates'],
     queryFn: async () => {
-      const res = await fetch(
-        `https://v6.exchangerate-api.com/v6/${process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY}/latest/USD`,
-      );
+      const res = await fetch('/api/exchange-rates');
       if (!res.ok) {
         throw new Error('Failed to fetch exchange rates');
       }
-      const data: ExchangeRateResponse = await res.json();
-      return data.conversion_rates;
+      const data: { kesPerUsd: number } = await res.json();
+      return data.kesPerUsd;
     },
     refetchOnWindowFocus: false,
     refetchInterval: 60 * 60 * 1000,
@@ -137,10 +126,21 @@ export const SaleOrderHeader = withForm({
                   fieldApi.form.setFieldValue('exchangeRate', 1);
                   return;
                 }
-                const rates = await queryClient.fetchQuery(
-                  exchangeRateOptions(),
-                );
-                fieldApi.form.setFieldValue('exchangeRate', rates['KES']);
+                try {
+                  const rate = await queryClient.fetchQuery(
+                    exchangeRateOptions(),
+                  );
+                  if (typeof rate !== 'number' || !Number.isFinite(rate)) {
+                    throw new Error('Missing KES conversion rate');
+                  }
+                  fieldApi.form.setFieldValue('exchangeRate', rate);
+                } catch {
+                  notify.error(
+                    'Exchange rate unavailable',
+                    'Enter the exchange rate manually.',
+                  );
+                  fieldApi.form.setFieldValue('exchangeRate', undefined);
+                }
               },
             }}
           >

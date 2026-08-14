@@ -49,10 +49,10 @@ async function salesOrderInternal({
 
   if (!isSalesAdmin) {
     filters.push(eq(salesOrdersHeader.salesRepId, userId));
-  }
-  if (salesPerson && salesPerson.trim().length > 0) {
+  } else if (salesPerson && salesPerson.trim().length > 0) {
     filters.push(eq(salesOrdersHeader.salesRepId, salesPerson));
   }
+
   if (account && account.trim().length > 0) {
     filters.push(eq(salesOrdersHeader.accountId, account));
   }
@@ -96,7 +96,7 @@ async function salesOrderInternal({
     .groupBy(salesOrdersDetails.headerId)
     .as('order_items_agg');
 
-  return db
+  return await db
     .select({
       id: salesOrdersHeader.id,
       saleOrderNo: salesOrdersHeader.saleOrderNo,
@@ -105,12 +105,12 @@ async function salesOrderInternal({
       salesRepName: users.name,
       total: salesOrdersHeader.amountInclusive,
       currency: salesOrdersHeader.currency,
-      totalItems: orderItemsAgg.totalItems,
+      totalItems: sql<number>`coalesce(${orderItemsAgg.totalItems}, 0)`,
       status: salesOrdersHeader.status,
     })
     .from(salesOrdersHeader)
     .innerJoin(saleAccounts, eq(salesOrdersHeader.accountId, saleAccounts.id))
-    .innerJoin(orderItemsAgg, eq(salesOrdersHeader.id, orderItemsAgg.headerId))
+    .leftJoin(orderItemsAgg, eq(salesOrdersHeader.id, orderItemsAgg.headerId))
     .innerJoin(users, eq(salesOrdersHeader.salesRepId, users.id))
     .where(and(...filters))
     .orderBy(desc(salesOrdersHeader.dateRaised));

@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
 import { SelectItem } from '@/components/ui/select';
 import { calculateSaleOrderLineGross } from '@/features/sales/components/orders/sale-order-line-gross';
+import { FURNITURE_CATEGORIES } from '@/features/sales/utils/constants';
 import { saleOrderFormOpts } from '@/features/sales/utils/form';
 import { withForm } from '@/lib/form';
 import { numberFormat } from '@/lib/helpers/formatters';
 import { cn } from '@/lib/utils';
-
-import { FURNITURE_CATEGORIES } from '../../utils/constants';
 
 function lineHeaderClass(width: string, align: 'left' | 'center' = 'left') {
   return cn(
@@ -125,7 +124,11 @@ export const SaleOrderDetails = withForm({
                           >
                             <form.AppField name={`details[${i}].item`}>
                               {(field) => (
-                                <field.Input label='' className='w-full' />
+                                <field.Input
+                                  aria-label={`Item for line ${i + 1}`}
+                                  label=''
+                                  className='w-full'
+                                />
                               )}
                             </form.AppField>
                           </td>
@@ -139,6 +142,7 @@ export const SaleOrderDetails = withForm({
                                   label=''
                                   type='number'
                                   className='w-full'
+                                  aria-label={`Quantity for line ${i + 1}`}
                                 />
                               )}
                             </form.AppField>
@@ -155,6 +159,7 @@ export const SaleOrderDetails = withForm({
                                   label=''
                                   type='number'
                                   className='w-full'
+                                  aria-label={`Rate for line ${i + 1}`}
                                 />
                               )}
                             </form.AppField>
@@ -189,6 +194,7 @@ export const SaleOrderDetails = withForm({
                                   label=''
                                   className='w-full'
                                   placeholder='Select category'
+                                  aria-label={`Category for line ${i + 1}`}
                                 >
                                   {FURNITURE_CATEGORIES.map((c) => (
                                     <SelectItem key={c.value} value={c.value}>

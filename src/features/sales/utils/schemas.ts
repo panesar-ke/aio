@@ -89,65 +89,77 @@ export const saleOrderFormSchema = z
       )
       .min(1, { error: 'Order must contain at least one item' }),
   })
-  .superRefine(({ vatType, vatRate, orderDate }, ctx) => {
-    if (vatType === 'NONE' && vatRate !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'VAT rate is not required when VAT type is NONE',
-        path: ['vatRate'],
-      });
-    }
-    if (vatType !== 'NONE' && vatRate === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'VAT rate is required when VAT type is not NONE',
-        path: ['vatRate'],
-      });
-    }
-    if (vatType !== 'NONE' && vatRate && vatRate <= 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'VAT rate must be greater than 0 when VAT type is not NONE',
-        path: ['vatRate'],
-      });
-    }
-    if (vatType !== 'NONE' && vatRate && vatRate > 100) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'VAT rate must be less than or equal to 100 when VAT type is not NONE',
-        path: ['vatRate'],
-      });
-    }
-    if (vatType !== 'NONE' && vatRate && vatRate % 1 !== 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'VAT rate must be a whole number when VAT type is not NONE',
-        path: ['vatRate'],
-      });
-    }
-
-    if (orderDate) {
-      const parsed = parseISO(orderDate);
-
-      if (!isValid(parsed)) {
+  .superRefine(
+    ({ vatType, vatRate, orderDate, currency, exchangeRate }, ctx) => {
+      if (
+        currency === 'USD' &&
+        (exchangeRate === undefined || exchangeRate <= 0)
+      ) {
         ctx.addIssue({
           code: 'custom',
-          message: 'Invalid order date',
-          path: ['orderDate'],
+          message: 'Exchange rate is required when currency is USD',
+          path: ['exchangeRate'],
         });
-        return;
       }
-
-      if (endOfDay(parsed) > endOfDay(new Date())) {
+      if (vatType === 'NONE' && vatRate !== undefined) {
         ctx.addIssue({
           code: 'custom',
-          message: 'Order date cannot be in the future',
-          path: ['orderDate'],
+          message: 'VAT rate is not required when VAT type is NONE',
+          path: ['vatRate'],
         });
       }
-    }
-  });
+      if (vatType !== 'NONE' && vatRate === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'VAT rate is required when VAT type is not NONE',
+          path: ['vatRate'],
+        });
+      }
+      if (vatType !== 'NONE' && vatRate && vatRate <= 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'VAT rate must be greater than 0 when VAT type is not NONE',
+          path: ['vatRate'],
+        });
+      }
+      if (vatType !== 'NONE' && vatRate && vatRate > 100) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'VAT rate must be less than or equal to 100 when VAT type is not NONE',
+          path: ['vatRate'],
+        });
+      }
+      if (vatType !== 'NONE' && vatRate && vatRate % 1 !== 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'VAT rate must be a whole number when VAT type is not NONE',
+          path: ['vatRate'],
+        });
+      }
+
+      if (orderDate) {
+        const parsed = parseISO(orderDate);
+
+        if (!isValid(parsed)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Invalid order date',
+            path: ['orderDate'],
+          });
+          return;
+        }
+
+        if (endOfDay(parsed) > endOfDay(new Date())) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Order date cannot be in the future',
+            path: ['orderDate'],
+          });
+        }
+      }
+    },
+  );
 
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
 export type SaleOrderFormValues = z.infer<typeof saleOrderFormSchema>;

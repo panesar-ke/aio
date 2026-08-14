@@ -11,16 +11,19 @@ import { getSaleOrder } from '@/features/sales/services/orders/data';
 import { canEditDeleteSaleOrder } from '@/features/sales/utils/sale-order-permissions';
 import { AccountTier } from '@/features/sales/utils/search-params';
 import { titleCase } from '@/lib/helpers/formatters';
+import { requirePermission } from '@/lib/permissions/guards';
 
 export const metadata: Metadata = {
   title: 'Edit Sale Order',
 };
 
-type PageProps = {
-  params: Promise<{ orderId: string }>;
-};
+// type PageProps = {
+//   params: Promise<{ orderId: string }>;
+// };
 
-export default async function EditSaleOrderPage({ params }: PageProps) {
+export default async function EditSaleOrderPage({
+  params,
+}: Pick<PageProps<'/sales/orders/[orderId]/edit'>, 'params'>) {
   return (
     <div className='space-y-6'>
       <FormHeader
@@ -37,7 +40,10 @@ export default async function EditSaleOrderPage({ params }: PageProps) {
   );
 }
 
-async function SuspendedEditSaleOrder({ params }: PageProps) {
+async function SuspendedEditSaleOrder({
+  params,
+}: Pick<PageProps<'/sales/orders/[orderId]/edit'>, 'params'>) {
+  await requirePermission('sales:admin', { mode: 'page' });
   const { orderId } = await params;
   const saleOrderId = Number(orderId);
 

@@ -199,6 +199,11 @@ export const upsertSaleOrder = async (values: unknown) =>
 export const cancelSaleOrder = async (saleOrderId: number) =>
   runAction('cancel-sale-order', async () => {
     await requirePermission('sales:admin');
+
+    if (!Number.isInteger(saleOrderId) || saleOrderId < 1) {
+      throw new ActionError('Invalid sale order reference.');
+    }
+
     const user = await getCurrentUser();
 
     const accountId = await db.transaction(async (tx) => {

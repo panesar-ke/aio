@@ -116,7 +116,7 @@ async function getAccountsInternal({
       phone: saleAccounts.phone,
       salesPerson: users.name,
       lastPurchaseDate: maxDateSql,
-      totalPurchaseValue: sql<number>`cast(coalesce(sum(${salesOrdersHeader.amountInclusive}), 0) as numeric)`,
+      totalPurchaseValue: sql<number>`cast(coalesce(sum(${salesOrdersHeader.totalAmountInLocalCurrency}), 0) as numeric)`,
     })
     .from(saleAccounts)
     .innerJoin(users, eq(saleAccounts.salesRepId, users.id))

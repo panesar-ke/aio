@@ -73,41 +73,37 @@ export const requiredDateSchemaEntry = () =>
     return date;
   });
 
+// Same coercion trap as requiredDateSchemaEntry above: `z.coerce.number()`
+// runs `Number()` before the error map sees the value, so `iss.input` is NaN -
+// which is falsy - for a missing field AND for a non-numeric one. A ternary on
+// `iss.input` therefore always takes the "missing" branch and the caller's
+// message is never reached. Checking the raw value in a `.transform()` is the
+// only way to tell the two apart.
 export const requiredNumberSchemaEntry = (message?: string) =>
-  z.coerce
-    .number<number>({
-      error: (iss) =>
-        iss.input ? message || 'Invalid number' : 'Number is required',
-    })
-    .positive({ error: 'Please enter a valid number' });
+  z.custom<number>().transform((value, ctx) => {
+    const val: unknown = value;
+    if (val === undefined || val === null || val === '') {
+      ctx.addIssue({
+        code: 'custom',
+        message: message || 'Field is required',
+      });
+      return z.NEVER;
+    }
 
-//TODO: TO UPDATE AFTER RHF FULL REPLACEMENT
-// export const requiredNumberSchemaEntry = (message?: string) =>
-//   z
-//     .unknown()
-//     .transform((val, ctx) => {
-//       if (val === undefined) {
-//         ctx.addIssue({
-//           code: 'custom',
-//           message: message || 'Field is required',
-//         });
-//         return z.NEVER;
-//       }
-//       const num = Number(val);
-//       if (Number.isNaN(num)) {
-//         ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
-//         return z.NEVER;
-//       }
-//       return num;
-//     })
-//     .pipe(
-//       z
-//         .number()
-//         .min(1, { message: message || 'Field is required' })
-//         .refine((value) => !Number.isNaN(value) && value > 0, {
-//           message: 'This field must be a valid number greater than 0',
-//         }),
-//     );
+    const num = Number(val);
+
+    if (Number.isNaN(num)) {
+      ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
+      return z.NEVER;
+    }
+
+    if (num <= 0) {
+      ctx.addIssue({ code: 'custom', message: 'Please enter a valid number' });
+      return z.NEVER;
+    }
+
+    return num;
+  });
 
 export const searchValidateSchema = z.object({ q: z.string().optional() });
 
