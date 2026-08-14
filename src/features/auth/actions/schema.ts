@@ -12,3 +12,9 @@ export const loginSchema = z.object({
     'Password must be at least 6 characters long'
   ),
 });
+
+export const forgotPasswordSchema = z.object({
+  identifier: requiredStringSchemaEntry('Email or contact is required'),
+});
+
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
