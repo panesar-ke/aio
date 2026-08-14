@@ -116,7 +116,7 @@ async function getAccountsInternal({
       phone: saleAccounts.phone,
       salesPerson: users.name,
       lastPurchaseDate: maxDateSql,
-      totalPurchaseValue: sql<number>`cast(coalesce(sum(${salesOrdersHeader.amountInclusive}), 0) as numeric)`,
+      totalPurchaseValue: sql<number>`cast(coalesce(sum(${salesOrdersHeader.totalAmountInLocalCurrency}), 0) as numeric)`,
     })
     .from(saleAccounts)
     .innerJoin(users, eq(saleAccounts.salesRepId, users.id))
@@ -222,6 +222,11 @@ async function getAccountDetailsInternal({
       saleOrderNo: salesOrdersHeader.saleOrderNo,
       dateRaised: salesOrdersHeader.dateRaised,
       amountInclusive: salesOrdersHeader.amountInclusive,
+      currency: salesOrdersHeader.currency,
+      // Orders can be raised in KES or USD, so cross-order totals have to be
+      // summed on the local-currency column instead of amountInclusive.
+      amountInLocalCurrency: salesOrdersHeader.totalAmountInLocalCurrency,
+      status: salesOrdersHeader.status,
       itemCount: sql<string>`cast(coalesce(sum(${salesOrdersDetails.qty}), 0) as numeric)`,
     })
     .from(salesOrdersHeader)

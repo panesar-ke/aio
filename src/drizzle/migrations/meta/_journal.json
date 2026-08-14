@@ -227,10 +227,31 @@
       "breakpoints": true
     },
     {
+      "idx": 32,
+      "version": "7",
+      "when": 1785833832747,
+      "tag": "0032_worthless_overlord",
+      "breakpoints": true
+    },
+    {
       "idx": 33,
       "version": "7",
       "when": 1785841255181,
       "tag": "0033_same_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1786685585290,
+      "tag": "0034_bored_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1786689459988,
+      "tag": "0035_sharp_turbo",
       "breakpoints": true
     }
   ]

@@ -17,6 +17,7 @@ import {
   type LucideIcon,
   PackageIcon,
   ReceiptIcon,
+  ReceiptTextIcon,
   RecycleIcon,
   TabletSmartphoneIcon,
   Users2,
@@ -238,11 +239,11 @@ const NAV_ITEMS: Array<NavItem> = [
         href: '/sales/accounts',
         icon: UsersIcon,
       },
-      // {
-      //   label: "Assets Management",
-      //   href: "/it/assets",
-      //   icon: TabletSmartphoneIcon,
-      // },
+      {
+        label: 'Sales Orders',
+        href: '/sales/orders',
+        icon: ReceiptTextIcon,
+      },
       // {
       //   label: "Licenses",
       //   href: "/it/licenses",

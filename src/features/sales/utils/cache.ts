@@ -16,6 +16,17 @@ export function getAccountIdTag(id: string) {
   return getIdTag('accounts', id);
 }
 
+export function getSalesOrdersGlobalTag() {
+  return getGlobalTag('sales-orders');
+}
+export function getSalesOrdersIdTag(id: string) {
+  return getIdTag('sales-orders', id);
+}
+
+export function getSalesPersonsGlobalTag() {
+  return getGlobalTag('sales-persons');
+}
+
 export function revalidateLeadsTag(id: string) {
   revalidateTag(getLeadsGlobalTag(), 'max');
   revalidateTag(getLeadIdTag(id), 'max');
@@ -24,4 +35,10 @@ export function revalidateLeadsTag(id: string) {
 export function revalidateAccountsTag(id: string) {
   revalidateTag(getAccountsGlobalTag(), 'max');
   revalidateTag(getAccountIdTag(id), 'max');
+}
+
+export function revalidateSalesOrderTag(id: string) {
+  revalidateTag(getSalesOrdersGlobalTag(), 'max');
+  revalidateTag(getSalesOrdersIdTag(id), 'max');
+  revalidateTag(getSalesPersonsGlobalTag(), 'max');
 }

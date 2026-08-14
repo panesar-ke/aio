@@ -5,7 +5,9 @@ import {
   AccountTier,
   leadSearchParams,
   LeadStatus,
+  salesOrderSearchParams,
 } from '@/features/sales/utils/search-params';
+import { dateFormat } from '@/lib/helpers/formatters';
 
 export function useLeadsFilters() {
   const [filters, setFilters] = useQueryStates(leadSearchParams, {
@@ -53,7 +55,9 @@ export function useAccountsFilters() {
     setFilters({
       search: '',
       tier: AccountTier.all,
-      lastPurchase: undefined,
+      // nuqs skips undefined entries entirely, so clearing a param means
+      // writing its default ('' here) or null - never undefined.
+      lastPurchase: null,
     });
   }
 
@@ -63,5 +67,53 @@ export function useAccountsFilters() {
     onTierChange,
     onReset,
     onLastPurchaseChange,
+  };
+}
+
+export function useSalesOrdersFilters() {
+  const [filters, setFilters] = useQueryStates(salesOrderSearchParams, {
+    shallow: false,
+    limitUrlUpdates: throttle(120),
+  });
+
+  function onHandleSearch(value: string) {
+    setFilters({ search: value });
+  }
+
+  function onSalesPersonChange(salesPerson: string) {
+    setFilters({ salesPerson });
+  }
+
+  function onAccountChange(account: string) {
+    setFilters({ account });
+  }
+
+  function onDateChange(date: { from: Date | null; to: Date | null }) {
+    setFilters({
+      from: date.from ? dateFormat(date.from) : null,
+      to: date.to ? dateFormat(date.to) : null,
+    });
+  }
+
+  function onReset() {
+    setFilters({
+      search: '',
+      // `salesPerson` and `account` carry withDefault(''), so '' clears them;
+      // `from`/`to` have no default, so null removes them from the URL.
+      // Passing undefined would make nuqs skip them and leave the filter on.
+      salesPerson: '',
+      account: '',
+      from: null,
+      to: null,
+    });
+  }
+
+  return {
+    filters,
+    onHandleSearch,
+    onSalesPersonChange,
+    onReset,
+    onAccountChange,
+    onDateChange,
   };
 }

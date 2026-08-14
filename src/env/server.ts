@@ -17,6 +17,7 @@ export const env = createEnv({
     SESSION_SECRET: z.string().min(1),
     SECONDARY_API_URL: z.string().min(1),
     ARCJET_KEY: z.string().min(1),
+    EXCHANGE_RATE_API_KEY: z.string().min(1),
     // VERCEL_URL: z.string().min(1),
   },
   runtimeEnv: process.env,

@@ -1,33 +1,33 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const paymentMethodSchemaEntry = () =>
-  z.enum(["cash", "mpesa", "cheque", "bank"], {
+  z.enum(['cash', 'mpesa', 'cheque', 'bank'], {
     error: (issue) =>
       issue.input === undefined
-        ? "Select payment method"
-        : "Select a payment method",
+        ? 'Select payment method'
+        : 'Select a payment method',
   });
 
 export const paymentReferenceSchemaEntry = () =>
-  z.string().trim().min(1, { message: "Reference is required" }).toLowerCase();
+  z.string().trim().min(1, { message: 'Reference is required' }).toLowerCase();
 
 export const requiredStringSchemaEntry = (message?: string) =>
   z
     .string()
     .trim()
     .toLowerCase()
-    .min(1, { message: message || "This field is required" });
+    .min(1, { message: message || 'This field is required' });
 
 export const requiredTrimmedStringSchemaEntry = (message?: string) =>
   z
     .string()
     .trim()
-    .min(1, { message: message || "This field is required" });
+    .min(1, { message: message || 'This field is required' });
 
 export const nullableTrimmedString = z
   .string()
   .trim()
-  .transform((value) => (value === "" ? null : value))
+  .transform((value) => (value === '' ? null : value))
   .nullable();
 
 export const optionalTrimmedString = z
@@ -35,7 +35,7 @@ export const optionalTrimmedString = z
   .trim()
   .nullable()
   .optional()
-  .transform((value) => (value === "" || value === undefined ? null : value));
+  .transform((value) => (value === '' || value === undefined ? null : value));
 
 export const nullableNonNegativeNumberField = (label: string) =>
   z
@@ -62,44 +62,51 @@ export const optionalNumberSchemaEntry = () =>
 export const requiredDateSchemaEntry = () =>
   z.unknown().transform((val, ctx) => {
     if (val === undefined) {
-      ctx.addIssue({ code: "custom", message: "Date is required" });
+      ctx.addIssue({ code: 'custom', message: 'Date is required' });
       return z.NEVER;
     }
     const date = new Date(val as string | number | Date);
     if (Number.isNaN(date.getTime())) {
-      ctx.addIssue({ code: "custom", message: "Date must be a valid date" });
+      ctx.addIssue({ code: 'custom', message: 'Date must be a valid date' });
       return z.NEVER;
     }
     return date;
   });
 
-//TODO: TO UPDATE AFTER RHF FULL REPLACEMENT
+// Same coercion trap as requiredDateSchemaEntry above: `z.coerce.number()`
+// runs `Number()` before the error map sees the value, so `iss.input` is NaN -
+// which is falsy - for a missing field AND for a non-numeric one. A ternary on
+// `iss.input` therefore always takes the "missing" branch and the caller's
+// message is never reached. Checking the raw value in a `.transform()` is the
+// only way to tell the two apart.
 export const requiredNumberSchemaEntry = (message?: string) =>
-  z
-    .unknown()
-    .transform((val, ctx) => {
-      if (val === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          message: message || "Field is required",
-        });
-        return z.NEVER;
-      }
-      const num = Number(val);
-      if (Number.isNaN(num)) {
-        ctx.addIssue({ code: "custom", message: "Field must be a number" });
-        return z.NEVER;
-      }
-      return num;
-    })
-    .pipe(
-      z
-        .number()
-        .min(1, { message: message || "Field is required" })
-        .refine((value) => !Number.isNaN(value) && value > 0, {
-          message: "This field must be a valid number greater than 0",
-        }),
-    );
+  z.custom<number>().transform((value, ctx) => {
+    const val: unknown = value;
+    if (val === undefined || val === null || val === '') {
+      ctx.addIssue({
+        code: 'custom',
+        message: message || 'Field is required',
+      });
+      return z.NEVER;
+    }
+
+    const num = Number(val);
+
+    // isFinite rather than !isNaN: 'Infinity' coerces to a non-NaN value that
+    // would otherwise clear the > 0 check below and reach Big.js, which throws
+    // on it and silently degrades the line to zero.
+    if (!Number.isFinite(num)) {
+      ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
+      return z.NEVER;
+    }
+
+    if (num <= 0) {
+      ctx.addIssue({ code: 'custom', message: 'Please enter a valid number' });
+      return z.NEVER;
+    }
+
+    return num;
+  });
 
 export const searchValidateSchema = z.object({ q: z.string().optional() });
 
@@ -110,15 +117,15 @@ export const reportDateRangeSchema = z.object({
 
 export const reportDateRangeSchemaWithRequired = z
   .object({
-    from: z.string().date("Start date must be a valid date"),
-    to: z.string().date("End date must be a valid date"),
+    from: z.string().date('Start date must be a valid date'),
+    to: z.string().date('End date must be a valid date'),
   })
   .superRefine((data, ctx) => {
     if (data.from && data.to && new Date(data.from) > new Date(data.to)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Start date cannot be after end date",
-        path: ["from"],
+        message: 'Start date cannot be after end date',
+        path: ['from'],
       });
     }
   });
@@ -130,16 +137,16 @@ export const reportWithClientAndDateRangeSchema = z.object({
 
 export const reportWithClientAndDateRangeSchemaWithRequired = z
   .object({
-    from: z.string().date("Start date must be a valid date"),
-    to: z.string().date("End date must be a valid date"),
-    clientId: requiredStringSchemaEntry("Client is required"),
+    from: z.string().date('Start date must be a valid date'),
+    to: z.string().date('End date must be a valid date'),
+    clientId: requiredStringSchemaEntry('Client is required'),
   })
   .superRefine((data, ctx) => {
     if (data.from && data.to && new Date(data.from) > new Date(data.to)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Start date cannot be after end date",
-        path: ["from"],
+        message: 'Start date cannot be after end date',
+        path: ['from'],
       });
     }
   });

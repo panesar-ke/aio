@@ -3,10 +3,7 @@ import type { z } from 'zod';
 import type { ActionResult } from '@/lib/actions/types';
 
 import { validateFields } from '@/lib/action-validator';
-import {
-  ForbiddenError,
-  UnauthorizedError,
-} from '@/lib/permissions/errors';
+import { ForbiddenError, UnauthorizedError } from '@/lib/permissions/errors';
 
 class ActionValidationError extends Error {
   constructor(message: string) {
@@ -15,9 +12,23 @@ class ActionValidationError extends Error {
   }
 }
 
+/**
+ * A business-rule failure whose message is safe to show the user.
+ *
+ * Prefer returning `{ error: true, message }` directly. Throw this instead
+ * when the check happens inside a database transaction, where returning would
+ * commit the very work the check is meant to prevent.
+ */
+export class ActionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ActionError';
+  }
+}
+
 export function parseOrFail<T>(
   schema: z.ZodType<T, unknown>,
-  values: unknown
+  values: unknown,
 ): T {
   const { data, error } = validateFields<T>(values, schema);
 
@@ -38,13 +49,14 @@ export function ensureId(id: string | null | undefined, label: string): string {
 
 export async function runAction<T>(
   name: string,
-  fn: () => Promise<ActionResult<T>>
+  fn: () => Promise<ActionResult<T>>,
 ): Promise<ActionResult<T>> {
   try {
     return await fn();
   } catch (error) {
     if (
       error instanceof ActionValidationError ||
+      error instanceof ActionError ||
       error instanceof ForbiddenError ||
       error instanceof UnauthorizedError
     ) {

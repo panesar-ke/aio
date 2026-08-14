@@ -77,3 +77,64 @@ export const LAST_PURCHASE = [
     label: 'Dormant (12+ months)',
   },
 ] as const;
+
+export const FURNITURE_CATEGORIES = [
+  {
+    value: 'accessories',
+    label: 'Accessories',
+  },
+  {
+    value: 'baristo',
+    label: 'Baristo',
+  },
+  {
+    value: 'bedroom',
+    label: 'Bedroom',
+  },
+  {
+    value: 'cabinet',
+    label: 'Cabinet',
+  },
+  {
+    value: 'consoles',
+    label: 'Consoles',
+  },
+  {
+    value: 'dining',
+    label: 'Dining',
+  },
+  {
+    value: 'joinery',
+    label: 'Joinery',
+  },
+  {
+    value: 'kitchen',
+    label: 'Kitchen',
+  },
+  {
+    value: 'living',
+    label: 'Living',
+  },
+  {
+    value: 'office',
+    label: 'Office',
+  },
+  {
+    value: 'tables',
+    label: 'Tables',
+  },
+];
+
+export const SALE_ORDER_STATUS = [
+  'draft',
+  'fulfilled',
+  'partially fulfilled',
+  'cancelled',
+] as const;
+
+export const SALE_ORDER_STATUS_LABELS = {
+  'draft': 'Pending',
+  'fulfilled': 'Fulfilled',
+  'partially fulfilled': 'Partially Fulfilled',
+  'cancelled': 'Cancelled',
+} as const satisfies Record<(typeof SALE_ORDER_STATUS)[number], string>;

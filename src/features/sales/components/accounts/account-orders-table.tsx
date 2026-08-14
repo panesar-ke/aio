@@ -8,9 +8,13 @@ import { DataTable } from '@/components/custom/datatable';
 import { Badge } from '@/components/ui/badge';
 import {
   buildSalesOrderLabel,
-  formatCurrency,
   formatTableDate,
 } from '@/features/sales/utils/account-helpers';
+import { formatSaleOrderAmount } from '@/features/sales/utils/sale-order-format';
+import {
+  saleOrderStatusLabel,
+  saleOrderStatusVariant,
+} from '@/features/sales/utils/sale-order-permissions';
 import { numberFormat } from '@/lib/helpers/formatters';
 
 type AccountOrder = NonNullable<
@@ -49,20 +53,23 @@ export function createAccountOrderColumns(): Array<ColumnDef<AccountOrder>> {
       accessorKey: 'amountInclusive',
       header: () => <div className='text-right'>Amount</div>,
       cell: ({ row }) => (
-        <div className='text-right font-medium'>
-          {formatCurrency(row.original.amountInclusive)}
+        <div className='text-right font-medium tabular-nums'>
+          {formatSaleOrderAmount(
+            row.original.currency,
+            row.original.amountInclusive,
+          )}
         </div>
       ),
     },
     {
-      id: 'status',
+      accessorKey: 'status',
       header: 'Status',
-      cell: () => (
+      cell: ({ row }) => (
         <Badge
-          variant='success'
+          variant={saleOrderStatusVariant(row.original.status)}
           className='rounded-full px-2.5 py-1 text-[11px]'
         >
-          Fulfilled
+          {saleOrderStatusLabel(row.original.status)}
         </Badge>
       ),
     },
