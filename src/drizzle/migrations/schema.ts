@@ -20,6 +20,9 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
+import { SALE_ORDER_STATUS } from '@/features/sales/utils/constants';
+
+import { createdAt, updatedAt } from '../helpers';
 import { stores } from '../schema';
 
 export const aalLevel = pgEnum('aal_level', ['aal3', 'aal2', 'aal1']);
@@ -214,6 +217,10 @@ export const workfloorType = pgEnum('workfloorType', [
   'UNIONISABLE',
   'NON-UNIONISABLE',
 ]);
+export const saleOrderStatusEnum = pgEnum(
+  'sale_order_status',
+  SALE_ORDER_STATUS,
+);
 
 export const appraisalHeader = pgTable(
   'appraisal_header',
@@ -237,7 +244,7 @@ export const appraisalHeader = pgTable(
     finalRatingManagement: numeric('final_rating_management'),
     finalRemarkManagement: text('final_remark_management'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -253,7 +260,7 @@ export const appraisalHeader = pgTable(
       foreignColumns: [calendarYears.id],
       name: 'appraisal_header_year_id_calendar_years_id_fk',
     }),
-  ]
+  ],
 );
 
 export const calendarYears = pgTable('calendar_years', {
@@ -273,7 +280,7 @@ export const contractExtensions = pgTable(
     createdBy: uuid('created_by').notNull(),
     createdDate: date('created_date').defaultNow().notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -284,7 +291,7 @@ export const contractExtensions = pgTable(
       foreignColumns: [employees.id],
       name: 'contract_extensions_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const attendances = pgTable('attendances', {
@@ -310,7 +317,7 @@ export const conversions = pgTable(
     convertedItem: uuid('converted_item').notNull(),
     convertedQuantity: numeric('converted_quantity').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.convertedItem],
       foreignColumns: [products.id],
@@ -321,7 +328,7 @@ export const conversions = pgTable(
       foreignColumns: [products.id],
       name: 'conversions_converting_item_products_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const disciplinaryCases = pgTable('disciplinary_cases', {
@@ -367,13 +374,13 @@ export const employeeQualifications = pgTable(
     attainment: varchar(),
     specialization: varchar(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employee_qualifications_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const employeeSession = pgTable(
@@ -386,13 +393,13 @@ export const employeeSession = pgTable(
       mode: 'string',
     }).notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.userId],
       foreignColumns: [employeeUsers.id],
       name: 'employee_session_user_id_employee_users_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const employeeTerminations = pgTable(
@@ -404,13 +411,13 @@ export const employeeTerminations = pgTable(
     reason: text().notNull(),
     remarks: text(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employee_terminations_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const employeeCertifications = pgTable(
@@ -421,13 +428,13 @@ export const employeeCertifications = pgTable(
     certification: varchar().notNull(),
     score: varchar().notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employee_certifications_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const employeeUsers = pgTable(
@@ -448,21 +455,21 @@ export const employeeUsers = pgTable(
     employeeRefId: integer('employee_ref_id').notNull(),
     idNumber: text('id_number'),
   },
-  table => [
+  (table) => [
     uniqueIndex('employee_user_contact_idx').using(
       'btree',
-      table.contact.asc().nullsLast().op('text_ops')
+      table.contact.asc().nullsLast().op('text_ops'),
     ),
     uniqueIndex('employee_user_id_number_idx').using(
       'btree',
-      table.idNumber.asc().nullsLast().op('text_ops')
+      table.idNumber.asc().nullsLast().op('text_ops'),
     ),
     index('employee_user_name_idx').using(
       'btree',
-      table.name.asc().nullsLast().op('text_ops')
+      table.name.asc().nullsLast().op('text_ops'),
     ),
     unique('employee_users_contact_unique').on(table.contact),
-  ]
+  ],
 );
 
 export const employees = pgTable(
@@ -499,14 +506,14 @@ export const employees = pgTable(
     attendanceId: integer('attendance_id'),
     isDeleted: boolean('is_deleted').default(false).notNull(),
   },
-  table => [
+  (table) => [
     index('employee_othernames_idx').using(
       'btree',
-      table.otherNames.asc().nullsLast().op('text_ops')
+      table.otherNames.asc().nullsLast().op('text_ops'),
     ),
     index('employee_surname_idx').using(
       'btree',
-      table.surname.asc().nullsLast().op('text_ops')
+      table.surname.asc().nullsLast().op('text_ops'),
     ),
     foreignKey({
       columns: [table.department],
@@ -518,7 +525,7 @@ export const employees = pgTable(
       foreignColumns: [designations.id],
       name: 'employees_designation_designations_id_fk',
     }).onDelete('restrict'),
-  ]
+  ],
 );
 
 export const employeesNoks = pgTable(
@@ -535,13 +542,13 @@ export const employeesNoks = pgTable(
     incaseOfEmergenceyContact: varchar('incase_of_emergencey_contact'),
     incaseOfEmergenceyRelation: varchar('incase_of_emergencey_relation'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employees_noks_employee_id_employees_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const employeesOtherdetails = pgTable(
@@ -568,13 +575,13 @@ export const employeesOtherdetails = pgTable(
     accountName: varchar('account_name'),
     shaNo: varchar('sha_no'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employees_otherdetails_employee_id_employees_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const grnsHeader = pgTable(
@@ -592,7 +599,7 @@ export const grnsHeader = pgTable(
     orderId: bigint('order_id', { mode: 'number' }),
     storeId: uuid('store_id').references(() => stores.id),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -608,7 +615,7 @@ export const grnsHeader = pgTable(
       foreignColumns: [vendors.id],
       name: 'grns_header_vendor_id_vendors_id_fk',
     }),
-  ]
+  ],
 );
 
 export const forms = pgTable('forms', {
@@ -637,7 +644,7 @@ export const healthSafety = pgTable(
     resolutionDate: date('resolution_date'),
     amountAwarded: numeric('amount_awarded'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.departmentId],
       foreignColumns: [departments.id],
@@ -648,7 +655,7 @@ export const healthSafety = pgTable(
       foreignColumns: [employees.id],
       name: 'health_safety_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const jobcardStaffs = pgTable(
@@ -658,7 +665,7 @@ export const jobcardStaffs = pgTable(
     taskId: uuid('task_id').notNull(),
     staffId: integer('staff_id').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.staffId],
       foreignColumns: [employees.id],
@@ -669,7 +676,7 @@ export const jobcardStaffs = pgTable(
       foreignColumns: [jobcardTasks.id],
       name: 'jobcard_staffs_task_id_jobcard_tasks_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const employeesChildren = pgTable(
@@ -679,13 +686,13 @@ export const employeesChildren = pgTable(
     childname: varchar(),
     dob: date(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'employees_children_employee_id_employees_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const employeesContacts = pgTable(
@@ -706,7 +713,7 @@ export const employeesContacts = pgTable(
     passport: varchar(),
     drivingLicense: varchar('driving_license'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.countyId],
       foreignColumns: [counties.id],
@@ -717,7 +724,7 @@ export const employeesContacts = pgTable(
       foreignColumns: [employees.id],
       name: 'employees_contacts_employee_id_employees_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const kpis = pgTable(
@@ -727,13 +734,13 @@ export const kpis = pgTable(
     kpi: text().notNull(),
     designationId: integer('designation_id'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.designationId],
       foreignColumns: [designations.id],
       name: 'kpis_designation_id_designations_id_fk',
     }),
-  ]
+  ],
 );
 
 export const jobcardTimes = pgTable(
@@ -746,13 +753,13 @@ export const jobcardTimes = pgTable(
     remarks: text(),
     isStart: boolean('is_start').default(false).notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.taskId],
       foreignColumns: [jobcardTasks.id],
       name: 'jobcard_times_task_id_jobcard_tasks_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const leaveApplications = pgTable(
@@ -775,7 +782,7 @@ export const leaveApplications = pgTable(
     isDeleted: boolean('is_deleted').default(false).notNull(),
     attachmentUrl: text('attachment_url'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.approvedBy],
       foreignColumns: [users.id],
@@ -796,7 +803,7 @@ export const leaveApplications = pgTable(
       foreignColumns: [leaveTypes.id],
       name: 'leave_applications_leave_type_id_leave_types_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const leaveTypes = pgTable('leave_types', {
@@ -819,7 +826,7 @@ export const loanDeductions = pgTable(
     createdBy: uuid('created_by').notNull(),
     createdDate: date('created_date').defaultNow().notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -830,7 +837,7 @@ export const loanDeductions = pgTable(
       foreignColumns: [staffLoans.id],
       name: 'loan_deductions_loan_id_staff_loans_id_fk',
     }),
-  ]
+  ],
 );
 
 export const materialIssuesHeader = pgTable(
@@ -847,14 +854,14 @@ export const materialIssuesHeader = pgTable(
     isDeleted: boolean('is_deleted').default(false).notNull(),
     storeId: uuid('store_id').references(() => stores.id),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.issuedBy],
       foreignColumns: [users.id],
       name: 'material_issues_header_issued_by_users_id_fk',
     }).onDelete('cascade'),
     unique('material_issues_header_issue_no_unique').on(table.issueNo),
-  ]
+  ],
 );
 
 export const motorVehicles = pgTable('motor_vehicles', {
@@ -881,10 +888,10 @@ export const jobcardTasks = pgTable(
     remarks: text(),
     jobcardId: uuid('jobcard_id').notNull(),
   },
-  table => [
+  (table) => [
     index('jobard_tasks_idx').using(
       'btree',
-      table.jobcardNo.asc().nullsLast().op('text_ops')
+      table.jobcardNo.asc().nullsLast().op('text_ops'),
     ),
     foreignKey({
       columns: [table.departmentId],
@@ -896,7 +903,7 @@ export const jobcardTasks = pgTable(
       foreignColumns: [jobcards.id],
       name: 'jobcard_tasks_jobcard_id_jobcards_id_fk',
     }),
-  ]
+  ],
 );
 
 export const jobcards = pgTable(
@@ -912,7 +919,7 @@ export const jobcards = pgTable(
     createdDate: date('created_date').defaultNow().notNull(),
     category: varchar(),
   },
-  table => [unique('jobcards_jobcard_no_unique').on(table.jobcardNo)]
+  (table) => [unique('jobcards_jobcard_no_unique').on(table.jobcardNo)],
 );
 
 export const mrqDetails = pgTable(
@@ -930,7 +937,7 @@ export const mrqDetails = pgTable(
     linked: boolean().default(false).notNull(),
     serviceId: uuid('service_id'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [mrqHeaders.id],
@@ -957,7 +964,7 @@ export const mrqDetails = pgTable(
       name: 'mrq_details_unit_id_uoms_id_fk',
     }).onDelete('cascade'),
     unique('mrq_details_request_id_unique').on(table.requestId),
-  ]
+  ],
 );
 
 export const odometerReadings = pgTable(
@@ -969,7 +976,7 @@ export const odometerReadings = pgTable(
     vehicleId: integer('vehicle_id').notNull(),
     employeeId: integer('employee_id').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
@@ -980,7 +987,7 @@ export const odometerReadings = pgTable(
       foreignColumns: [motorVehicles.id],
       name: 'odometer_readings_vehicle_id_motor_vehicles_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const opportunitiesFiles = pgTable(
@@ -995,7 +1002,7 @@ export const opportunitiesFiles = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -1006,7 +1013,7 @@ export const opportunitiesFiles = pgTable(
       foreignColumns: [opportunities.id],
       name: 'opportunities_files_opportunity_id_opportunities_id_fk',
     }),
-  ]
+  ],
 );
 
 export const notifications = pgTable(
@@ -1024,7 +1031,7 @@ export const notifications = pgTable(
     notificationType: varchar('notification_type').notNull(),
     eventId: text('event_id'),
   },
-  table => [
+  (table) => [
     uniqueIndex('notifications_addressed_type_event_unique')
       .on(table.addressedTo, table.notificationType, table.eventId)
       .where(sql`${table.eventId} is not null`),
@@ -1033,7 +1040,7 @@ export const notifications = pgTable(
       foreignColumns: [users.id],
       name: 'notifications_addressed_to_users_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const opportunities = pgTable(
@@ -1052,7 +1059,7 @@ export const opportunities = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.accountId],
       foreignColumns: [saleAccounts.id],
@@ -1063,7 +1070,7 @@ export const opportunities = pgTable(
       foreignColumns: [users.id],
       name: 'opportunities_sales_rep_id_users_id_fk',
     }),
-  ]
+  ],
 );
 
 export const projects = pgTable(
@@ -1074,12 +1081,12 @@ export const projects = pgTable(
     active: boolean().default(true),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow(),
   },
-  table => [
+  (table) => [
     index('project_name_idx').using(
       'btree',
-      table.projectName.asc().nullsLast().op('text_ops')
+      table.projectName.asc().nullsLast().op('text_ops'),
     ),
-  ]
+  ],
 );
 
 export const productCategories = pgTable('product_categories', {
@@ -1097,13 +1104,13 @@ export const projectComments = pgTable(
     postedBy: varchar('posted_by').notNull(),
     postedDate: date('posted_date').defaultNow().notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [siteProjects.id],
       name: 'project_comments_project_id_site_projects_id_fk',
     }),
-  ]
+  ],
 );
 
 export const projectComponents = pgTable(
@@ -1115,13 +1122,13 @@ export const projectComponents = pgTable(
     quantity: numeric().default('1').notNull(),
     remarks: varchar(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [siteProjects.id],
       name: 'project_components_project_id_site_projects_id_fk',
     }),
-  ]
+  ],
 );
 
 export const projectFinancials = pgTable(
@@ -1134,13 +1141,13 @@ export const projectFinancials = pgTable(
     quantity: numeric().default('1').notNull(),
     remarks: varchar(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [siteProjects.id],
       name: 'project_financials_project_id_site_projects_id_fk',
     }),
-  ]
+  ],
 );
 
 export const quotationsHeader = pgTable(
@@ -1164,7 +1171,7 @@ export const quotationsHeader = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.accountId],
       foreignColumns: [saleAccounts.id],
@@ -1175,7 +1182,7 @@ export const quotationsHeader = pgTable(
       foreignColumns: [users.id],
       name: 'quotations_header_sales_rep_id_users_id_fk',
     }).onDelete('restrict'),
-  ]
+  ],
 );
 
 export const saleAccounts = pgTable(
@@ -1198,13 +1205,13 @@ export const saleAccounts = pgTable(
       .notNull(),
     kraPin: varchar('kra_pin', { length: 15 }),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.salesRepId],
       foreignColumns: [users.id],
       name: 'sale_accounts_sales_rep_id_users_id_fk',
     }).onDelete('restrict'),
-  ]
+  ],
 );
 
 export const quotationsItems = pgTable(
@@ -1222,13 +1229,13 @@ export const quotationsItems = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.quotationId],
       foreignColumns: [quotationsHeader.id],
       name: 'quotations_items_quotation_id_quotations_header_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const roles = pgTable('roles', {
@@ -1260,13 +1267,13 @@ export const ordersHeader = pgTable(
     vatId: integer('vat_id'),
     srnReceipt: boolean('srn_receipt').default(false),
     displayOdometerReadingsOnPrint: boolean(
-      'display_odometer_readings_on_print'
+      'display_odometer_readings_on_print',
     ).default(false),
     vehicleId: integer('vehicle_id'),
     grnReceipt: boolean('grn_receipt').default(false),
     fileUrl: text('file_url'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -1293,7 +1300,7 @@ export const ordersHeader = pgTable(
       name: 'orders_header_vendor_id_vendors_id_fk',
     }).onDelete('cascade'),
     unique('orders_header_reference_unique').on(table.reference),
-  ]
+  ],
 );
 
 export const ordersDetails = pgTable(
@@ -1318,7 +1325,7 @@ export const ordersDetails = pgTable(
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
     requestId: bigint('request_id', { mode: 'number' }),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [ordersHeader.id],
@@ -1344,7 +1351,7 @@ export const ordersDetails = pgTable(
       foreignColumns: [vats.id],
       name: 'orders_details_vat_id_vats_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const products = pgTable(
@@ -1363,10 +1370,10 @@ export const products = pgTable(
       .default(false)
       .notNull(),
   },
-  table => [
+  (table) => [
     index('product_name_idx').using(
       'btree',
-      table.productName.asc().nullsLast().op('text_ops')
+      table.productName.asc().nullsLast().op('text_ops'),
     ),
     foreignKey({
       columns: [table.categoryId],
@@ -1378,7 +1385,7 @@ export const products = pgTable(
       foreignColumns: [uoms.id],
       name: 'products_uom_id_uoms_id_fk',
     }),
-  ]
+  ],
 );
 
 export const previousLostHours = pgTable(
@@ -1391,13 +1398,13 @@ export const previousLostHours = pgTable(
     earlyExit: numeric('early_exit'),
     remarks: text(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'previous_lost_hours_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const salesSupportTickets = pgTable(
@@ -1415,7 +1422,7 @@ export const salesSupportTickets = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.accountId],
       foreignColumns: [saleAccounts.id],
@@ -1426,7 +1433,7 @@ export const salesSupportTickets = pgTable(
       foreignColumns: [users.id],
       name: 'sales_support_tickets_created_by_users_id_fk',
     }),
-  ]
+  ],
 );
 
 export const session = pgTable(
@@ -1439,13 +1446,13 @@ export const session = pgTable(
       mode: 'string',
     }).notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
       name: 'session_user_id_users_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const uoms = pgTable('uoms', {
@@ -1465,7 +1472,7 @@ export const srnsHeader = pgTable(
     createdOn: date('created_on').defaultNow(),
     isDeleted: boolean('is_deleted').default(false),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
@@ -1476,7 +1483,7 @@ export const srnsHeader = pgTable(
       foreignColumns: [ordersHeader.id],
       name: 'srns_header_order_id_orders_header_id_fk',
     }),
-  ]
+  ],
 );
 
 export const salesOrdersHeader = pgTable(
@@ -1496,8 +1503,20 @@ export const salesOrdersHeader = pgTable(
     salesRepId: uuid('sales_rep_id').notNull(),
     display: boolean().default(true).notNull(),
     importRefId: integer('import_ref_id'),
+    currency: varchar('currency', { length: 3 }).notNull().default('KES'),
+    conversionRate: numeric('conversion_rate').notNull().default('1'),
+    totalAmountInLocalCurrency: numeric('total_amount_in_local_currency')
+      .notNull()
+      .default('0'),
+    status: saleOrderStatusEnum('sale_order_status')
+      .default('fulfilled')
+      .notNull(),
+    createdAt,
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.accountId],
       foreignColumns: [saleAccounts.id],
@@ -1508,7 +1527,17 @@ export const salesOrdersHeader = pgTable(
       foreignColumns: [users.id],
       name: 'sales_orders_header_sales_rep_id_users_id_fk',
     }).onDelete('restrict'),
-  ]
+    uniqueIndex('sales_orders_header_sale_order_no_idx').on(table.saleOrderNo),
+    index('sales_orders_header_sales_rep_date_idx').on(
+      table.salesRepId,
+      table.dateRaised,
+    ),
+    index('sales_orders_header_account_date_order_no_idx').on(
+      table.accountId,
+      table.dateRaised,
+      table.saleOrderNo,
+    ),
+  ],
 );
 
 export const staffObjectivesHeader = pgTable(
@@ -1524,7 +1553,7 @@ export const staffObjectivesHeader = pgTable(
       .defaultNow()
       .notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.approvedBy],
       foreignColumns: [users.id],
@@ -1540,7 +1569,7 @@ export const staffObjectivesHeader = pgTable(
       foreignColumns: [calendarYears.id],
       name: 'staff_objectives_header_year_id_calendar_years_id_fk',
     }),
-  ]
+  ],
 );
 
 export const services = pgTable('services', {
@@ -1565,7 +1594,7 @@ export const stockMovements = pgTable(
     isDeleted: boolean('is_deleted').default(false),
     storeId: uuid('store_id').references(() => stores.id),
   },
-  table => [
+  (table) => [
     // Both partial (every report/snapshot query filters is_deleted = false).
     // Two shapes because the report hits this table two ways: Step A
     // (paginate products in a date range, no item filter) needs date
@@ -1589,7 +1618,7 @@ export const stockMovements = pgTable(
       foreignColumns: [products.id],
       name: 'stock_movements_item_id_products_id_fk',
     }),
-  ]
+  ],
 );
 
 export const tempDebtors = pgTable(
@@ -1601,10 +1630,10 @@ export const tempDebtors = pgTable(
     contact: varchar(),
     debtAmount: numeric('debt_amount').notNull(),
   },
-  table => [
+  (table) => [
     unique('temp_debtors_email_unique').on(table.email),
     unique('temp_debtors_contact_unique').on(table.contact),
-  ]
+  ],
 );
 
 export const siteProjects = pgTable('site_projects', {
@@ -1635,13 +1664,13 @@ export const staffLoans = pgTable(
     loanType: varchar('loan_type').default('existing'),
     loanStatus: leaveStatusEnum('loan_status').default('PENDING').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [employees.id],
       name: 'staff_loans_employee_id_employees_id_fk',
     }),
-  ]
+  ],
 );
 
 export const srnsDetails = pgTable(
@@ -1654,7 +1683,7 @@ export const srnsDetails = pgTable(
     qtyReceived: numeric('qty_received').notNull(),
     remarks: text(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [srnsHeader.id],
@@ -1665,7 +1694,7 @@ export const srnsDetails = pgTable(
       foreignColumns: [services.id],
       name: 'srns_details_service_id_services_id_fk',
     }),
-  ]
+  ],
 );
 
 export const staffObjectivesDetails = pgTable(
@@ -1676,7 +1705,7 @@ export const staffObjectivesDetails = pgTable(
     kpiId: text('kpi_id').notNull(),
     objective: text().notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [staffObjectivesHeader.id],
@@ -1687,7 +1716,7 @@ export const staffObjectivesDetails = pgTable(
       foreignColumns: [kpis.id],
       name: 'staff_objectives_details_kpi_id_kpis_id_fk',
     }),
-  ]
+  ],
 );
 
 export const vats = pgTable('vats', {
@@ -1708,12 +1737,12 @@ export const vendors = pgTable(
     contactPerson: varchar('contact_person'),
     active: boolean().default(true),
   },
-  table => [
+  (table) => [
     index('vendor_name_idx').using(
       'btree',
-      table.vendorName.asc().nullsLast().op('text_ops')
+      table.vendorName.asc().nullsLast().op('text_ops'),
     ),
-  ]
+  ],
 );
 
 export const users = pgTable(
@@ -1736,14 +1765,14 @@ export const users = pgTable(
       .default(false)
       .notNull(),
   },
-  table => [
+  (table) => [
     uniqueIndex('contact_idx').using(
       'btree',
-      table.contact.asc().nullsLast().op('text_ops')
+      table.contact.asc().nullsLast().op('text_ops'),
     ),
     index('user_name_idx').using(
       'btree',
-      table.name.asc().nullsLast().op('text_ops')
+      table.name.asc().nullsLast().op('text_ops'),
     ),
     foreignKey({
       columns: [table.role],
@@ -1752,7 +1781,7 @@ export const users = pgTable(
     }).onDelete('cascade'),
     unique('users_contact_unique').on(table.contact),
     unique('users_email_unique').on(table.email),
-  ]
+  ],
 );
 
 export const appraisalDetails = pgTable(
@@ -1769,13 +1798,13 @@ export const appraisalDetails = pgTable(
     finalRating: numeric('final_rating'),
     detailType: appraisalDetailTypeEnum('detail_type'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [appraisalHeader.id],
       name: 'appraisal_details_header_id_appraisal_header_id_fk',
     }),
-  ]
+  ],
 );
 
 export const grnsDetails = pgTable(
@@ -1789,7 +1818,7 @@ export const grnsDetails = pgTable(
     remarks: text(),
     orderedQty: numeric('ordered_qty'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [grnsHeader.id],
@@ -1800,7 +1829,7 @@ export const grnsDetails = pgTable(
       foreignColumns: [products.id],
       name: 'grns_details_item_id_products_id_fk',
     }),
-  ]
+  ],
 );
 
 export const salesOrdersDetails = pgTable(
@@ -1814,13 +1843,13 @@ export const salesOrdersDetails = pgTable(
     amount: numeric().notNull(),
     category: varchar(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.headerId],
       foreignColumns: [salesOrdersHeader.id],
       name: 'sales_orders_details_header_id_sales_orders_header_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const mrqHeaders = pgTable(
@@ -1838,13 +1867,13 @@ export const mrqHeaders = pgTable(
     isDeleted: boolean('is_deleted').default(false).notNull(),
     fileUrl: text('file_url'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [users.id],
       name: 'mrq_headers_created_by_users_id_fk',
     }).onDelete('cascade'),
-  ]
+  ],
 );
 
 export const loginAttempts = pgTable('login_attempts', {
@@ -1867,13 +1896,13 @@ export const sessions = pgTable(
     userAgent: text('user_agent'),
     ipAddress: text('ip_address'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
       name: 'sessions_user_id_users_id_fk',
     }),
-  ]
+  ],
 );
 
 export const disciplinaryCasesDocuments = pgTable(
@@ -1882,7 +1911,7 @@ export const disciplinaryCasesDocuments = pgTable(
     caseId: text('case_id').notNull(),
     uploadedUrl: text('uploaded_url').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [disciplinaryCases.id],
@@ -1892,7 +1921,7 @@ export const disciplinaryCasesDocuments = pgTable(
       columns: [table.caseId, table.uploadedUrl],
       name: 'disciplinary_cases_documents_case_id_uploaded_url_pk',
     }),
-  ]
+  ],
 );
 
 export const disciplinaryCasesPersonnel = pgTable(
@@ -1901,7 +1930,7 @@ export const disciplinaryCasesPersonnel = pgTable(
     staffId: integer('staff_id').notNull(),
     caseId: text('case_id').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [disciplinaryCases.id],
@@ -1916,7 +1945,7 @@ export const disciplinaryCasesPersonnel = pgTable(
       columns: [table.staffId, table.caseId],
       name: 'disciplinary_cases_personnel_case_id_staff_id_pk',
     }),
-  ]
+  ],
 );
 
 export const healthSafetyDocuments = pgTable(
@@ -1925,7 +1954,7 @@ export const healthSafetyDocuments = pgTable(
     caseId: text('case_id').notNull(),
     uploadedUrl: text('uploaded_url').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [healthSafety.id],
@@ -1935,7 +1964,7 @@ export const healthSafetyDocuments = pgTable(
       columns: [table.caseId, table.uploadedUrl],
       name: 'health_safety_documents_case_id_uploaded_url_pk',
     }),
-  ]
+  ],
 );
 
 export const userRoles = pgTable(
@@ -1944,7 +1973,7 @@ export const userRoles = pgTable(
     userId: uuid('user_id').notNull(),
     roleId: integer('role_id').notNull(),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.roleId],
       foreignColumns: [roles.id],
@@ -1959,7 +1988,7 @@ export const userRoles = pgTable(
       columns: [table.userId, table.roleId],
       name: 'user_roles_role_id_user_id_pk',
     }),
-  ]
+  ],
 );
 
 export const verificationTokens = pgTable(
@@ -1969,12 +1998,12 @@ export const verificationTokens = pgTable(
     token: text().notNull(),
     expires: timestamp({ mode: 'string' }).notNull(),
   },
-  table => [
+  (table) => [
     primaryKey({
       columns: [table.identifier, table.token],
       name: 'verification_tokens_identifier_token_pk',
     }),
-  ]
+  ],
 );
 
 export const accounts = pgTable(
@@ -1992,7 +2021,7 @@ export const accounts = pgTable(
     idToken: text('id_token'),
     sessionState: text('session_state'),
   },
-  table => [
+  (table) => [
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
@@ -2002,5 +2031,5 @@ export const accounts = pgTable(
       columns: [table.provider, table.providerAccountId],
       name: 'accounts_provider_provider_account_id_pk',
     }),
-  ]
+  ],
 );

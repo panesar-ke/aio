@@ -1,6 +1,6 @@
 {
-  "id": "bd2c14bf-fe57-4f83-8899-12d3e0c15297",
-  "prevId": "ec302aa5-2eff-4960-9163-59bd16b40d67",
+  "id": "ffb2b281-c816-4b00-b56b-f2e252466773",
+  "prevId": "bd2c14bf-fe57-4f83-8899-12d3e0c15297",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -5179,9 +5179,115 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'KES'"
+        },
+        "conversion_rate": {
+          "name": "conversion_rate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1'"
+        },
+        "total_amount_in_local_currency": {
+          "name": "total_amount_in_local_currency",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "sale_order_status": {
+          "name": "sale_order_status",
+          "type": "sale_order_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'fulfilled'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "sales_orders_header_sale_order_no_idx": {
+          "name": "sales_orders_header_sale_order_no_idx",
+          "columns": [
+            {
+              "expression": "sale_order_no",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sales_orders_header_sales_rep_date_idx": {
+          "name": "sales_orders_header_sales_rep_date_idx",
+          "columns": [
+            {
+              "expression": "sales_rep_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date_raised",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sales_orders_header_account_date_order_no_idx": {
+          "name": "sales_orders_header_account_date_order_no_idx",
+          "columns": [
+            {
+              "expression": "account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date_raised",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sale_order_no",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "sales_orders_header_account_id_sale_accounts_id_fk": {
           "name": "sales_orders_header_account_id_sale_accounts_id_fk",
@@ -7212,9 +7318,32 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "trigger_request_id": {
+          "name": "trigger_request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "product_deactivation_batches_trigger_request_id_idx": {
+          "name": "product_deactivation_batches_trigger_request_id_idx",
+          "columns": [
+            {
+              "expression": "trigger_request_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"product_deactivation_batches\".\"trigger_request_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -9761,6 +9890,16 @@
         "accepted",
         "declined",
         "expired"
+      ]
+    },
+    "public.sale_order_status": {
+      "name": "sale_order_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "fulfilled",
+        "partially fulfilled",
+        "cancelled"
       ]
     },
     "public.salutationEnum": {
