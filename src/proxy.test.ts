@@ -101,4 +101,38 @@ describe('proxy session handling', () => {
     expect(redirectMock).not.toHaveBeenCalled();
     expect(response).toBe('next');
   });
+
+  test('treats a reset-password token URL as public', async () => {
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    nextMock.mockReturnValue('next');
+
+    const result = await proxy(
+      createRequest('/reset-password/AbC123-xyz') as never
+    );
+
+    expect(redirectMock).not.toHaveBeenCalled();
+    expect(result).toBe('next');
+  });
+
+  test('still redirects an unauthenticated protected route', async () => {
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    redirectMock.mockReturnValue('redirect');
+
+    const result = await proxy(createRequest('/dashboard') as never);
+
+    expect(redirectMock).toHaveBeenCalled();
+    expect(result).toBe('redirect');
+  });
+
+  test('does not treat a lookalike prefix as public', async () => {
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    redirectMock.mockReturnValue('redirect');
+
+    const result = await proxy(
+      createRequest('/reset-password-admin') as never
+    );
+
+    expect(redirectMock).toHaveBeenCalled();
+    expect(result).toBe('redirect');
+  });
 });

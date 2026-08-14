@@ -5,7 +5,12 @@ import type { SessionPayload } from '@/types/index.types';
 
 import { decrypt } from '@/lib/session';
 
-const publicRoutes = ['/login', '/forgot-password', '/api/inngest'];
+const publicRoutes = [
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/api/inngest',
+];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
@@ -60,7 +65,11 @@ export default async function proxy(req: NextRequest) {
     return new Response(null, { status: 403 });
   }
 
-  const isPublicRoute = publicRoutes.includes(path);
+  // Prefix match, so /reset-password/<token> is public while
+  // /reset-password-admin is not.
+  const isPublicRoute = publicRoutes.some(
+    route => path === route || path.startsWith(`${route}/`)
+  );
   const hasSession = Boolean(session);
 
   if (!isPublicRoute && !hasSession) {
