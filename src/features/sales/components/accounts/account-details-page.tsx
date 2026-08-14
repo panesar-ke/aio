@@ -204,7 +204,10 @@ export function AccountDetailsPageContent({
             <CustomDropdownTrigger />
             <CustomDropdownContent>
               <DropdownMenuItem asChild>
-                <Link href={`/sales/accounts/${account.id}/edit`}>
+                <Link
+                  prefetch={false}
+                  href={`/sales/accounts/${account.id}/edit`}
+                >
                   <PencilIcon className='size-3 text-muted-foreground' />
                   <span className='text-xs'>Edit Account</span>
                 </Link>

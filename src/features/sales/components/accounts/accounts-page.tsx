@@ -115,14 +115,20 @@ export function ClientAccountsPage({
           <CustomDropdownTrigger />
           <CustomDropdownContent>
             <DropdownMenuItem asChild>
-              <Link href={`/sales/accounts/${row.original.id}/details`}>
+              <Link
+                prefetch={false}
+                href={`/sales/accounts/${row.original.id}/details`}
+              >
                 <EyeIcon className='size-3 text-muted-foreground' />
                 <span className='text-xs'>View Account</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/sales/accounts/${row.original.id}/edit`}>
-              <EditAction />
+              <Link
+                prefetch={false}
+                href={`/sales/accounts/${row.original.id}/edit`}
+              >
+                <EditAction />
               </Link>
             </DropdownMenuItem>
           </CustomDropdownContent>
