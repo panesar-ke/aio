@@ -1767,7 +1767,6 @@ export const users = pgTable(
     active: boolean().default(true).notNull(),
     role: integer(),
     promptPasswordChange: boolean('prompt_password_change').default(false),
-    resetToken: text('reset_token'),
     hasAdminPriviledges: boolean('has_admin_priviledges')
       .default(false)
       .notNull(),
