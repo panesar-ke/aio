@@ -101,7 +101,7 @@ export function LeadsClientPage({ leads }: LeadsPageProps) {
             <CustomDropdownTrigger />
             <CustomDropdownContent>
               <DropdownMenuItem asChild>
-                <Link href={`/sales/leads/${id}/edit`}>
+                <Link prefetch={false} href={`/sales/leads/${id}/edit`}>
                   <EditAction />
                 </Link>
               </DropdownMenuItem>
