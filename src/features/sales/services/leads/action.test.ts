@@ -68,7 +68,7 @@ const validLeadInput = {
   title: 'Director',
   description: 'Warm prospect',
   status: 'new' as const,
-  kraPin: '123456789A',
+  kraPin: 'P012345678X',
 };
 
 beforeEach(() => {
