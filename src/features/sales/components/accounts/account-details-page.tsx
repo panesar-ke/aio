@@ -33,6 +33,7 @@ import {
   getInitials,
   titleCase,
 } from '@/lib/helpers/formatters';
+import { toNumber } from '@/lib/helpers/numbers';
 import { cn } from '@/lib/utils';
 
 type AccountDetails = NonNullable<
@@ -40,23 +41,35 @@ type AccountDetails = NonNullable<
 >;
 type AccountOrder = AccountDetails['orders'][number];
 
+/**
+ * Aggregates an account's orders into the figures shown on its detail page.
+ *
+ * Two rules matter here. Orders can be raised in KES or USD, so totals sum
+ * `amountInLocalCurrency` - adding raw `amountInclusive` across currencies
+ * would add two different units together. And cancelled orders are not
+ * revenue: they stay in the history table but count towards nothing.
+ */
 export function getAccountOrderMetrics(orders: Array<AccountOrder>) {
-  const totalSpend = orders.reduce(
-    (sum, order) => sum + Number(order.amountInclusive),
+  const billableOrders = orders.filter((order) => order.status !== 'cancelled');
+
+  const totalSpend = billableOrders.reduce(
+    (sum, order) => sum + toNumber(order.amountInLocalCurrency),
     0,
   );
-  const totalItems = orders.reduce(
-    (sum, order) => sum + Number(order.itemCount),
+  const totalItems = billableOrders.reduce(
+    (sum, order) => sum + toNumber(order.itemCount),
     0,
   );
-  const totalOrders = orders.length;
+  const totalOrders = billableOrders.length;
 
   return {
     totalSpend,
     totalOrders,
     totalItems,
     averageOrderValue: totalOrders > 0 ? totalSpend / totalOrders : 0,
-    lastPurchaseDate: orders[0]?.dateRaised ?? null,
+    // Orders arrive newest first, so the first billable one is the last
+    // actual purchase.
+    lastPurchaseDate: billableOrders[0]?.dateRaised ?? null,
   };
 }
 
@@ -220,18 +233,18 @@ export function AccountDetailsPageContent({
       <section className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
         <StatCard
           label='Total Spend'
-          value={compactNumberFormatter(metrics.totalSpend)}
+          value={`KES ${compactNumberFormatter(metrics.totalSpend)}`}
           subtext={`Across ${metrics.totalOrders} sales orders`}
         />
         <StatCard
           label='Total Orders'
           value={metrics.totalOrders}
-          subtext='All orders currently marked fulfilled'
+          subtext='Excludes cancelled orders'
         />
         <StatCard
           label='Average Order Value'
-          value={compactNumberFormatter(metrics.averageOrderValue)}
-          subtext='Based on fulfilled orders'
+          value={`KES ${compactNumberFormatter(metrics.averageOrderValue)}`}
+          subtext='Excludes cancelled orders'
         />
         <StatCard
           label='Last Purchase'
