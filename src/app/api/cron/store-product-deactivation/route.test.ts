@@ -36,7 +36,9 @@ describe('GET /api/cron/store-product-deactivation', () => {
   });
 
   it('returns an empty result when no stale products are found', async () => {
-    vi.mocked(inngest.send).mockResolvedValueOnce(undefined);
+    vi.mocked(inngest.send).mockResolvedValueOnce({
+      ids: ['event-id'],
+    } as Awaited<ReturnType<typeof inngest.send>>);
 
     const request = new NextRequest(
       'https://example.com/api/cron/store-product-deactivation',

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
+import ts from 'typescript6';
 import { describe, expect, test } from 'vitest';
 
 const SRC_DIR = path.join(process.cwd(), 'src');
@@ -59,6 +59,7 @@ function hasPrefetchFalse(
   return node.attributes.properties.some((attribute) => {
     if (
       !ts.isJsxAttribute(attribute) ||
+      !ts.isIdentifier(attribute.name) ||
       attribute.name.text !== 'prefetch' ||
       !attribute.initializer ||
       !ts.isJsxExpression(attribute.initializer)

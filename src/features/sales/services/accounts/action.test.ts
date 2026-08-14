@@ -5,6 +5,8 @@ const {
   revalidateAccountsTag,
   revalidatePath,
   getAccount,
+  requireAnyPermission,
+  saleUser,
 } = vi.hoisted(() => {
   const updateWhere = vi.fn(async () => undefined);
   const set = vi.fn(() => ({ where: updateWhere }));
@@ -16,6 +18,8 @@ const {
     revalidateAccountsTag: vi.fn(),
     revalidatePath: vi.fn(),
     getAccount: vi.fn(),
+    requireAnyPermission: vi.fn(),
+    saleUser: vi.fn(),
   };
 });
 
@@ -38,7 +42,11 @@ vi.mock('@/features/sales/services/accounts/data', () => ({
 }));
 
 vi.mock('@/lib/permissions/guards', () => ({
-  requireAnyPermission: vi.fn(),
+  requireAnyPermission,
+}));
+
+vi.mock('@/features/sales/utils/sale-helpers', () => ({
+  saleUser,
 }));
 
 import { upsertAccount } from '@/features/sales/services/accounts/action';
@@ -57,6 +65,7 @@ const validAccountInput = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  saleUser.mockResolvedValue({ isSalesAdmin: true, userId: 'user-1' });
 });
 
 describe('upsertAccount', () => {
