@@ -191,6 +191,16 @@ Content: greeting by first name, one action button, the raw URL as text for
 clients that strip buttons, the 30-minute expiry stated plainly, and a line
 telling recipients who did not request it to contact IT.
 
+The template takes `name`, `resetUrl`, `logoUrl`, `expiresInMinutes`, and
+`supportEmail` as props and holds no environment access of its own, so it stays
+renderable in isolation. `expiresInMinutes` is passed from the same constant
+that sets the token TTL, so the copy cannot drift from the real expiry.
+
+The header shows the logo rather than the company name in text. It must be
+`logo-black.png`, not one of the SVGs used in the app: Gmail and Outlook strip
+SVG entirely. Its `alt` text is the company name, so clients that block images
+by default still render a sensible header.
+
 ## Error handling
 
 | Condition | Response |
