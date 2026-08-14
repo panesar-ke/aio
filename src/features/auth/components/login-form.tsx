@@ -82,7 +82,7 @@ export function LoginForm() {
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
                   <Link
-                    href="/login"
+                    href="/forgot-password"
                     prefetch={false}
                     className="text-link text-sm transition-all hover:underline"
                   >
