@@ -350,16 +350,18 @@ export function AccountDetailsPageContent({
               All orders placed by this account.
             </CardDescription>
           </div>
-          <Link href={`/sales/orders?account=${account.id}`} prefetch={false}>
-            <Button
-              type='button'
-              variant='ghost'
-              className='gap-2 px-0 text-muted-foreground'
-            >
+
+          <Button
+            type='button'
+            variant='ghost'
+            className='gap-2 px-0 text-muted-foreground'
+            asChild
+          >
+            <Link href={`/sales/orders?account=${account.id}`} prefetch={false}>
               View All in Sales Orders
               <ArrowUpRightIcon className='size-4' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent className='px-0 py-5'>
           <AccountOrdersTable orders={orders} />

@@ -27,6 +27,39 @@ const exchangeRateIssues = (values: Record<string, unknown>) => {
   );
 };
 
+describe('saleOrderFormSchema order lines', () => {
+  const lineIssues = (line: Record<string, unknown>) => {
+    const result = saleOrderFormSchema.safeParse({
+      ...baseOrder,
+      currency: 'KES',
+      exchangeRate: 1,
+      details: [{ ...baseOrder.details[0], ...line }],
+    });
+
+    return (
+      result.error?.issues.map(
+        (issue) => `${issue.path.join('.')}: ${issue.message}`,
+      ) ?? []
+    );
+  };
+
+  it('rejects a non-finite qty', () => {
+    expect(lineIssues({ qty: 'Infinity' })).toContain(
+      'details.0.qty: Field must be a number',
+    );
+  });
+
+  it('rejects a non-finite rate', () => {
+    expect(lineIssues({ rate: 'Infinity' })).toContain(
+      'details.0.rate: Field must be a number',
+    );
+  });
+
+  it('still accepts ordinary qty and rate values', () => {
+    expect(lineIssues({ qty: 40, rate: 850.5 })).toEqual([]);
+  });
+});
+
 describe('saleOrderFormSchema exchange rate', () => {
   it('rejects a USD order with no exchange rate', () => {
     // This is the state the form lands in when the rate lookup fails and the

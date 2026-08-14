@@ -92,7 +92,10 @@ export const requiredNumberSchemaEntry = (message?: string) =>
 
     const num = Number(val);
 
-    if (Number.isNaN(num)) {
+    // isFinite rather than !isNaN: 'Infinity' coerces to a non-NaN value that
+    // would otherwise clear the > 0 check below and reach Big.js, which throws
+    // on it and silently degrades the line to zero.
+    if (!Number.isFinite(num)) {
       ctx.addIssue({ code: 'custom', message: 'Field must be a number' });
       return z.NEVER;
     }

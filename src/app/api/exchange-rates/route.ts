@@ -24,9 +24,22 @@ async function getKesPerUsd() {
   'use cache';
   cacheLife('hours');
 
-  const res = await fetch(
-    `https://v6.exchangerate-api.com/v6/${env.EXCHANGE_RATE_API_KEY}/latest/USD`,
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  let res: Response;
+
+  try {
+    res = await fetch(
+      `https://v6.exchangerate-api.com/v6/${env.EXCHANGE_RATE_API_KEY}/latest/USD`,
+      { signal: controller.signal },
+    );
+  } catch {
+    throw new ExchangeRateUnavailableError(
+      'Exchange rate provider request failed',
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
     throw new ExchangeRateUnavailableError(

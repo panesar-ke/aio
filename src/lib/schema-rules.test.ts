@@ -25,9 +25,8 @@ describe('requiredNumberSchemaEntry', () => {
   });
 
   it('uses the custom message for a missing field when provided', () => {
-    const result = requiredNumberSchemaEntry('Qty is required').safeParse(
-      undefined,
-    );
+    const result =
+      requiredNumberSchemaEntry('Qty is required').safeParse(undefined);
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -39,6 +38,17 @@ describe('requiredNumberSchemaEntry', () => {
     const result = requiredNumberSchemaEntry().safeParse('5');
 
     expect(result).toEqual({ success: true, data: 5 });
+  });
+
+  it('rejects non-finite values that survive a NaN check', () => {
+    for (const input of ['Infinity', '-Infinity', Infinity, -Infinity]) {
+      const result = requiredNumberSchemaEntry().safeParse(input);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Field must be a number');
+      }
+    }
   });
 });
 
