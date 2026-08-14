@@ -1,34 +1,34 @@
-"use client";
-import { useSelector } from "@tanstack/react-store";
-import { CircleXIcon, SaveIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+'use client';
+import { useSelector } from '@tanstack/react-form';
+import { CircleXIcon, SaveIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef } from 'react';
 
 import type {
   Order,
   PendingOrder,
-} from "@/features/procurement/utils/procurement.types";
-import type { Option } from "@/types/index.types";
+} from '@/features/procurement/utils/procurement.types';
+import type { Option } from '@/types/index.types';
 
-import { notify } from "@/components/custom/toast";
-import { Button } from "@/components/ui/button";
-import { LoadingSwap } from "@/components/ui/loading-swap";
-import { OrderDetails } from "@/features/procurement/components/purchase-order/order-details";
+import { notify } from '@/components/custom/toast';
+import { Button } from '@/components/ui/button';
+import { LoadingSwap } from '@/components/ui/loading-swap';
+import { OrderDetails } from '@/features/procurement/components/purchase-order/order-details';
 import {
   buildOrderFormDefaultValues,
   getOrderFormSeedKey,
   type OrderFormRequisitionData,
-} from "@/features/procurement/components/purchase-order/order-form-defaults";
-import { OrderFormHeader } from "@/features/procurement/components/purchase-order/order-form-header";
+} from '@/features/procurement/components/purchase-order/order-form-defaults';
+import { OrderFormHeader } from '@/features/procurement/components/purchase-order/order-form-header';
 import {
   calculateOrderSummary,
   OrderSummary,
-} from "@/features/procurement/components/purchase-order/order-summary";
-import { createOrder } from "@/features/procurement/services/purchase-orders/actions";
-import { purchaseOrderFormOpts } from "@/features/procurement/utils/form";
-import { useAppForm } from "@/lib/form";
-import { handleSubmitFeedback } from "@/lib/form-submit-feedback";
-import { numberFormat } from "@/lib/helpers/formatters";
+} from '@/features/procurement/components/purchase-order/order-summary';
+import { createOrder } from '@/features/procurement/services/purchase-orders/actions';
+import { purchaseOrderFormOpts } from '@/features/procurement/utils/form';
+import { useAppForm } from '@/lib/form';
+import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
+import { numberFormat } from '@/lib/helpers/formatters';
 
 interface OrderFormProps {
   orderNo: number;
@@ -81,21 +81,21 @@ export function OrderForm({
     ...formOpts,
     onSubmit: async ({ value }) => {
       if (value.details.length === 0) {
-        notify.error("Validation Error", "At least one item is required");
+        notify.error('Validation Error', 'At least one item is required');
         return;
       }
 
       await handleSubmitFeedback({
         action: () => createOrder({ values: value, id: order?.reference }),
-        errorTitle: `Error ${isEdit ? "updating" : "creating"} order`,
-        successTitle: `✅ ${isEdit ? "Updated" : "Created"}`,
-        fallbackMessage: `Failed to ${isEdit ? "update" : "create"} order. Please try again.`,
+        errorTitle: `Error ${isEdit ? 'updating' : 'creating'} order`,
+        successTitle: `✅ ${isEdit ? 'Updated' : 'Created'}`,
+        fallbackMessage: `Failed to ${isEdit ? 'update' : 'create'} order. Please try again.`,
         onSuccess: (data) => {
           appForm.reset();
           router.push(
             data
               ? `/procurement/purchase-order/${data}/details`
-              : "/procurement/purchase-order",
+              : '/procurement/purchase-order',
           );
         },
       });
@@ -122,13 +122,13 @@ export function OrderForm({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className='flex min-h-0 flex-1 flex-col'>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           appForm.handleSubmit();
         }}
-        className="flex-1 space-y-6 overflow-y-auto pb-6"
+        className='flex-1 space-y-6 overflow-y-auto pb-6'
       >
         <OrderFormHeader form={appForm} vendors={vendors} />
         <OrderDetails
@@ -140,8 +140,8 @@ export function OrderForm({
         />
         <OrderSummary form={appForm} />
       </form>
-      <footer className="sticky bottom-0 z-10 border-t bg-background">
-        <div className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
+      <footer className='sticky bottom-0 z-10 border-t bg-background'>
+        <div className='flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between'>
           <appForm.Subscribe
             selector={(state) => {
               const { details, vatType, vat } = state.values;
@@ -153,34 +153,34 @@ export function OrderForm({
             }}
           >
             {({ lineCount, total }) => (
-              <p className="text-xs text-muted-foreground">
-                {lineCount} {lineCount === 1 ? "line" : "lines"} &mdash; Ksh{" "}
+              <p className='text-xs text-muted-foreground'>
+                {lineCount} {lineCount === 1 ? 'line' : 'lines'} &mdash; Ksh{' '}
                 {numberFormat(total)}
               </p>
             )}
           </appForm.Subscribe>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <div className='flex flex-col gap-2 md:flex-row md:items-center'>
             <Button
-              type="button"
-              variant="outline"
-              size="lg"
+              type='button'
+              variant='outline'
+              size='lg'
               disabled={isSubmitting}
               onClick={() => appForm.reset()}
-              className="min-w-32"
+              className='min-w-32'
             >
               <CircleXIcon />
               <span>Cancel</span>
             </Button>
             <Button
-              type="button"
-              size="lg"
+              type='button'
+              size='lg'
               disabled={isSubmitting}
               onClick={() => appForm.handleSubmit()}
-              className="min-w-32"
+              className='min-w-32'
             >
               <LoadingSwap
                 isLoading={isSubmitting}
-                className="flex items-center gap-2"
+                className='flex items-center gap-2'
               >
                 <SaveIcon />
                 <span>Save Purchase Order</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSelector } from '@tanstack/react-store';
+import { useSelector } from '@tanstack/react-form';
 import { SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

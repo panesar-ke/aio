@@ -1,5 +1,5 @@
 'use client';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -76,7 +76,9 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
     },
   });
 
-  const [licenseType] = useStore(store, state => [state.values.licenseType]);
+  const [licenseType] = useSelector(store, (state) => [
+    state.values.licenseType,
+  ]);
 
   useEffect(() => {
     if (licenseType === 'perpetual') {
@@ -87,8 +89,8 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
   }, [licenseType, setFieldValue]);
 
   return (
-    <Card className="shadow-none">
-      <CardHeader className="border-b">
+    <Card className='shadow-none'>
+      <CardHeader className='border-b'>
         <CardTitle>{isEdit ? 'Edit License' : 'New License'}</CardTitle>
         <CardDescription>
           {isEdit
@@ -98,37 +100,37 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
       </CardHeader>
       <CardContent>
         <form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-6"
+          className='space-y-6'
         >
           <FieldSet>
             <FieldDescription>License Information</FieldDescription>
-            <FieldGroup className="grid md:grid-cols-2 gap-6">
-              <AppField name="name">
-                {field => (
+            <FieldGroup className='grid md:grid-cols-2 gap-6'>
+              <AppField name='name'>
+                {(field) => (
                   <field.Input
-                    placeholder="Google Workspace Business"
+                    placeholder='Google Workspace Business'
                     required
-                    label="Name"
+                    label='Name'
                   />
                 )}
               </AppField>
-              <AppField name="softwareName">
-                {field => (
+              <AppField name='softwareName'>
+                {(field) => (
                   <field.Input
-                    placeholder="Google Workspace Business"
+                    placeholder='Google Workspace Business'
                     required
-                    label="Software Name"
+                    label='Software Name'
                   />
                 )}
               </AppField>
-              <AppField name="vendorId">
-                {field => (
-                  <field.Select required label="Vendor">
-                    {vendors.map(vendor => (
+              <AppField name='vendorId'>
+                {(field) => (
+                  <field.Select required label='Vendor'>
+                    {vendors.map((vendor) => (
                       <SelectItem key={vendor.value} value={vendor.value}>
                         {vendor.label.toUpperCase()}
                       </SelectItem>
@@ -136,89 +138,89 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
                   </field.Select>
                 )}
               </AppField>
-              <AppField name="renewalCost">
-                {field => (
-                  <field.Input type="number" required label="Initial Cost" />
+              <AppField name='renewalCost'>
+                {(field) => (
+                  <field.Input type='number' required label='Initial Cost' />
                 )}
               </AppField>
-              <AppField name="licenseKey">
-                {field => (
+              <AppField name='licenseKey'>
+                {(field) => (
                   <field.Input
-                    placeholder="[ENCRYPTION_KEY]"
-                    label="License Key"
+                    placeholder='[ENCRYPTION_KEY]'
+                    label='License Key'
                   />
                 )}
               </AppField>
-              <AppField name="licenseType">
-                {field => (
+              <AppField name='licenseType'>
+                {(field) => (
                   <field.Select
                     required
-                    label="License Type"
-                    placeholder="Select license type"
+                    label='License Type'
+                    placeholder='Select license type'
                   >
-                    <SelectItem value="subscription">Subscription</SelectItem>
-                    <SelectItem value="perpetual">Perpetual</SelectItem>
+                    <SelectItem value='subscription'>Subscription</SelectItem>
+                    <SelectItem value='perpetual'>Perpetual</SelectItem>
                   </field.Select>
                 )}
               </AppField>
-              <AppField name="totalSeats">
-                {field => (
+              <AppField name='totalSeats'>
+                {(field) => (
                   <field.Input
-                    type="number"
-                    placeholder="0"
+                    type='number'
+                    placeholder='0'
                     required
-                    label="Total Seats"
+                    label='Total Seats'
                   />
                 )}
               </AppField>
-              <AppField name="usedSeats">
-                {field => (
+              <AppField name='usedSeats'>
+                {(field) => (
                   <field.Input
-                    type="number"
-                    placeholder="0"
+                    type='number'
+                    placeholder='0'
                     required
-                    label="Used Seats"
+                    label='Used Seats'
                   />
                 )}
               </AppField>
-              <AppField name="startDate">
-                {field => (
+              <AppField name='startDate'>
+                {(field) => (
                   <field.Input
-                    type="date"
+                    type='date'
                     required={licenseType === 'subscription'}
                     disabled={licenseType === 'perpetual'}
-                    label="Start Date"
+                    label='Start Date'
                   />
                 )}
               </AppField>
-              <AppField name="endDate">
-                {field => (
+              <AppField name='endDate'>
+                {(field) => (
                   <field.Input
-                    type="date"
+                    type='date'
                     required={licenseType === 'subscription'}
                     disabled={licenseType === 'perpetual'}
-                    label="End Date"
+                    label='End Date'
                   />
                 )}
               </AppField>
-              <AppField name="renewalDate">
-                {field => (
+              <AppField name='renewalDate'>
+                {(field) => (
                   <field.Input
-                    type="date"
+                    type='date'
                     required={licenseType === 'subscription'}
                     disabled={licenseType === 'perpetual'}
-                    label="Renewal Date"
+                    label='Renewal Date'
                   />
                 )}
               </AppField>
-              <AppField name="status">
-                {field => (
+              <AppField name='status'>
+                {(field) => (
                   <field.Select
                     required
-                    label="Status"
-                    placeholder="Select status"
+                    label='Status'
+                    placeholder='Select status'
                   >
-                    {LICENSE_STATUS.map(status => (
+                    {LICENSE_STATUS.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status.toUpperCase()}
                       </SelectItem>
@@ -226,13 +228,13 @@ export function LicenseForm({ vendors, initialValues }: LicenseFormProps) {
                   </field.Select>
                 )}
               </AppField>
-              <AppField name="notes">
-                {field => (
+              <AppField name='notes'>
+                {(field) => (
                   <field.Textarea
-                    placeholder="Notes"
-                    fieldClassName="col-span-full"
-                    className="shadow-none"
-                    label="Notes"
+                    placeholder='Notes'
+                    fieldClassName='col-span-full'
+                    className='shadow-none'
+                    label='Notes'
                   />
                 )}
               </AppField>

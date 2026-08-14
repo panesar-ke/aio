@@ -1,6 +1,6 @@
 'use client';
 
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { Option } from '@/types/index.types';
@@ -60,23 +60,23 @@ export function AssignmentForm({
     },
   });
 
-  const [custodyType] = useStore(store, state => [
+  const [custodyType] = useSelector(store, (state) => [
     state.values.assetAssignmentCustodyType,
   ]);
 
   return (
     <form
-      onSubmit={e => {
+      onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
         handleSubmit();
       }}
-      className="space-y-6"
+      className='space-y-6'
     >
-      <AppField name="assetId">
-        {field => (
-          <field.Select required label="Asset" placeholder="Select asset">
-            {assets.map(asset => (
+      <AppField name='assetId'>
+        {(field) => (
+          <field.Select required label='Asset' placeholder='Select asset'>
+            {assets.map((asset) => (
               <SelectItem key={asset.value} value={asset.value}>
                 {asset.label}
               </SelectItem>
@@ -84,23 +84,23 @@ export function AssignmentForm({
           </field.Select>
         )}
       </AppField>
-      <AppField name="assetAssignmentCustodyType">
-        {field => (
+      <AppField name='assetAssignmentCustodyType'>
+        {(field) => (
           <field.Select
             required
-            label="Custody Type"
-            placeholder="Select custody type"
+            label='Custody Type'
+            placeholder='Select custody type'
           >
-            <SelectItem value="user">User</SelectItem>
-            <SelectItem value="department">Department</SelectItem>
+            <SelectItem value='user'>User</SelectItem>
+            <SelectItem value='department'>Department</SelectItem>
           </field.Select>
         )}
       </AppField>
       {custodyType === 'user' && (
-        <AppField name="userId">
-          {field => (
-            <field.Select required label="Assign To" placeholder="Select user">
-              {users.map(user => (
+        <AppField name='userId'>
+          {(field) => (
+            <field.Select required label='Assign To' placeholder='Select user'>
+              {users.map((user) => (
                 <SelectItem key={user.value} value={user.value}>
                   {user.label}
                 </SelectItem>
@@ -110,14 +110,14 @@ export function AssignmentForm({
         </AppField>
       )}
       {custodyType === 'department' && (
-        <AppField name="departmentId">
-          {field => (
+        <AppField name='departmentId'>
+          {(field) => (
             <field.Select
               required
-              label="Department"
-              placeholder="Select department"
+              label='Department'
+              placeholder='Select department'
             >
-              {departments.map(department => (
+              {departments.map((department) => (
                 <SelectItem key={department.value} value={department.value}>
                   {department.label}
                 </SelectItem>
@@ -126,19 +126,19 @@ export function AssignmentForm({
           )}
         </AppField>
       )}
-      <AppField name="assignedDate">
-        {field => <field.Input type="date" required label="Assigned Date" />}
+      <AppField name='assignedDate'>
+        {(field) => <field.Input type='date' required label='Assigned Date' />}
       </AppField>
-      <AppField name="assignmentNotes">
-        {field => (
+      <AppField name='assignmentNotes'>
+        {(field) => (
           <field.Textarea
-            label="Notes"
-            placeholder="Any handover notes or accessory details"
+            label='Notes'
+            placeholder='Any handover notes or accessory details'
           />
         )}
       </AppField>
       <AppForm>
-        <SubmitButton buttonText="Assign Asset" withReset className="w-full" />
+        <SubmitButton buttonText='Assign Asset' withReset className='w-full' />
       </AppForm>
     </form>
   );

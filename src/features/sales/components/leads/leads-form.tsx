@@ -1,5 +1,5 @@
 'use client';
-import { useSelector } from '@tanstack/react-store';
+import { useSelector } from '@tanstack/react-form';
 import { useRouter } from 'next/navigation';
 
 import type { Lead } from '@/features/sales/utils/sales.types';
