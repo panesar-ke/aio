@@ -17,6 +17,7 @@ import {
   type ResetPasswordFormValues,
   resetPasswordSchema,
 } from '@/features/auth/actions/schema';
+import { findValidResetToken } from '@/features/auth/services/data';
 import { maskEmail } from '@/features/auth/utils/mask-email';
 import {
   generateResetToken,
@@ -24,7 +25,6 @@ import {
   RESET_TOKEN_REQUEST_LIMIT,
   resetRequestWindowStart,
   resetTokenExpiry,
-  resetTokenState,
 } from '@/features/auth/utils/reset-token';
 import { validateFields } from '@/lib/action-validator';
 import { sendPasswordResetEmail } from '@/lib/resend';
@@ -82,25 +82,29 @@ export async function requestPasswordResetAction(
 
   const token = generateResetToken();
 
-  // Supersede any outstanding link so only the newest one works.
-  await db
-    .update(passwordResetTokens)
-    .set({ usedAt: now })
-    .where(
-      and(
-        eq(passwordResetTokens.userId, user.id),
-        isNull(passwordResetTokens.usedAt)
-      )
-    );
+  const { id: tokenId } = await db.transaction(async tx => {
+    // Supersede any outstanding link so only the newest one works.
+    await tx
+      .update(passwordResetTokens)
+      .set({ usedAt: now })
+      .where(
+        and(
+          eq(passwordResetTokens.userId, user.id),
+          isNull(passwordResetTokens.usedAt)
+        )
+      );
 
-  const [{ id: tokenId }] = await db
-    .insert(passwordResetTokens)
-    .values({
-      userId: user.id,
-      tokenHash: hashResetToken(token),
-      expiresAt: resetTokenExpiry(now),
-    })
-    .returning({ id: passwordResetTokens.id });
+    const [inserted] = await tx
+      .insert(passwordResetTokens)
+      .values({
+        userId: user.id,
+        tokenHash: hashResetToken(token),
+        expiresAt: resetTokenExpiry(now),
+      })
+      .returning({ id: passwordResetTokens.id });
+
+    return inserted;
+  });
 
   try {
     await sendPasswordResetEmail({
@@ -125,23 +129,6 @@ export async function requestPasswordResetAction(
     error: false,
     message: `Reset link sent to ${maskEmail(user.email)}`,
   };
-}
-
-export async function findValidResetToken(token: string) {
-  const row = await db.query.passwordResetTokens.findFirst({
-    columns: { id: true, userId: true, expiresAt: true, usedAt: true },
-    where: (table, { eq }) => eq(table.tokenHash, hashResetToken(token)),
-  });
-
-  if (!row) {
-    return null;
-  }
-
-  if (resetTokenState(row, new Date()) !== 'valid') {
-    return null;
-  }
-
-  return { id: row.id, userId: row.userId };
 }
 
 export async function resetPasswordAction(
@@ -185,7 +172,10 @@ export async function resetPasswordAction(
         )
       );
 
-    // A reset signs out every existing session, so a stolen cookie dies here.
+    // Bookkeeping only: session validity is currently derived from the JWT
+    // alone (see getSession/getCurrentUserOrNull and src/proxy.ts), so
+    // clearing these rows does not revoke an existing cookie. This becomes
+    // load-bearing once session validation checks the sessions table.
     await tx.delete(sessions).where(eq(sessions.userId, valid.userId));
   });
 
