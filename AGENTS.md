@@ -15,7 +15,7 @@ the tree clean.
 
 ## Project Structure & Module Organization
 
-This is a Next.js 15 App Router application written in TypeScript. Route pages,
+This is a Next.js 16 App Router application written in TypeScript. Route pages,
 layouts, and API handlers live in `src/app/`; business domains such as
 procurement, store, IT, production, admin, and auth belong in `src/features/`.
 Reusable UI is organized under `src/components/`, shared hooks and utilities
