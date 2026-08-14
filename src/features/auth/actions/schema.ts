@@ -18,3 +18,25 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    token: requiredTrimmedStringSchemaEntry('Reset token is missing'),
+    newPassword: requiredTrimmedStringSchemaEntry(
+      'New password is required'
+    ).min(8, 'Password must be at least 8 characters long'),
+    confirmPassword: requiredTrimmedStringSchemaEntry(
+      'Password confirmation is required'
+    ),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+      });
+    }
+  });
+
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;

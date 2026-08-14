@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   forgotPasswordSchema,
   loginSchema,
+  resetPasswordSchema,
 } from '@/features/auth/actions/schema';
 import { changePasswordSchema } from '@/features/change-password/utils/schema';
 
@@ -80,5 +81,56 @@ describe('forgotPasswordSchema', () => {
     expect(forgotPasswordSchema.safeParse({ identifier: '' }).success).toBe(
       false
     );
+  });
+});
+
+describe('resetPasswordSchema', () => {
+  const valid = {
+    token: 'a-token',
+    newPassword: 'NewPass456',
+    confirmPassword: 'NewPass456',
+  };
+
+  it('accepts a matching pair and preserves case', () => {
+    const parsed = resetPasswordSchema.parse(valid);
+
+    expect(parsed.newPassword).toBe('NewPass456');
+  });
+
+  it('rejects a mismatched confirmation', () => {
+    const result = resetPasswordSchema.safeParse({
+      ...valid,
+      confirmPassword: 'Different1',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('puts the mismatch error on the confirmation field', () => {
+    const result = resetPasswordSchema.safeParse({
+      ...valid,
+      confirmPassword: 'Different1',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].path).toEqual(['confirmPassword']);
+    }
+  });
+
+  it('rejects a password shorter than 8 characters', () => {
+    const result = resetPasswordSchema.safeParse({
+      token: 'a-token',
+      newPassword: 'Short1',
+      confirmPassword: 'Short1',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a missing token', () => {
+    const result = resetPasswordSchema.safeParse({ ...valid, token: '' });
+
+    expect(result.success).toBe(false);
   });
 });

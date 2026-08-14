@@ -8,11 +8,14 @@ import type {
 } from '@/types/index.types';
 
 import db from '@/drizzle/db';
-import { passwordResetTokens } from '@/drizzle/schema';
+import { passwordResetTokens, sessions, users } from '@/drizzle/schema';
 import { env } from '@/env/server';
+import { hashPassword } from '@/features/admin/utils/helpers';
 import {
   type ForgotPasswordFormValues,
   forgotPasswordSchema,
+  type ResetPasswordFormValues,
+  resetPasswordSchema,
 } from '@/features/auth/actions/schema';
 import { maskEmail } from '@/features/auth/utils/mask-email';
 import {
@@ -21,6 +24,7 @@ import {
   RESET_TOKEN_REQUEST_LIMIT,
   resetRequestWindowStart,
   resetTokenExpiry,
+  resetTokenState,
 } from '@/features/auth/utils/reset-token';
 import { validateFields } from '@/lib/action-validator';
 import { sendPasswordResetEmail } from '@/lib/resend';
@@ -120,5 +124,73 @@ export async function requestPasswordResetAction(
   return {
     error: false,
     message: `Reset link sent to ${maskEmail(user.email)}`,
+  };
+}
+
+export async function findValidResetToken(token: string) {
+  const row = await db.query.passwordResetTokens.findFirst({
+    columns: { id: true, userId: true, expiresAt: true, usedAt: true },
+    where: (table, { eq }) => eq(table.tokenHash, hashResetToken(token)),
+  });
+
+  if (!row) {
+    return null;
+  }
+
+  if (resetTokenState(row, new Date()) !== 'valid') {
+    return null;
+  }
+
+  return { id: row.id, userId: row.userId };
+}
+
+export async function resetPasswordAction(
+  values: unknown
+): Promise<ApiSuccessWithoutData | ApiFailureWithoutData> {
+  const { data, error } = validateFields<ResetPasswordFormValues>(
+    values,
+    resetPasswordSchema
+  );
+
+  if (error !== null) {
+    return { error: true, message: 'Check the passwords you entered.' };
+  }
+
+  // Re-validated here: the page render is not a trusted gate.
+  const valid = await findValidResetToken(data.token);
+
+  if (!valid) {
+    return {
+      error: true,
+      message: 'That reset link is invalid or has expired. Request a new one.',
+    };
+  }
+
+  const hashedPassword = await hashPassword(data.newPassword);
+  const now = new Date();
+
+  await db.transaction(async tx => {
+    await tx
+      .update(users)
+      .set({ password: hashedPassword, promptPasswordChange: false })
+      .where(eq(users.id, valid.userId));
+
+    await tx
+      .update(passwordResetTokens)
+      .set({ usedAt: now })
+      .where(
+        and(
+          eq(passwordResetTokens.userId, valid.userId),
+          isNull(passwordResetTokens.usedAt)
+        )
+      );
+
+    // A reset signs out every existing session, so a stolen cookie dies here.
+    await tx.delete(sessions).where(eq(sessions.userId, valid.userId));
+  });
+
+  return {
+    error: false,
+    message: 'Password updated. Sign in with your new password.',
   };
 }
