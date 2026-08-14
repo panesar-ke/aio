@@ -11,6 +11,7 @@ import type {
 import db from '@/drizzle/db';
 import { users } from '@/drizzle/schema';
 import { env } from '@/env/server';
+import { verifyPassword } from '@/features/auth/utils/password';
 import {
   type ChangePasswordFormValues,
   changePasswordSchema,
@@ -58,12 +59,16 @@ export async function changePasswordAction(
       };
     }
 
-    const isCurrentPasswordValid = await bcrypt.compare(
+    // Uses verifyPassword rather than a direct bcrypt.compare so a legacy
+    // hash-of-lowercased-input still verifies against the as-typed password.
+    // No needsRehash handling here: the update below always re-hashes and
+    // stores the new password, making a separate rehash of the old one moot.
+    const verification = await verifyPassword(
       data.currentPassword,
       user.password
     );
 
-    if (!isCurrentPasswordValid) {
+    if (!verification.ok) {
       return {
         error: true,
         message: 'Current password is incorrect.',

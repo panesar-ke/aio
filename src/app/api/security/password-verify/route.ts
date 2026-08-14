@@ -1,10 +1,10 @@
 import type { NextRequest } from 'next/server';
 
-import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import z from 'zod';
 
 import db from '@/drizzle/db';
+import { verifyPassword } from '@/features/auth/utils/password';
 import { getCurrentUserOrNull } from '@/lib/session';
 
 const bodySchema = z.object({
@@ -38,11 +38,15 @@ export async function POST(req: NextRequest) {
     if (!dbUser)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isValid = await bcrypt.compare(
+    // Uses verifyPassword rather than a direct bcrypt.compare so a legacy
+    // hash-of-lowercased-input still verifies against the as-typed password.
+    // No needsRehash handling: this is a read-only validation endpoint and
+    // should not have a database write side effect.
+    const verification = await verifyPassword(
       validation.data.currentPassword,
       dbUser.password
     );
-    if (!isValid) {
+    if (!verification.ok) {
       return NextResponse.json(
         { error: 'Invalid current password' },
         { status: 401 }
