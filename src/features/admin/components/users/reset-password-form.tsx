@@ -1,5 +1,5 @@
 'use client';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { ClipboardCheckIcon, ClipboardIcon } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -52,14 +52,14 @@ export function ResetPasswordForm() {
         onError: () => {
           notify.error(
             'Error resetting password',
-            'An error occured while resetting the password.'
+            'An error occured while resetting the password.',
           );
         },
       });
     },
   });
 
-  const isDirty = useStore(form.store, state => state.isDirty);
+  const isDirty = useSelector(form.store, (state) => state.isDirty);
   useEffect(() => {
     if (isDirty && mutation.data) {
       mutation.reset();
@@ -67,31 +67,31 @@ export function ResetPasswordForm() {
   }, [isDirty, mutation]);
 
   return (
-    <div className="space-y-6 bg-background p-4">
+    <div className='space-y-6 bg-background p-4'>
       <form
-        className="space-y-4"
-        onSubmit={e => {
+        className='space-y-4'
+        onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
           form.handleSubmit();
         }}
       >
-        <form.Field name="resetMethod">
-          {field => (
+        <form.Field name='resetMethod'>
+          {(field) => (
             <RadioGroup
               defaultValue={field.state.value}
               value={field.state.value}
-              onValueChange={val => {
+              onValueChange={(val) => {
                 field.form.resetField('password');
                 field.handleChange(
-                  val as ResetPasswordFormValues['resetMethod']
+                  val as ResetPasswordFormValues['resetMethod'],
                 );
               }}
             >
-              {RESET_PASSWORD_METHODS.map(method => (
-                <div key={method.value} className="flex items-center space-x-2">
+              {RESET_PASSWORD_METHODS.map((method) => (
+                <div key={method.value} className='flex items-center space-x-2'>
                   <RadioGroupItem value={method.value} id={method.value} />
-                  <Label htmlFor={method.value} className="font-normal text-sm">
+                  <Label htmlFor={method.value} className='font-normal text-sm'>
                     {method.label}
                   </Label>
                 </div>
@@ -99,15 +99,15 @@ export function ResetPasswordForm() {
             </RadioGroup>
           )}
         </form.Field>
-        <form.Subscribe selector={state => state.values.resetMethod}>
-          {resetMethod =>
+        <form.Subscribe selector={(state) => state.values.resetMethod}>
+          {(resetMethod) =>
             resetMethod === 'manual' && (
-              <form.AppField name="password">
-                {field => (
+              <form.AppField name='password'>
+                {(field) => (
                   <field.Input
-                    type="password"
-                    placeholder="*******"
-                    label="Password"
+                    type='password'
+                    placeholder='*******'
+                    label='Password'
                     isPassword
                   />
                 )}
@@ -117,9 +117,9 @@ export function ResetPasswordForm() {
         </form.Subscribe>
         <form.AppForm>
           <form.SubmitButton
-            buttonText="Reset Password"
+            buttonText='Reset Password'
             withReset={false}
-            orientation="horizontal"
+            orientation='horizontal'
             isLoading={mutation.isPending}
           />
         </form.AppForm>
@@ -151,26 +151,26 @@ function SuccessAlert({
   }, [copied]);
 
   return (
-    <div className="rounded-md bg-green-50 p-4">
-      <div className="flex">
-        <div className="shrink-0">
+    <div className='rounded-md bg-green-50 p-4'>
+      <div className='flex'>
+        <div className='shrink-0'>
           <svg
-            className="h-5 w-5 text-green-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
+            className='h-5 w-5 text-green-400'
+            xmlns='http://www.w3.org/2000/svg'
+            viewBox='0 0 20 20'
+            fill='currentColor'
+            aria-hidden='true'
           >
             <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
+              fillRule='evenodd'
+              d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+              clipRule='evenodd'
             />
           </svg>
         </div>
-        <div className="ml-3 space-y-2">
-          <h3 className="text-sm font-medium text-green-800">Password Reset</h3>
-          <div className="mt-2 text-sm text-green-700">
+        <div className='ml-3 space-y-2'>
+          <h3 className='text-sm font-medium text-green-800'>Password Reset</h3>
+          <div className='mt-2 text-sm text-green-700'>
             <p>The user&apos;s password has been reset successfully.</p>
             <p>
               <strong>New Password:</strong> {newPassword}
@@ -178,7 +178,7 @@ function SuccessAlert({
           </div>
           {resetMethod === 'automatic' && (
             <Button
-              variant="outline"
+              variant='outline'
               disabled={copied}
               onClick={() => {
                 navigator.clipboard.writeText(newPassword);

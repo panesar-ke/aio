@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import {
   CircleCheckBigIcon,
   CircleXIcon,
@@ -72,6 +74,7 @@ type FooterFormActionsProps = {
   withMarginTop?: boolean;
   footerClassName?: string;
   buttonGroupClassName?: string;
+  formSummary?: ReactNode;
 };
 
 export function FooterFormActions(props: FooterFormActionsProps) {
@@ -85,36 +88,43 @@ export function FooterFormActions(props: FooterFormActionsProps) {
     >
       <div
         className={cn(
-          'flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-end',
+          'flex flex-col gap-3 py-4 md:flex-row md:items-center ',
+          {
+            'md:justify-end': !props.formSummary,
+            'md:justify-between': props.formSummary,
+          },
           props.buttonGroupClassName,
         )}
       >
-        <Button
-          type='button'
-          onClick={props.handleSubmit}
-          size='lg'
-          disabled={props.isSubmitting}
-          className='min-w-32'
-        >
-          <LoadingSwap
-            isLoading={props.isSubmitting}
-            className='flex gap-2 items-center'
+        {props.formSummary && props.formSummary}
+        <div className='flex items-center gap-x-2'>
+          <Button
+            type='button'
+            onClick={props.handleSubmit}
+            size='lg'
+            disabled={props.isSubmitting}
+            className='min-w-32'
           >
-            {props.saveIcon ? <props.saveIcon /> : <SaveIcon />}
-            <span>{props.saveText ?? 'Save'}</span>
-          </LoadingSwap>
-        </Button>
-        <Button
-          type='button'
-          disabled={props.isSubmitting}
-          variant='outline'
-          size='lg'
-          className='min-w-32'
-          onClick={() => props.handleReset()}
-        >
-          {props.resetIcon ? <props.resetIcon /> : <CircleXIcon />}
-          <span>{props.resetText ?? 'Cancel'}</span>
-        </Button>
+            <LoadingSwap
+              isLoading={props.isSubmitting}
+              className='flex gap-2 items-center'
+            >
+              {props.saveIcon ? <props.saveIcon /> : <SaveIcon />}
+              <span>{props.saveText ?? 'Save'}</span>
+            </LoadingSwap>
+          </Button>
+          <Button
+            type='button'
+            disabled={props.isSubmitting}
+            variant='outline'
+            size='lg'
+            className='min-w-32'
+            onClick={() => props.handleReset()}
+          >
+            {props.resetIcon ? <props.resetIcon /> : <CircleXIcon />}
+            <span>{props.resetText ?? 'Cancel'}</span>
+          </Button>
+        </div>
       </div>
     </footer>
   );

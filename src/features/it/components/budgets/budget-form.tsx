@@ -1,16 +1,11 @@
 'use client';
 
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -87,9 +82,9 @@ export function BudgetForm({
     },
   });
 
-  const [categoryId, financialYearStart, monthAmounts] = useStore(
+  const [categoryId, financialYearStart, monthAmounts] = useSelector(
     store,
-    state => [
+    (state) => [
       state.values.categoryId,
       state.values.financialYearStart,
       state.values.monthAmounts,
@@ -97,34 +92,34 @@ export function BudgetForm({
   );
 
   const filteredSubCategories = subCategories.filter(
-    subCategory => subCategory.categoryId === categoryId,
+    (subCategory) => subCategory.categoryId === categoryId,
   );
   const months = getFinancialYearMonths(Number(financialYearStart));
   const total = monthAmounts.reduce((sum, amount) => sum + (amount || 0), 0);
 
   return (
-    <Card className="shadow-none">
-      <CardHeader className="border-b">
+    <Card className='shadow-none'>
+      <CardHeader className='border-b'>
         <CardTitle>{isEdit ? 'Edit Budget' : 'New Budget'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-6"
+          className='space-y-6'
         >
           <FieldSet>
             <FieldLegend>Budget Identity</FieldLegend>
-            <FieldGroup className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <AppField name="financialYearStart">
-                {field => (
+            <FieldGroup className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+              <AppField name='financialYearStart'>
+                {(field) => (
                   <field.Select
                     required
                     disabled={isEdit}
-                    label="Financial Year"
-                    placeholder="Select Financial Year"
+                    label='Financial Year'
+                    placeholder='Select Financial Year'
                   >
                     {financialYearOptions.map(({ value, label }) => (
                       <SelectItem key={value} value={value}>
@@ -134,13 +129,13 @@ export function BudgetForm({
                   </field.Select>
                 )}
               </AppField>
-              <AppField name="categoryId">
-                {field => (
+              <AppField name='categoryId'>
+                {(field) => (
                   <field.Select
                     required
                     disabled={isEdit}
-                    label="Category"
-                    placeholder="Select Category"
+                    label='Category'
+                    placeholder='Select Category'
                   >
                     {categories.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
@@ -150,13 +145,13 @@ export function BudgetForm({
                   </field.Select>
                 )}
               </AppField>
-              <AppField name="subCategoryId">
-                {field => (
+              <AppField name='subCategoryId'>
+                {(field) => (
                   <field.Select
                     required
                     disabled={isEdit}
-                    label="Sub Category"
-                    placeholder="Select Sub Category"
+                    label='Sub Category'
+                    placeholder='Select Sub Category'
                   >
                     {filteredSubCategories.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
@@ -171,22 +166,22 @@ export function BudgetForm({
           <Separator />
           <FieldSet>
             <FieldLegend>Monthly Amounts</FieldLegend>
-            <FieldGroup className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <FieldGroup className='grid grid-cols-2 md:grid-cols-4 gap-6'>
               {months.map((month, index) => (
                 <AppField key={month.label} name={`monthAmounts[${index}]`}>
-                  {field => (
+                  {(field) => (
                     <field.Input
-                      type="number"
+                      type='number'
                       min={0}
-                      step="0.01"
+                      step='0.01'
                       label={month.label}
-                      placeholder="0.00"
+                      placeholder='0.00'
                     />
                   )}
                 </AppField>
               ))}
             </FieldGroup>
-            <div className="flex justify-end pt-2 text-sm font-medium">
+            <div className='flex justify-end pt-2 text-sm font-medium'>
               Total: {numberFormat(total)}
             </div>
           </FieldSet>

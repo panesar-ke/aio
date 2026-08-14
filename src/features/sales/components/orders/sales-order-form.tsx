@@ -1,5 +1,5 @@
 'use client';
-import { useSelector } from '@tanstack/react-store';
+import { useSelector } from '@tanstack/react-form';
 import { SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -9,13 +9,17 @@ import type { Option } from '@/types/index.types';
 
 import { FooterFormActions } from '@/components/custom/form-actions';
 import { notify } from '@/components/custom/toast';
-import { SaleOrderSummary } from '@/features/sales/components/orders/order-summary';
+import {
+  calculateOrderSummary,
+  SaleOrderSummary,
+} from '@/features/sales/components/orders/order-summary';
 import { SaleOrderDetails } from '@/features/sales/components/orders/sale-order-details';
 import { SaleOrderHeader } from '@/features/sales/components/orders/sale-order-header';
 import { upsertSaleOrder } from '@/features/sales/services/orders/actions';
 import { saleOrderFormOpts } from '@/features/sales/utils/form';
 import { useAppForm } from '@/lib/form';
 import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
+import { numberFormat } from '@/lib/helpers/formatters';
 
 type PageProps = {
   accounts: Array<Option>;
@@ -88,6 +92,26 @@ export function SalesOrderForm({
         <SaleOrderSummary form={form} />
       </form>
       <FooterFormActions
+        formSummary={
+          <form.Subscribe
+            selector={(state) => {
+              const { details, vatType, vatRate } = state.values;
+              return {
+                lineCount: details.length,
+                total: calculateOrderSummary({ details, vatType, vatRate })
+                  .inclusive,
+                currency: state.values.currency,
+              };
+            }}
+          >
+            {({ lineCount, total, currency }) => (
+              <p className='text-xs text-muted-foreground'>
+                {lineCount} {lineCount === 1 ? 'line' : 'lines'} &mdash;{' '}
+                {currency} {numberFormat(total)}
+              </p>
+            )}
+          </form.Subscribe>
+        }
         isSubmitting={isSubmitting}
         saveIcon={SaveIcon}
         handleSubmit={form.handleSubmit}
