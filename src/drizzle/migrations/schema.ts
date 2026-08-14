@@ -1511,6 +1511,8 @@ export const salesOrdersHeader = pgTable(
     status: saleOrderStatusEnum('sale_order_status')
       .default('fulfilled')
       .notNull(),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    cancelledBy: uuid('cancelled_by'),
     createdAt,
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
       () => new Date(),
@@ -1526,6 +1528,11 @@ export const salesOrdersHeader = pgTable(
       columns: [table.salesRepId],
       foreignColumns: [users.id],
       name: 'sales_orders_header_sales_rep_id_users_id_fk',
+    }).onDelete('restrict'),
+    foreignKey({
+      columns: [table.cancelledBy],
+      foreignColumns: [users.id],
+      name: 'sales_orders_header_cancelled_by_users_id_fk',
     }).onDelete('restrict'),
     uniqueIndex('sales_orders_header_sale_order_no_idx').on(table.saleOrderNo),
     index('sales_orders_header_sales_rep_date_idx').on(
