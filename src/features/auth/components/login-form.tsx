@@ -1,122 +1,85 @@
 'use client';
-import type z from 'zod';
 
-// biome-ignore assist/source/organizeImports: <Too annoying to fix>
-import { zodResolver } from '@hookform/resolvers/zod';
+import type { Route } from 'next';
+
+import { useSelector } from '@tanstack/react-form';
 import { KeyRoundIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 
-import { CustomAlert } from '@/components/custom/custom-alert';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { PasswordInput } from '@/components/custom/password-input';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { FieldGroup } from '@/components/ui/field';
+import { LoadingSwap } from '@/components/ui/loading-swap';
 import { loginAction } from '@/features/auth/actions/auth';
 import { loginSchema } from '@/features/auth/actions/schema';
-import { useError } from '@/hooks/use-error';
-import { setFormErrors } from '@/lib/helpers/errors';
+import { useAppForm } from '@/lib/form';
+import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
 
 export function LoginForm() {
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const router = useRouter();
+
+  const form = useAppForm({
     defaultValues: {
       userName: '',
       password: '',
     },
-    resolver: zodResolver(loginSchema),
+    validators: {
+      onSubmit: loginSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await handleSubmitFeedback({
+        action: () => loginAction(value),
+        errorTitle: 'Error signing in',
+        successTitle: 'Welcome back',
+        fallbackMessage: 'Failed to sign in. Please try again.',
+        onSuccess: (destination) => {
+          router.push((destination || '/dashboard') as Route);
+        },
+      });
+    },
   });
-  const { clearErrors, errors, onError } = useError();
-  const isPending = form.formState.isSubmitting;
 
-  async function onSubmit(data: z.infer<typeof loginSchema>) {
-    clearErrors();
-    const results = await loginAction(data);
-
-    if (results.errors) {
-      setFormErrors(form, results.errors);
-      return;
-    }
-
-    if (!results.success) {
-      onError(results.message);
-      return;
-    }
-  }
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <div className="space-y-4">
-      {errors && <CustomAlert variant="error" description={errors} />}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="userName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contact/Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    {...field}
-                    placeholder="jsmith@example.com"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/forgot-password"
-                    prefetch={false}
-                    className="text-link text-sm transition-all hover:underline"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
-                <FormControl>
-                  <PasswordInput
-                    {...field}
-                    placeholder="*******"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={isPending}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+      className='space-y-6'
+    >
+      <FieldGroup>
+        <form.AppField name='userName'>
+          {(field) => (
+            <field.Input label='Contact/Email' placeholder='jsmith@example.com' />
+          )}
+        </form.AppField>
+        <form.AppField name='password'>
+          {(field) => (
+            <field.Input label='Password' placeholder='*******' isPassword />
+          )}
+        </form.AppField>
+        <div className='flex justify-end'>
+          <Link
+            href='/forgot-password'
+            prefetch={false}
+            className='text-link text-sm transition-all hover:underline'
           >
-            {isPending ? (
-              <ButtonLoader loadingText="Processing..." />
-            ) : (
-              <>
-                <KeyRoundIcon />
-                <span>Sign In</span>
-              </>
-            )}
-          </Button>
-        </form>
-      </Form>
-    </div>
+            Forgot Password?
+          </Link>
+        </div>
+      </FieldGroup>
+      <FieldGroup>
+        <Button type='submit' className='w-full' size='lg' disabled={isPending}>
+          <LoadingSwap isLoading={isPending} className='flex items-center gap-2'>
+            <>
+              <KeyRoundIcon />
+              <span>Sign In</span>
+            </>
+          </LoadingSwap>
+        </Button>
+      </FieldGroup>
+    </form>
   );
 }
