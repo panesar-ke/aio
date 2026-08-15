@@ -20,6 +20,7 @@ export const env = createEnv({
     EXCHANGE_RATE_API_KEY: z.string().min(1),
     APP_URL: z.string().url(),
     SUPPORT_EMAIL: z.string().email().default('support@panesar.co.ke'),
+    PASSWORD_POLICY_DEADLINE: z.string().datetime().optional(),
     // VERCEL_URL: z.string().min(1),
   },
   runtimeEnv: process.env,

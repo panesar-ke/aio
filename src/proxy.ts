@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import type { SessionPayload } from '@/types/index.types';
 
+import { shouldGate } from '@/features/auth/utils/password-policy';
 import { decrypt } from '@/lib/session';
 
 const publicRoutes = [
@@ -78,6 +79,29 @@ export default async function proxy(req: NextRequest) {
 
   if (isPublicRoute && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+  }
+
+  const deadline = process.env.PASSWORD_POLICY_DEADLINE
+    ? new Date(process.env.PASSWORD_POLICY_DEADLINE)
+    : null;
+
+  // `/change-password` must stay reachable or the gate redirects to itself.
+  const isPolicyExempt = path === '/change-password' || path.startsWith('/api/');
+
+  if (
+    hasSession &&
+    !isPolicyExempt &&
+    shouldGate({
+      // A session predating the policy has no claim; treat it as compliant and
+      // let the next login settle it, rather than gating on stale data.
+      compliant: session?.policyCompliant !== false,
+      deadline,
+      // Per-user exemptions are not in the JWT; they take effect at next login.
+      exemptUntil: null,
+      now: new Date(),
+    })
+  ) {
+    return NextResponse.redirect(new URL('/change-password', req.nextUrl));
   }
 
   return NextResponse.next();

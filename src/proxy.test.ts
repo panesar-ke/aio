@@ -135,4 +135,89 @@ describe('proxy session handling', () => {
     expect(redirectMock).toHaveBeenCalled();
     expect(result).toBe('redirect');
   });
+
+  test('redirects a non-compliant user to change-password after the deadline', async () => {
+    vi.stubEnv('PASSWORD_POLICY_DEADLINE', '2026-01-01T00:00:00.000Z');
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    decryptMock.mockResolvedValue({
+      userId: 'u1',
+      sessionId: 's1',
+      policyCompliant: false,
+    });
+    redirectMock.mockReturnValue('redirect');
+
+    const result = await proxy(createRequest('/dashboard', 'cookie') as never);
+
+    expect(redirectMock).toHaveBeenCalled();
+    expect(String(redirectMock.mock.calls[0][0])).toContain('/change-password');
+    expect(result).toBe('redirect');
+
+    vi.unstubAllEnvs();
+  });
+
+  test('never gates the change-password page itself', async () => {
+    vi.stubEnv('PASSWORD_POLICY_DEADLINE', '2026-01-01T00:00:00.000Z');
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    decryptMock.mockResolvedValue({
+      userId: 'u1',
+      sessionId: 's1',
+      policyCompliant: false,
+    });
+    nextMock.mockReturnValue('next');
+
+    const result = await proxy(
+      createRequest('/change-password', 'cookie') as never
+    );
+
+    expect(redirectMock).not.toHaveBeenCalled();
+    expect(result).toBe('next');
+
+    vi.unstubAllEnvs();
+  });
+
+  test('does not gate a compliant user after the deadline', async () => {
+    vi.stubEnv('PASSWORD_POLICY_DEADLINE', '2026-01-01T00:00:00.000Z');
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    decryptMock.mockResolvedValue({
+      userId: 'u1',
+      sessionId: 's1',
+      policyCompliant: true,
+    });
+    nextMock.mockReturnValue('next');
+
+    const result = await proxy(createRequest('/dashboard', 'cookie') as never);
+
+    expect(result).toBe('next');
+
+    vi.unstubAllEnvs();
+  });
+
+  test('does not gate a non-compliant user when no deadline is set', async () => {
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    decryptMock.mockResolvedValue({
+      userId: 'u1',
+      sessionId: 's1',
+      policyCompliant: false,
+    });
+    nextMock.mockReturnValue('next');
+
+    const result = await proxy(createRequest('/dashboard', 'cookie') as never);
+
+    expect(redirectMock).not.toHaveBeenCalled();
+    expect(result).toBe('next');
+  });
+
+  test('lets a session issued before the policy through', async () => {
+    vi.stubEnv('PASSWORD_POLICY_DEADLINE', '2026-01-01T00:00:00.000Z');
+    protectMock.mockResolvedValue({ isDenied: () => false });
+    // No policyCompliant claim at all.
+    decryptMock.mockResolvedValue({ userId: 'u1', sessionId: 's1' });
+    nextMock.mockReturnValue('next');
+
+    const result = await proxy(createRequest('/dashboard', 'cookie') as never);
+
+    expect(result).toBe('next');
+
+    vi.unstubAllEnvs();
+  });
 });
