@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 
 import { ButtonLoader } from '@/components/custom/loaders';
 import { PasswordInput } from '@/components/custom/password-input';
+import { PasswordStrength } from '@/components/custom/password-strength';
 import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -105,6 +106,7 @@ export function ChangePasswordForm() {
                         disabled={isPending}
                       />
                     </FormControl>
+                    <PasswordStrength value={field.value} />
                     <FormMessage />
                   </FormItem>
                 )}

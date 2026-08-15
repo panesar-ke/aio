@@ -1,11 +1,16 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
+import {
+  PasswordPolicyBanner,
+  policyDeadlineDays,
+} from "@/components/auth/password-policy-banner";
 import { PermissionProvider } from "@/components/auth/permission-provider";
 import { AppSidebar, SidebarSkeleton } from "@/components/layout/app-sidebar";
 import { AppNavbar } from "@/components/layout/navbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isPolicyCompliant } from "@/features/auth/utils/password-policy";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
 import { getCurrentUser } from "@/lib/session";
 
@@ -32,8 +37,12 @@ async function ProtectedLayoutContent({
 }: {
   children: React.ReactNode;
 }) {
-  await getCurrentUser();
+  const user = await getCurrentUser();
   const permissions = Array.from(await getCurrentUserPermissions());
+
+  const deadline = process.env.PASSWORD_POLICY_DEADLINE
+    ? new Date(process.env.PASSWORD_POLICY_DEADLINE)
+    : null;
 
   return (
     <PermissionProvider permissions={permissions}>
@@ -42,6 +51,11 @@ async function ProtectedLayoutContent({
         <AppNavbar />
         <div className="flex min-h-0 flex-1 flex-col gap-4 bg-neutral">
           <div className="flex min-h-0 flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
+            {!isPolicyCompliant(user.passwordPolicyVersion) && (
+              <PasswordPolicyBanner
+                days={policyDeadlineDays(deadline, new Date())}
+              />
+            )}
             {children}
           </div>
         </div>

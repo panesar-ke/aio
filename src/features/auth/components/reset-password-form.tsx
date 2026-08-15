@@ -4,6 +4,7 @@ import { useSelector } from '@tanstack/react-form';
 import { LockIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { PasswordStrength } from '@/components/custom/password-strength';
 import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
 import { LoadingSwap } from '@/components/ui/loading-swap';
@@ -54,6 +55,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
             />
           )}
         </form.AppField>
+        <form.Subscribe selector={(state) => state.values.newPassword}>
+          {(newPassword) => <PasswordStrength value={newPassword} />}
+        </form.Subscribe>
         <form.AppField name='confirmPassword'>
           {(field) => (
             <field.Input

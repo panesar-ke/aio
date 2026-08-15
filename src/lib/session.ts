@@ -134,6 +134,7 @@ export const getCurrentUserOrNull = cache(async () => {
       name: true,
       email: true,
       userType: true,
+      passwordPolicyVersion: true,
     },
     where: (model, { eq }) => eq(model.id, session.userId),
   });
