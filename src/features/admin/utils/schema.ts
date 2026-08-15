@@ -66,3 +66,17 @@ export const resetPasswordFormSchema = z
       }
     }
   });
+
+export const policyExemptionFormSchema = z.object({
+  userId: z.string().min(1, { message: 'User is required' }),
+  until: z
+    .string()
+    .trim()
+    .min(1, { message: 'Exemption date is required' })
+    .refine((value) => !Number.isNaN(Date.parse(value)), {
+      message: 'Enter a valid date',
+    })
+    .refine((value) => new Date(value).getTime() > Date.now(), {
+      message: 'Exemption date must be in the future',
+    }),
+});

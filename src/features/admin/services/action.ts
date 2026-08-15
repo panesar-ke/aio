@@ -291,3 +291,14 @@ export const resetPassword = async (data: ResetPasswordFormValues) => {
     .where(eq(users.id, userId));
   return newPassword;
 };
+
+export const grantPolicyExemption = async (userId: string, until: Date) => {
+  await requirePermission('admin:admin');
+
+  await db
+    .update(users)
+    .set({ passwordPolicyExemptUntil: until })
+    .where(eq(users.id, userId));
+
+  revalidateUserTags(userId);
+};

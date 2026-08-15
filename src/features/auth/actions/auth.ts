@@ -75,7 +75,13 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
     compliant = true;
   }
 
-  await createSession(user.id, { policyCompliant: compliant });
+  const exemptUntil = user.passwordPolicyExemptUntil
+    ? new Date(user.passwordPolicyExemptUntil)
+    : null;
+
+  const exempt = exemptUntil !== null && Date.now() < exemptUntil.getTime();
+
+  await createSession(user.id, { policyCompliant: compliant || exempt });
 
   return redirect((user.defaultMenu as Route) || ('/dashboard' as Route));
 }
