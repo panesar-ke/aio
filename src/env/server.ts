@@ -19,7 +19,7 @@ export const env = createEnv({
     ARCJET_KEY: z.string().min(1),
     EXCHANGE_RATE_API_KEY: z.string().min(1),
     APP_URL: z.string().url(),
-    SUPPORT_EMAIL: z.string().email().default('support@panesars.co.ke'),
+    SUPPORT_EMAIL: z.string().email().default('support@panesar.co.ke'),
     // VERCEL_URL: z.string().min(1),
   },
   runtimeEnv: process.env,
