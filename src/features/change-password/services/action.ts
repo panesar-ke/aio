@@ -13,6 +13,11 @@ import { users } from '@/drizzle/schema';
 import { env } from '@/env/server';
 import { verifyPassword } from '@/features/auth/utils/password';
 import {
+  checkPasswordPolicy,
+  CURRENT_POLICY_VERSION,
+  policyFailureMessage,
+} from '@/features/auth/utils/password-policy';
+import {
   type ChangePasswordFormValues,
   changePasswordSchema,
 } from '@/features/change-password/utils/schema';
@@ -49,6 +54,9 @@ export async function changePasswordAction(
       columns: {
         id: true,
         password: true,
+        name: true,
+        email: true,
+        contact: true,
       },
     });
 
@@ -75,6 +83,15 @@ export async function changePasswordAction(
       };
     }
 
+    const failures = checkPasswordPolicy(data.newPassword, user);
+
+    if (failures.length > 0) {
+      return {
+        error: true,
+        message: policyFailureMessage(failures[0]),
+      };
+    }
+
     const saltRounds = Number(env.BCRYPT_ROUNDS);
     const hashedNewPassword = await bcrypt.hash(data.newPassword, saltRounds);
 
@@ -82,6 +99,8 @@ export async function changePasswordAction(
       .update(users)
       .set({
         password: hashedNewPassword,
+        passwordPolicyVersion: CURRENT_POLICY_VERSION,
+        passwordChangedAt: new Date(),
       })
       .where(eq(users.id, currentUser.id));
 

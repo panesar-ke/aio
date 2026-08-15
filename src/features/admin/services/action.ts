@@ -164,7 +164,7 @@ export const upsertUser = async (values: unknown) => {
       ? normalizePermissions(assignedPermissions)
       : [];
 
-  const password = generatePassword(8);
+  const password = generatePassword();
   const hashedPassword = await hashPassword(password);
 
   try {
@@ -278,7 +278,7 @@ export const resetPassword = async (data: ResetPasswordFormValues) => {
 
   let newPassword: string;
   if (resetMethod === 'automatic') {
-    newPassword = generatePassword(8);
+    newPassword = generatePassword();
   } else {
     newPassword = password as string;
   }

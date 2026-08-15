@@ -15,6 +15,11 @@ import {
 import { findValidResetToken } from '@/features/auth/services/data';
 import { maskEmail } from '@/features/auth/utils/mask-email';
 import {
+  checkPasswordPolicy,
+  CURRENT_POLICY_VERSION,
+  policyFailureMessage,
+} from '@/features/auth/utils/password-policy';
+import {
   generateResetToken,
   hashResetToken,
   RESET_TOKEN_REQUEST_LIMIT,
@@ -133,13 +138,32 @@ export const resetPasswordAction = (values: unknown) =>
       );
     }
 
+    const user = await db.query.users.findFirst({
+      columns: { name: true, email: true, contact: true },
+      where: (table, { eq }) => eq(table.id, valid.userId),
+    });
+
+    if (!user) {
+      throw new ActionError('That account no longer exists.');
+    }
+
+    const failures = checkPasswordPolicy(data.newPassword, user);
+
+    if (failures.length > 0) {
+      throw new ActionError(policyFailureMessage(failures[0]));
+    }
+
     const hashedPassword = await hashPassword(data.newPassword);
     const now = new Date();
 
     await db.transaction(async (tx) => {
       await tx
         .update(users)
-        .set({ password: hashedPassword })
+        .set({
+          password: hashedPassword,
+          passwordPolicyVersion: CURRENT_POLICY_VERSION,
+          passwordChangedAt: now,
+        })
         .where(eq(users.id, valid.userId));
 
       await tx

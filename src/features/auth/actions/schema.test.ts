@@ -36,20 +36,20 @@ describe('loginSchema', () => {
 describe('changePasswordSchema', () => {
   it('preserves case on both password fields', () => {
     const parsed = changePasswordSchema.parse({
-      currentPassword: 'OldPass123',
-      newPassword: 'NewPass456',
-      confirmPassword: 'NewPass456',
+      currentPassword: 'OldPassphrase123',
+      newPassword: 'NewPassphrase456',
+      confirmPassword: 'NewPassphrase456',
     });
 
-    expect(parsed.currentPassword).toBe('OldPass123');
-    expect(parsed.newPassword).toBe('NewPass456');
+    expect(parsed.currentPassword).toBe('OldPassphrase123');
+    expect(parsed.newPassword).toBe('NewPassphrase456');
   });
 
   it('rejects a confirmation that differs only by case', () => {
     const result = changePasswordSchema.safeParse({
-      currentPassword: 'OldPass123',
-      newPassword: 'NewPass456',
-      confirmPassword: 'newpass456',
+      currentPassword: 'OldPassphrase123',
+      newPassword: 'NewPassphrase456',
+      confirmPassword: 'newpassphrase456',
     });
 
     expect(result.success).toBe(false);
@@ -87,20 +87,20 @@ describe('forgotPasswordSchema', () => {
 describe('resetPasswordSchema', () => {
   const valid = {
     token: 'a-token',
-    newPassword: 'NewPass456',
-    confirmPassword: 'NewPass456',
+    newPassword: 'NewPassphrase456',
+    confirmPassword: 'NewPassphrase456',
   };
 
   it('accepts a matching pair and preserves case', () => {
     const parsed = resetPasswordSchema.parse(valid);
 
-    expect(parsed.newPassword).toBe('NewPass456');
+    expect(parsed.newPassword).toBe('NewPassphrase456');
   });
 
   it('rejects a mismatched confirmation', () => {
     const result = resetPasswordSchema.safeParse({
       ...valid,
-      confirmPassword: 'Different1',
+      confirmPassword: 'DifferentPass1',
     });
 
     expect(result.success).toBe(false);
@@ -109,7 +109,7 @@ describe('resetPasswordSchema', () => {
   it('puts the mismatch error on the confirmation field', () => {
     const result = resetPasswordSchema.safeParse({
       ...valid,
-      confirmPassword: 'Different1',
+      confirmPassword: 'DifferentPass1',
     });
 
     expect(result.success).toBe(false);
@@ -118,11 +118,11 @@ describe('resetPasswordSchema', () => {
     }
   });
 
-  it('rejects a password shorter than 8 characters', () => {
+  it('rejects a password shorter than 12 characters', () => {
     const result = resetPasswordSchema.safeParse({
       token: 'a-token',
-      newPassword: 'Short1',
-      confirmPassword: 'Short1',
+      newPassword: 'ElevenChar1',
+      confirmPassword: 'ElevenChar1',
     });
 
     expect(result.success).toBe(false);
