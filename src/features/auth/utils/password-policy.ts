@@ -133,6 +133,59 @@ export function parsePolicyDeadline(raw: string | undefined) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+export const POLICY_WARNING_WINDOW_DAYS = 7;
+
+/** Whole days until the deadline, clamped at zero. Null with no deadline. */
+export function policyDeadlineDays(deadline: Date | null, now: Date) {
+  if (!deadline) {
+    return null;
+  }
+
+  return Math.max(
+    0,
+    Math.ceil((deadline.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+  );
+}
+
+function isExemptAt(exemptUntil: Date | null, at: Date) {
+  return exemptUntil !== null && at.getTime() < exemptUntil.getTime();
+}
+
+/**
+ * Whether to show the in-app warning. Quiet until the final week, so the
+ * notifications carry the long tail and the banner only appears once being
+ * locked out is imminent.
+ */
+export function shouldWarnAboutPolicy(input: {
+  compliant: boolean;
+  deadline: Date | null;
+  exemptUntil: Date | null;
+  now: Date;
+}) {
+  if (input.compliant || input.deadline === null) {
+    return false;
+  }
+
+  // An exemption outlasting the deadline means this user is never gated by it.
+  if (isExemptAt(input.exemptUntil, input.deadline)) {
+    return false;
+  }
+
+  const days = policyDeadlineDays(input.deadline, input.now);
+
+  return days !== null && days <= POLICY_WARNING_WINDOW_DAYS;
+}
+
+/**
+ * Whether the reminder job should run today. Shuts once the deadline passes:
+ * past it the gate speaks for itself, and a reminder would be noise.
+ */
+export function isInPolicyReminderWindow(deadline: Date | null, now: Date) {
+  const days = policyDeadlineDays(deadline, now);
+
+  return days !== null && days >= 1 && days <= POLICY_WARNING_WINDOW_DAYS;
+}
+
 export function shouldGate(input: {
   compliant: boolean;
   deadline: Date | null;

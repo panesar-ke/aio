@@ -3,10 +3,13 @@ import { describe, expect, it } from 'vitest';
 import {
   checkPasswordPolicy,
   CURRENT_POLICY_VERSION,
+  isInPolicyReminderWindow,
   isPolicyCompliant,
   parsePolicyDeadline,
   passwordStrength,
+  policyDeadlineDays,
   shouldGate,
+  shouldWarnAboutPolicy,
 } from '@/features/auth/utils/password-policy';
 
 const user = {
@@ -183,5 +186,147 @@ describe('parsePolicyDeadline', () => {
   it('treats an unparseable value as no deadline rather than gating', () => {
     expect(parsePolicyDeadline('1 Nov 2026 EAT')).toBeNull();
     expect(parsePolicyDeadline('not-a-date')).toBeNull();
+  });
+});
+
+describe('policyDeadlineDays', () => {
+  const now = new Date('2026-10-20T00:00:00.000Z');
+
+  it('counts whole days to the deadline', () => {
+    expect(policyDeadlineDays(new Date('2026-10-27T00:00:00.000Z'), now)).toBe(
+      7,
+    );
+  });
+
+  it('rounds a part day up, so "tomorrow" never reads as today', () => {
+    expect(policyDeadlineDays(new Date('2026-10-20T12:00:00.000Z'), now)).toBe(
+      1,
+    );
+  });
+
+  it('clamps a passed deadline to zero', () => {
+    expect(policyDeadlineDays(new Date('2026-10-01T00:00:00.000Z'), now)).toBe(
+      0,
+    );
+  });
+
+  it('is null without a deadline', () => {
+    expect(policyDeadlineDays(null, now)).toBeNull();
+  });
+});
+
+describe('shouldWarnAboutPolicy', () => {
+  const now = new Date('2026-10-20T00:00:00.000Z');
+  const inAWeek = new Date('2026-10-26T00:00:00.000Z');
+  const inAMonth = new Date('2026-11-20T00:00:00.000Z');
+  const passed = new Date('2026-10-01T00:00:00.000Z');
+
+  it('warns inside the final week', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: inAWeek,
+        exemptUntil: null,
+        now,
+      }),
+    ).toBe(true);
+  });
+
+  it('stays quiet while the deadline is far off', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: inAMonth,
+        exemptUntil: null,
+        now,
+      }),
+    ).toBe(false);
+  });
+
+  it('stays quiet with no deadline configured', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: null,
+        exemptUntil: null,
+        now,
+      }),
+    ).toBe(false);
+  });
+
+  it('never warns a compliant user', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: true,
+        deadline: inAWeek,
+        exemptUntil: null,
+        now,
+      }),
+    ).toBe(false);
+  });
+
+  it('does not warn a user exempt past the deadline', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: inAWeek,
+        exemptUntil: inAMonth,
+        now,
+      }),
+    ).toBe(false);
+  });
+
+  it('warns a user whose exemption runs out before the deadline', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: inAWeek,
+        exemptUntil: new Date('2026-10-22T00:00:00.000Z'),
+        now,
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps warning once the deadline has passed', () => {
+    expect(
+      shouldWarnAboutPolicy({
+        compliant: false,
+        deadline: passed,
+        exemptUntil: null,
+        now,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('isInPolicyReminderWindow', () => {
+  const now = new Date('2026-10-20T00:00:00.000Z');
+
+  it('is open on the seventh day out', () => {
+    expect(
+      isInPolicyReminderWindow(new Date('2026-10-27T00:00:00.000Z'), now),
+    ).toBe(true);
+  });
+
+  it('is open on the last day', () => {
+    expect(
+      isInPolicyReminderWindow(new Date('2026-10-20T12:00:00.000Z'), now),
+    ).toBe(true);
+  });
+
+  it('is shut while the deadline is further out', () => {
+    expect(
+      isInPolicyReminderWindow(new Date('2026-10-28T00:00:00.000Z'), now),
+    ).toBe(false);
+  });
+
+  it('is shut once the deadline has passed, since the gate has taken over', () => {
+    expect(
+      isInPolicyReminderWindow(new Date('2026-10-19T00:00:00.000Z'), now),
+    ).toBe(false);
+  });
+
+  it('is shut with no deadline configured', () => {
+    expect(isInPolicyReminderWindow(null, now)).toBe(false);
   });
 });

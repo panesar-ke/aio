@@ -1,10 +1,7 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import {
-  PasswordPolicyBanner,
-  policyDeadlineDays,
-} from "@/components/auth/password-policy-banner";
+import { PasswordPolicyBanner } from "@/components/auth/password-policy-banner";
 import { PermissionProvider } from "@/components/auth/permission-provider";
 import { AppSidebar, SidebarSkeleton } from "@/components/layout/app-sidebar";
 import { AppNavbar } from "@/components/layout/navbar";
@@ -13,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   isPolicyCompliant,
   parsePolicyDeadline,
+  policyDeadlineDays,
+  shouldWarnAboutPolicy,
 } from "@/features/auth/utils/password-policy";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
 import { getCurrentUser } from "@/lib/session";
@@ -43,7 +42,18 @@ async function ProtectedLayoutContent({
   const user = await getCurrentUser();
   const permissions = Array.from(await getCurrentUserPermissions());
 
+  const now = new Date();
   const deadline = parsePolicyDeadline(process.env.PASSWORD_POLICY_DEADLINE);
+
+  const daysToDeadline = policyDeadlineDays(deadline, now);
+
+  // Quiet until the final week — the notifications carry the long tail.
+  const warnAboutPolicy = shouldWarnAboutPolicy({
+    compliant: isPolicyCompliant(user.passwordPolicyVersion),
+    deadline,
+    exemptUntil: user.passwordPolicyExemptUntil,
+    now,
+  });
 
   return (
     <PermissionProvider permissions={permissions}>
@@ -52,10 +62,8 @@ async function ProtectedLayoutContent({
         <AppNavbar />
         <div className="flex min-h-0 flex-1 flex-col gap-4 bg-neutral">
           <div className="flex min-h-0 flex-1 flex-col gap-4 max-w-6xl mx-auto w-full py-4">
-            {!isPolicyCompliant(user.passwordPolicyVersion) && (
-              <PasswordPolicyBanner
-                days={policyDeadlineDays(deadline, new Date())}
-              />
+            {warnAboutPolicy && daysToDeadline !== null && (
+              <PasswordPolicyBanner days={daysToDeadline} />
             )}
             {children}
           </div>

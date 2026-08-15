@@ -14,7 +14,10 @@ import {
   checkPasswordPolicy,
   CURRENT_POLICY_VERSION,
   isPolicyCompliant,
+  parsePolicyDeadline,
 } from '@/features/auth/utils/password-policy';
+import { policyDeadlineNotification } from '@/features/auth/utils/policy-notification';
+import { createNotification } from '@/features/global/services/actions';
 import { redirectActionResult } from '@/lib/actions/results';
 import { ActionError, parseOrFail, runAction } from '@/lib/actions/safe-action';
 import { createSession, deleteSession } from '@/lib/session';
@@ -77,6 +80,28 @@ export const loginAction = async (
       : null;
 
     const exempt = exemptUntil !== null && Date.now() < exemptUntil.getTime();
+
+    if (!compliant && !exempt) {
+      // Announce the deadline once per user per deadline. Opportunistic: a
+      // notification failure must never stand between someone and their work.
+      try {
+        const deadline = parsePolicyDeadline(
+          process.env.PASSWORD_POLICY_DEADLINE,
+        );
+
+        if (deadline) {
+          await createNotification({
+            ...policyDeadlineNotification(deadline),
+            userId: user.id,
+          });
+        }
+      } catch (notificationError) {
+        console.error(
+          'Failed to raise password policy notification:',
+          notificationError,
+        );
+      }
+    }
 
     await createSession(user.id, { policyCompliant: compliant || exempt });
 

@@ -1,0 +1,65 @@
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { env } from '@/env/server';
+import { findUsersNeedingPolicyReminder } from '@/features/auth/services/data';
+import {
+  isInPolicyReminderWindow,
+  parsePolicyDeadline,
+  policyDeadlineDays,
+} from '@/features/auth/utils/password-policy';
+import { policyReminderNotification } from '@/features/auth/utils/policy-notification';
+import { createNotification } from '@/features/global/services/actions';
+
+function getCronSecret(request: NextRequest): string | null {
+  const auth = request.headers.get('authorization');
+  if (!auth) return null;
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? null;
+}
+
+export async function GET(request: NextRequest) {
+  if (!env.CRON_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { message: 'Server misconfigured: CRON_SECRET is not set' },
+        { status: 500 },
+      );
+    }
+  } else {
+    const token = getCronSecret(request);
+    if (!token || token !== env.CRON_SECRET) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  const deadline = parsePolicyDeadline(process.env.PASSWORD_POLICY_DEADLINE);
+  const now = new Date();
+
+  if (!isInPolicyReminderWindow(deadline, now)) {
+    return NextResponse.json({ notified: 0, skipped: 'outside-window' });
+  }
+
+  // Narrowed by isInPolicyReminderWindow, which is false for a null deadline.
+  const dueDate = deadline as Date;
+  const days = policyDeadlineDays(dueDate, now) as number;
+
+  try {
+    const recipients = await findUsersNeedingPolicyReminder(dueDate);
+    const notification = policyReminderNotification(dueDate, days);
+
+    // The unique index on (addressed_to, notification_type, event_id) makes
+    // this idempotent, so a re-run inside the window inserts nothing new.
+    for (const recipient of recipients) {
+      await createNotification({ ...notification, userId: recipient.id });
+    }
+
+    return NextResponse.json({ notified: recipients.length, days });
+  } catch (error) {
+    console.error('Failed to send password policy reminders', { error });
+
+    return NextResponse.json(
+      { message: 'Failed to send password policy reminders' },
+      { status: 500 },
+    );
+  }
+}
