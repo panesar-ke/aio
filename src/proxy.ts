@@ -3,7 +3,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import type { SessionPayload } from '@/types/index.types';
 
-import { shouldGate } from '@/features/auth/utils/password-policy';
+import {
+  parsePolicyDeadline,
+  shouldGate,
+} from '@/features/auth/utils/password-policy';
 import { decrypt } from '@/lib/session';
 
 const publicRoutes = [
@@ -81,9 +84,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
   }
 
-  const deadline = process.env.PASSWORD_POLICY_DEADLINE
-    ? new Date(process.env.PASSWORD_POLICY_DEADLINE)
-    : null;
+  const deadline = parsePolicyDeadline(process.env.PASSWORD_POLICY_DEADLINE);
 
   // `/change-password` must stay reachable or the gate redirects to itself.
   const isPolicyExempt = path === '/change-password' || path.startsWith('/api/');

@@ -117,6 +117,22 @@ export function passwordStrength(password: string): PasswordStrength {
   return 'strong';
 }
 
+/**
+ * An unparseable deadline must read as "no deadline". Left as an Invalid Date
+ * it would make every comparison in `shouldGate` false and gate the whole
+ * company, and the proxy runs in middleware where the validated env is not
+ * importable.
+ */
+export function parsePolicyDeadline(raw: string | undefined) {
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = new Date(raw);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function shouldGate(input: {
   compliant: boolean;
   deadline: Date | null;

@@ -4,6 +4,7 @@ import {
   checkPasswordPolicy,
   CURRENT_POLICY_VERSION,
   isPolicyCompliant,
+  parsePolicyDeadline,
   passwordStrength,
   shouldGate,
 } from '@/features/auth/utils/password-policy';
@@ -164,5 +165,23 @@ describe('shouldGate', () => {
     expect(
       shouldGate({ compliant: false, deadline: past, exemptUntil: past, now }),
     ).toBe(true);
+  });
+});
+
+describe('parsePolicyDeadline', () => {
+  it('parses an ISO timestamp', () => {
+    expect(parsePolicyDeadline('2026-11-01T00:00:00.000Z')?.toISOString()).toBe(
+      '2026-11-01T00:00:00.000Z',
+    );
+  });
+
+  it('treats an unset value as no deadline', () => {
+    expect(parsePolicyDeadline(undefined)).toBeNull();
+    expect(parsePolicyDeadline('')).toBeNull();
+  });
+
+  it('treats an unparseable value as no deadline rather than gating', () => {
+    expect(parsePolicyDeadline('1 Nov 2026 EAT')).toBeNull();
+    expect(parsePolicyDeadline('not-a-date')).toBeNull();
   });
 });

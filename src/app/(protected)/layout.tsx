@@ -10,7 +10,10 @@ import { AppSidebar, SidebarSkeleton } from "@/components/layout/app-sidebar";
 import { AppNavbar } from "@/components/layout/navbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isPolicyCompliant } from "@/features/auth/utils/password-policy";
+import {
+  isPolicyCompliant,
+  parsePolicyDeadline,
+} from "@/features/auth/utils/password-policy";
 import { getCurrentUserPermissions } from "@/lib/permissions/service";
 import { getCurrentUser } from "@/lib/session";
 
@@ -40,9 +43,7 @@ async function ProtectedLayoutContent({
   const user = await getCurrentUser();
   const permissions = Array.from(await getCurrentUserPermissions());
 
-  const deadline = process.env.PASSWORD_POLICY_DEADLINE
-    ? new Date(process.env.PASSWORD_POLICY_DEADLINE)
-    : null;
+  const deadline = parsePolicyDeadline(process.env.PASSWORD_POLICY_DEADLINE);
 
   return (
     <PermissionProvider permissions={permissions}>
