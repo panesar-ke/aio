@@ -1,111 +1,82 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useSelector } from '@tanstack/react-form';
 import { LockIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 
-import { CustomAlert } from '@/components/custom/custom-alert';
-import { ButtonLoader } from '@/components/custom/loaders';
-import { PasswordInput } from '@/components/custom/password-input';
-import { notify } from '@/components/custom/toast';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { FieldGroup } from '@/components/ui/field';
+import { LoadingSwap } from '@/components/ui/loading-swap';
 import { resetPasswordAction } from '@/features/auth/actions/password-reset';
-import {
-  type ResetPasswordFormValues,
-  resetPasswordSchema,
-} from '@/features/auth/actions/schema';
-import { useError } from '@/hooks/use-error';
+import { resetPasswordSchema } from '@/features/auth/actions/schema';
+import { useAppForm } from '@/lib/form';
+import { handleSubmitFeedback } from '@/lib/form-submit-feedback';
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const { clearErrors, errors, onError } = useError();
 
-  const form = useForm<ResetPasswordFormValues>({
+  const form = useAppForm({
     defaultValues: { token, newPassword: '', confirmPassword: '' },
-    resolver: zodResolver(resetPasswordSchema),
+    validators: {
+      onSubmit: resetPasswordSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await handleSubmitFeedback({
+        action: () => resetPasswordAction(value),
+        errorTitle: `Error resetting password`,
+        successTitle: `Password reset successfully`,
+        fallbackMessage: `Failed to reset password. Please try again.`,
+        onSuccess: () => {
+          form.reset();
+          router.push('/login');
+        },
+      });
+    },
   });
 
-  const isPending = form.formState.isSubmitting;
-
-  async function onSubmit(data: ResetPasswordFormValues) {
-    clearErrors();
-
-    const result = await resetPasswordAction(data);
-
-    if (result.error) {
-      onError(result.message);
-      return;
-    }
-
-    notify.success('Success', result.message);
-    router.push('/login');
-  }
+  const isPending = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <div className="space-y-4">
-      {errors && <CustomAlert variant="error" description={errors} />}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="newPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>New Password</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    {...field}
-                    placeholder="Enter your new password"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm New Password</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    {...field}
-                    placeholder="Confirm your new password"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={isPending}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+      className='space-y-6'
+    >
+      <FieldGroup>
+        <form.AppField name='newPassword'>
+          {(field) => (
+            <field.Input
+              label='New Password'
+              placeholder='Enter your new password'
+              isPassword
+            />
+          )}
+        </form.AppField>
+        <form.AppField name='confirmPassword'>
+          {(field) => (
+            <field.Input
+              label='Confirm New Password'
+              placeholder='Confirm your new password'
+              isPassword
+            />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      <FieldGroup>
+        <Button type='submit' className='w-full' size='lg' disabled={isPending}>
+          <LoadingSwap
+            isLoading={isPending}
+            className='flex items-center gap-2'
           >
-            {isPending ? (
-              <ButtonLoader loadingText="Updating..." />
-            ) : (
-              <>
-                <LockIcon className="size-4" />
-                <span>Set new password</span>
-              </>
-            )}
-          </Button>
-        </form>
-      </Form>
-    </div>
+            <>
+              <LockIcon className='size-4' />
+              <span>Set new password</span>
+            </>
+          </LoadingSwap>
+        </Button>
+      </FieldGroup>
+    </form>
   );
 }
