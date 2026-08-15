@@ -126,7 +126,7 @@ export const requestPasswordResetAction = async (
     };
   });
 
-export const resetPasswordAction = (values: unknown) =>
+export const resetPasswordAction = async (values: unknown) =>
   runAction('reset-password-action', async () => {
     const data = parseOrFail(resetPasswordSchema, values);
 

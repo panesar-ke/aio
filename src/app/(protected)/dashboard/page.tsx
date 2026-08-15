@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 
 import db from '@/drizzle/db';
 import { getCurrentUser } from '@/lib/session';
@@ -10,7 +11,18 @@ export const metadata: Metadata = {
   title: 'Dashboard',
 };
 
-export default async function Home() {
+export default function Home() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <DashboardRedirect />
+      </Suspense>
+      <h1>Dashboard</h1>
+    </>
+  );
+}
+
+async function DashboardRedirect() {
   await connection();
   const redirectPath = await getRedirectPage();
 
@@ -18,7 +30,7 @@ export default async function Home() {
     redirect(redirectPath as Route);
   }
 
-  return <h1>Dashboard</h1>;
+  return null;
 }
 
 async function getRedirectPage(): Promise<string | null> {
