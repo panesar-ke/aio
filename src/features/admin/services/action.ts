@@ -191,7 +191,6 @@ export const upsertUser = async (values: unknown) => {
           email,
           userType,
           active: true,
-          promptPasswordChange: true,
         })
         .onConflictDoUpdate({
           target: users.id,

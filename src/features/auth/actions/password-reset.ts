@@ -139,7 +139,7 @@ export const resetPasswordAction = (values: unknown) =>
     await db.transaction(async (tx) => {
       await tx
         .update(users)
-        .set({ password: hashedPassword, promptPasswordChange: false })
+        .set({ password: hashedPassword })
         .where(eq(users.id, valid.userId));
 
       await tx

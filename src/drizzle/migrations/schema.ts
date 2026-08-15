@@ -12,6 +12,7 @@ import {
   pgTable,
   primaryKey,
   serial,
+  smallint,
   text,
   timestamp,
   unique,
@@ -1766,7 +1767,15 @@ export const users = pgTable(
     defaultMenu: varchar('default_menu'),
     active: boolean().default(true).notNull(),
     role: integer(),
-    promptPasswordChange: boolean('prompt_password_change').default(false),
+    passwordPolicyVersion: smallint('password_policy_version')
+      .default(0)
+      .notNull(),
+    passwordChangedAt: timestamp('password_changed_at', {
+      withTimezone: true,
+    }),
+    passwordPolicyExemptUntil: timestamp('password_policy_exempt_until', {
+      withTimezone: true,
+    }),
     hasAdminPriviledges: boolean('has_admin_priviledges')
       .default(false)
       .notNull(),

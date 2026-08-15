@@ -82,7 +82,6 @@ export async function changePasswordAction(
       .update(users)
       .set({
         password: hashedNewPassword,
-        promptPasswordChange: false,
       })
       .where(eq(users.id, currentUser.id));
 
