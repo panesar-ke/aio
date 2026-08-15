@@ -35,7 +35,10 @@ export async function decrypt(session: string | undefined = '') {
   }
 }
 
-export async function createSession(userId: string) {
+export async function createSession(
+  userId: string,
+  options?: { policyCompliant?: boolean },
+) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   const createdSession = await db
@@ -47,6 +50,7 @@ export async function createSession(userId: string) {
     userId,
     sessionId: createdSession[0].id,
     expiresAt,
+    policyCompliant: options?.policyCompliant,
   });
 
   const cookieStore = await cookies();

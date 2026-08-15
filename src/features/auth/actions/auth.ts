@@ -11,6 +11,11 @@ import { users } from '@/drizzle/schema';
 import { hashPassword } from '@/features/admin/utils/helpers';
 import { loginSchema } from '@/features/auth/actions/schema';
 import { verifyPassword } from '@/features/auth/utils/password';
+import {
+  checkPasswordPolicy,
+  CURRENT_POLICY_VERSION,
+  isPolicyCompliant,
+} from '@/features/auth/utils/password-policy';
 import { createSession, deleteSession } from '@/lib/session';
 
 export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
@@ -57,7 +62,20 @@ export async function loginAction(unsafeData: z.infer<typeof loginSchema>) {
     }
   }
 
-  await createSession(user.id);
+  let compliant = isPolicyCompliant(user.passwordPolicyVersion);
+
+  // The plaintext is only available here, so this is the one place an existing
+  // password can be judged against the policy without forcing a change.
+  if (!compliant && checkPasswordPolicy(data.password, user).length === 0) {
+    await db
+      .update(users)
+      .set({ passwordPolicyVersion: CURRENT_POLICY_VERSION })
+      .where(eq(users.id, user.id));
+
+    compliant = true;
+  }
+
+  await createSession(user.id, { policyCompliant: compliant });
 
   return redirect((user.defaultMenu as Route) || ('/dashboard' as Route));
 }

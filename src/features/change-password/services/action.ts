@@ -22,7 +22,7 @@ import {
   changePasswordSchema,
 } from '@/features/change-password/utils/schema';
 import { validateFields } from '@/lib/action-validator';
-import { getCurrentUser } from '@/lib/session';
+import { createSession, getCurrentUser } from '@/lib/session';
 
 export async function changePasswordAction(
   values: unknown
@@ -103,6 +103,9 @@ export async function changePasswordAction(
         passwordChangedAt: new Date(),
       })
       .where(eq(users.id, currentUser.id));
+
+    // Re-issue the cookie so the gate lifts now rather than at next login.
+    await createSession(currentUser.id, { policyCompliant: true });
 
     return {
       error: false,
