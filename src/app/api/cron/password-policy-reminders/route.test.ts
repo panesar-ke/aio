@@ -10,12 +10,12 @@ vi.mock('@/features/auth/services/data', () => ({
 }));
 
 vi.mock('@/features/global/services/actions', () => ({
-  createNotification: vi.fn(),
+  createNotifications: vi.fn(),
 }));
 
 import { GET } from '@/app/api/cron/password-policy-reminders/route';
 import { findUsersNeedingPolicyReminder } from '@/features/auth/services/data';
-import { createNotification } from '@/features/global/services/actions';
+import { createNotifications } from '@/features/global/services/actions';
 
 function request(token = 'secret') {
   return new NextRequest(
@@ -27,7 +27,7 @@ function request(token = 'secret') {
 describe('GET /api/cron/password-policy-reminders', () => {
   beforeEach(() => {
     vi.mocked(findUsersNeedingPolicyReminder).mockReset();
-    vi.mocked(createNotification).mockReset();
+    vi.mocked(createNotifications).mockReset();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-20T00:00:00.000Z'));
   });
@@ -52,7 +52,7 @@ describe('GET /api/cron/password-policy-reminders', () => {
       notified: 0,
       skipped: 'outside-window',
     });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(createNotifications).not.toHaveBeenCalled();
   });
 
   it('does nothing while the deadline is more than a week out', async () => {
@@ -64,7 +64,7 @@ describe('GET /api/cron/password-policy-reminders', () => {
       notified: 0,
       skipped: 'outside-window',
     });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(createNotifications).not.toHaveBeenCalled();
   });
 
   it('does nothing once the deadline has passed', async () => {
@@ -76,7 +76,7 @@ describe('GET /api/cron/password-policy-reminders', () => {
       notified: 0,
       skipped: 'outside-window',
     });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(createNotifications).not.toHaveBeenCalled();
   });
 
   it('notifies every affected user inside the final week', async () => {
@@ -89,15 +89,20 @@ describe('GET /api/cron/password-policy-reminders', () => {
     const response = await GET(request());
 
     await expect(response.json()).resolves.toEqual({ notified: 2, days: 5 });
-    expect(createNotification).toHaveBeenCalledTimes(2);
-    expect(createNotification).toHaveBeenCalledWith(
+    // One insert for the batch, not one per recipient.
+    expect(createNotifications).toHaveBeenCalledTimes(1);
+    expect(createNotifications).toHaveBeenCalledWith([
       expect.objectContaining({
         userId: 'user-1',
         notificationType: 'PASSWORD_POLICY',
         path: '/change-password',
         eventId: 'reminder-2026-10-25T00:00:00.000Z',
       }),
-    );
+      expect.objectContaining({
+        userId: 'user-2',
+        eventId: 'reminder-2026-10-25T00:00:00.000Z',
+      }),
+    ]);
   });
 
   it('reports a failure instead of pretending it notified', async () => {

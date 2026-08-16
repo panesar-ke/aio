@@ -13,15 +13,15 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
-      <Suspense fallback={null}>
-        <DashboardRedirect />
-      </Suspense>
-      <h1>Dashboard</h1>
-    </>
+    <Suspense fallback={null}>
+      <DashboardRedirect />
+    </Suspense>
   );
 }
 
+// The heading renders inside the boundary, not beside it: anything in the
+// static shell paints before the redirect resolves, so every user with a
+// defaultMenu would see an empty Dashboard heading flash on the way out.
 async function DashboardRedirect() {
   await connection();
   const redirectPath = await getRedirectPage();
@@ -30,7 +30,7 @@ async function DashboardRedirect() {
     redirect(redirectPath as Route);
   }
 
-  return null;
+  return <h1>Dashboard</h1>;
 }
 
 async function getRedirectPage(): Promise<string | null> {

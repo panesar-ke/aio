@@ -41,7 +41,11 @@ export const loginAction = async (
       throw new ActionError('Account is deactivated');
     }
 
-    const verification = await verifyPassword(data.password, user.password);
+    const verification = await verifyPassword(data.password, user.password, {
+      // Only a hash that has never been rewritten since the casing fix can be
+      // a hash of lowercased input.
+      allowLegacyLowercase: user.passwordChangedAt === null,
+    });
 
     if (!verification.ok) {
       throw new ActionError('Invalid credentials');
@@ -49,12 +53,17 @@ export const loginAction = async (
 
     // TRANSITIONAL: this hash predates the casing fix and is a hash of
     // lowercased input. Re-store it as typed so the account self-heals.
+    // Stamping passwordChangedAt closes the lowercase fallback for this user:
+    // the hash is now exact-case, so a later mis-cased attempt must fail.
     // Opportunistic only: a failure here must never block a valid login.
     if (verification.needsRehash) {
       try {
         await db
           .update(users)
-          .set({ password: await hashPassword(data.password) })
+          .set({
+            password: await hashPassword(data.password),
+            passwordChangedAt: new Date(),
+          })
           .where(eq(users.id, user.id));
       } catch (rehashError) {
         console.error('Failed to self-heal password hash:', rehashError);

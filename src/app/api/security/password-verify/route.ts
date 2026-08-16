@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       columns: {
         id: true,
         password: true,
+        passwordChangedAt: true,
       },
     });
 
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
     // should not have a database write side effect.
     const verification = await verifyPassword(
       validation.data.currentPassword,
-      dbUser.password
+      dbUser.password,
+      { allowLegacyLowercase: dbUser.passwordChangedAt === null }
     );
     if (!verification.ok) {
       return NextResponse.json(

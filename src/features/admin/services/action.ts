@@ -287,8 +287,20 @@ export const resetPassword = async (data: ResetPasswordFormValues) => {
 
   await db
     .update(users)
-    .set({ password: hashedPassword })
+    .set({
+      password: hashedPassword,
+      // An admin-set password has not been judged against the policy and is
+      // known to someone other than its owner, so drop the user back to
+      // version 0. loginAction only ever upgrades compliance, so without this
+      // an already-compliant user would stay flagged compliant forever and
+      // neither the gate nor the banner would ask them to change it.
+      passwordPolicyVersion: 0,
+      passwordChangedAt: new Date(),
+    })
     .where(eq(users.id, userId));
+
+  revalidateUserTags(userId);
+
   return newPassword;
 };
 

@@ -60,7 +60,7 @@ export function PolicyExemptionForm() {
             <field.Input
               type='date'
               label='Exempt until'
-              helperText='The exemption applies from the next time the user signs in.'
+              helperText='The exemption applies on the next page load. The user does not need to sign out.'
             />
           )}
         </form.AppField>

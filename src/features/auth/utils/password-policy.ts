@@ -40,7 +40,9 @@ function personalFragments(user: PolicyUser) {
 function containsRun(lowered: string) {
   return RUNS.some((run) => {
     for (let i = 0; i + 6 <= run.length; i++) {
-      if (lowered.includes(run.slice(i, i + 6))) {
+      const sequence = run.slice(i, i + 6);
+      const reverseSequence = [...sequence].reverse().join('');
+      if (lowered.includes(sequence) || lowered.includes(reverseSequence)) {
         return true;
       }
     }
@@ -59,8 +61,10 @@ export function checkPasswordPolicy(
 ): Array<PolicyFailure> {
   const failures: Array<PolicyFailure> = [];
   const lowered = password.toLowerCase();
+  const passwordCharacters = Array.from(password);
+  const loweredCharacters = Array.from(lowered);
 
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (passwordCharacters.length < MIN_PASSWORD_LENGTH) {
     failures.push('too-short');
   }
 
@@ -69,7 +73,7 @@ export function checkPasswordPolicy(
   }
 
   const isRepeatedCharacter =
-    password.length > 0 && new Set(lowered).size === 1;
+    passwordCharacters.length > 0 && new Set(loweredCharacters).size === 1;
 
   if (
     BLOCKLIST.some((word) => lowered.includes(word)) ||

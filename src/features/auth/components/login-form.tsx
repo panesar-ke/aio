@@ -33,7 +33,13 @@ export function LoginForm() {
         successTitle: 'Welcome back',
         fallbackMessage: 'Failed to sign in. Please try again.',
         onSuccess: (destination) => {
-          router.push((destination || '/dashboard') as Route);
+          const safeDestination =
+            destination &&
+            destination.startsWith('/') &&
+            !destination.startsWith('//')
+              ? destination
+              : '/dashboard';
+          router.push(safeDestination as Route);
         },
       });
     },
@@ -52,7 +58,10 @@ export function LoginForm() {
       <FieldGroup>
         <form.AppField name='userName'>
           {(field) => (
-            <field.Input label='Contact/Email' placeholder='jsmith@example.com' />
+            <field.Input
+              label='Contact/Email'
+              placeholder='jsmith@example.com'
+            />
           )}
         </form.AppField>
         <form.AppField name='password'>
@@ -72,7 +81,10 @@ export function LoginForm() {
       </FieldGroup>
       <FieldGroup>
         <Button type='submit' className='w-full' size='lg' disabled={isPending}>
-          <LoadingSwap isLoading={isPending} className='flex items-center gap-2'>
+          <LoadingSwap
+            isLoading={isPending}
+            className='flex items-center gap-2'
+          >
             <>
               <KeyRoundIcon />
               <span>Sign In</span>

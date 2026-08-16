@@ -8,7 +8,7 @@ import {
   policyDeadlineDays,
 } from '@/features/auth/utils/password-policy';
 import { policyReminderNotification } from '@/features/auth/utils/policy-notification';
-import { createNotification } from '@/features/global/services/actions';
+import { createNotifications } from '@/features/global/services/actions';
 
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get('authorization');
@@ -47,11 +47,17 @@ export async function GET(request: NextRequest) {
     const recipients = await findUsersNeedingPolicyReminder(dueDate);
     const notification = policyReminderNotification(dueDate, days);
 
-    // The unique index on (addressed_to, notification_type, event_id) makes
-    // this idempotent, so a re-run inside the window inserts nothing new.
-    for (const recipient of recipients) {
-      await createNotification({ ...notification, userId: recipient.id });
-    }
+    // One insert for the whole batch: a round trip per recipient risks the
+    // function timeout, and a mid-way failure leaves the run unresumable
+    // within its own window. The unique index on
+    // (addressed_to, notification_type, event_id) keeps it idempotent, so a
+    // re-run inside the window inserts nothing new.
+    await createNotifications(
+      recipients.map((recipient) => ({
+        ...notification,
+        userId: recipient.id,
+      })),
+    );
 
     return NextResponse.json({ notified: recipients.length, days });
   } catch (error) {

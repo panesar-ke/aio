@@ -97,7 +97,9 @@ export default async function proxy(req: NextRequest) {
       // let the next login settle it, rather than gating on stale data.
       compliant: session?.policyCompliant !== false,
       deadline,
-      // Per-user exemptions are not in the JWT; they take effect at next login.
+      // Per-user exemptions are not in the JWT and the proxy cannot reach the
+      // database. A user gated on a stale claim is released by
+      // releasePolicyGateAction when they land on /change-password.
       exemptUntil: null,
       now: new Date(),
     })

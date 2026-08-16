@@ -1,5 +1,6 @@
 import z from 'zod';
 
+import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/password-policy';
 import { PERMISSIONS } from '@/lib/permissions/catalog';
 import {
   requiredNumberSchemaEntry,
@@ -57,10 +58,10 @@ export const resetPasswordFormSchema = z
   })
   .superRefine((data, ctx) => {
     if (data.resetMethod === 'manual') {
-      if (!data.password || data.password.length < 8) {
+      if (!data.password || data.password.length < MIN_PASSWORD_LENGTH) {
         ctx.addIssue({
           code: 'custom',
-          message: 'Password must be at least 8 characters long',
+          message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
           path: ['password'],
         });
       }

@@ -2,13 +2,14 @@ import { z } from 'zod';
 
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/password-policy';
 import {
+  requiredPasswordSchemaEntry,
   requiredStringSchemaEntry,
   requiredTrimmedStringSchemaEntry,
 } from '@/lib/schema-rules';
 
 export const loginSchema = z.object({
   userName: requiredStringSchemaEntry('Email/contact is required'),
-  password: requiredTrimmedStringSchemaEntry('Password is required').min(
+  password: requiredPasswordSchemaEntry('Password is required').min(
     6,
     'Password must be at least 6 characters long'
   ),
@@ -23,11 +24,11 @@ export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export const resetPasswordSchema = z
   .object({
     token: requiredTrimmedStringSchemaEntry('Reset token is missing'),
-    newPassword: requiredTrimmedStringSchemaEntry('New password is required').min(
+    newPassword: requiredPasswordSchemaEntry('New password is required').min(
       MIN_PASSWORD_LENGTH,
       `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
     ),
-    confirmPassword: requiredTrimmedStringSchemaEntry(
+    confirmPassword: requiredPasswordSchemaEntry(
       'Password confirmation is required'
     ),
   })

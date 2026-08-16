@@ -26,10 +26,12 @@ export function ForgotPasswordForm() {
       await handleSubmitFeedback({
         action: () => requestPasswordResetAction(value),
         errorTitle: `Error sending reset link`,
-        successTitle: `✅ Link sent`,
+        successTitle: `✅ Request received`,
         fallbackMessage: `Failed to send reset link. Please try again.`,
-        onSuccess: (res) => {
-          setSentMessage(`Reset link sent to ${res || 'your email'}`);
+        // The action answers identically whether or not the account exists,
+        // so the message it returns is the only thing shown here.
+        onSuccess: (_data, message) => {
+          setSentMessage(message ?? 'Reset link sent if that account exists.');
           form.reset();
         },
       });

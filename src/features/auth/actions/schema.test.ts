@@ -134,3 +134,41 @@ describe('resetPasswordSchema', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// These three schemas are tested together on purpose. Each one is a place a
+// password is typed, and the hash written by one is verified by another, so
+// they have to agree character for character. If any of them normalises the
+// input and the others do not, the password stored by one flow stops matching
+// the password accepted by the next and the account is locked out.
+describe('password entry points preserve the password exactly', () => {
+  const padded = '  correct horse battery  ';
+
+  it('keeps a login password as typed', () => {
+    const parsed = loginSchema.parse({
+      userName: 'jsmith@panesar.co.ke',
+      password: padded,
+    });
+
+    expect(parsed.password).toBe(padded);
+  });
+
+  it('keeps a changed password as typed', () => {
+    const parsed = changePasswordSchema.parse({
+      currentPassword: 'something else entirely',
+      newPassword: padded,
+      confirmPassword: padded,
+    });
+
+    expect(parsed.newPassword).toBe(padded);
+  });
+
+  it('keeps a reset password as typed', () => {
+    const parsed = resetPasswordSchema.parse({
+      token: 'a-token',
+      newPassword: padded,
+      confirmPassword: padded,
+    });
+
+    expect(parsed.newPassword).toBe(padded);
+  });
+});
