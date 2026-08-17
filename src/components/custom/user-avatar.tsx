@@ -1,26 +1,26 @@
-import { initials } from '@dicebear/collection'
-import { createAvatar } from '@dicebear/core'
+import { initials } from '@dicebear/collection';
+import { Avatar as DiceBearAvatar } from '@dicebear/core';
 
-import type { User } from '@/types/index.types'
+import type { User } from '@/types/index.types';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getInitials } from '@/lib/helpers/formatters'
-import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/helpers/formatters';
+import { cn } from '@/lib/utils';
 
 interface UserAvatarProps {
-  className?: string
-  user: User
+  className?: string;
+  user: User;
 }
 
 export function UserAvatar({ className, user }: UserAvatarProps) {
-  const avatar = createAvatar(initials, {
+  const avatar = new DiceBearAvatar(initials, {
     seed: user.name,
     fontFamily: ['Classico'],
     fontWeight: 500,
     fontSize: 32,
-  })
+  });
 
-  const dataUri = avatar.toDataUri()
+  const dataUri = avatar.toDataUri();
 
   return (
     <Avatar
@@ -29,5 +29,5 @@ export function UserAvatar({ className, user }: UserAvatarProps) {
       <AvatarImage src={user.image ?? dataUri} alt={user.name} />
       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
     </Avatar>
-  )
+  );
 }

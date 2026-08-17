@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from '@tanstack/react-table';
 
-import { initials } from "@dicebear/collection";
-import { createAvatar } from "@dicebear/core";
+import { initials } from '@dicebear/collection';
+import { Avatar as DiceBearAvatar } from '@dicebear/core';
 import {
   BanIcon,
   CalendarClockIcon,
   CheckIcon,
   Undo2Icon,
   UserLockIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { useTransition } from "react";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useTransition } from 'react';
 
-import type { getUsers } from "@/features/admin/services/data";
+import type { getUsers } from '@/features/admin/services/data';
 
-import { EditAction } from "@/components/custom/custom-button";
-import { CustomDropdownContent } from "@/components/custom/custom-dropdown-content";
-import { CustomDropdownTrigger } from "@/components/custom/custom-dropdown-trigger";
-import { DataTable } from "@/components/custom/datatable";
-import { notify } from "@/components/custom/toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { toggleUserActiveState } from "@/features/admin/services/action";
-import { cn } from "@/lib/utils";
+import { EditAction } from '@/components/custom/custom-button';
+import { CustomDropdownContent } from '@/components/custom/custom-dropdown-content';
+import { CustomDropdownTrigger } from '@/components/custom/custom-dropdown-trigger';
+import { DataTable } from '@/components/custom/datatable';
+import { notify } from '@/components/custom/toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { toggleUserActiveState } from '@/features/admin/services/action';
+import { cn } from '@/lib/utils';
 
 type User = Awaited<ReturnType<typeof getUsers>>[number];
 export function UsersDatatable({ users }: { users: Array<User> }) {
@@ -33,7 +33,7 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
 
   function handleToogleActiveState(userId: string, currentState: boolean) {
     startTransition(async () => {
-      console.log("Toggling user:", userId, "Current state:", currentState);
+      console.log('Toggling user:', userId, 'Current state:', currentState);
       const response = await toggleUserActiveState(userId, currentState);
       if (response.error) {
         notify.error('Error updating user state', response.message);
@@ -44,8 +44,8 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
 
   const columns: Array<ColumnDef<User>> = [
     {
-      accessorKey: "name",
-      header: "User",
+      accessorKey: 'name',
+      header: 'User',
       cell: ({ row }) => (
         <UserAvatar
           userName={row.original.name}
@@ -54,18 +54,18 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
       ),
     },
     {
-      accessorKey: "email",
-      header: "Email",
+      accessorKey: 'email',
+      header: 'Email',
     },
     {
-      accessorKey: "userType",
-      header: "User Type",
+      accessorKey: 'userType',
+      header: 'User Type',
       cell: ({ row }) => {
         const userType = row.original.userType;
         return (
           <Badge
-            variant={userType === "STANDARD USER" ? "secondary" : "info"}
-            className="capitalize"
+            variant={userType === 'STANDARD USER' ? 'secondary' : 'info'}
+            className='capitalize'
           >
             {userType}
           </Badge>
@@ -73,19 +73,19 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
       },
     },
     {
-      accessorKey: "active",
-      header: "Status",
+      accessorKey: 'active',
+      header: 'Status',
       cell: ({ row }) => {
-        const status = row.original.active ? "Active" : "Inactive";
+        const status = row.original.active ? 'Active' : 'Inactive';
         return (
           <Badge
-            variant={row.original.active ? "success" : "error"}
-            className="capitalize"
+            variant={row.original.active ? 'success' : 'error'}
+            className='capitalize'
           >
-            {status === "Active" ? (
-              <CheckIcon className="size-3 text-success-foreground" />
+            {status === 'Active' ? (
+              <CheckIcon className='size-3 text-success-foreground' />
             ) : (
-              <BanIcon className="size-3 text-error-foreground" />
+              <BanIcon className='size-3 text-error-foreground' />
             )}
             {status}
           </Badge>
@@ -93,7 +93,7 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
       },
     },
     {
-      id: "actions",
+      id: 'actions',
       cell: ({
         row: {
           original: { id, active },
@@ -109,8 +109,8 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/admin/users/${id}/reset-password`} prefetch={false}>
-                <Undo2Icon className="size-3 text-muted-foreground" />
-                <span className="text-xs">Reset Password</span>
+                <Undo2Icon className='size-3 text-muted-foreground' />
+                <span className='text-xs'>Reset Password</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -118,8 +118,8 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
                 href={`/admin/users/${id}/policy-exemption`}
                 prefetch={false}
               >
-                <CalendarClockIcon className="size-3 text-muted-foreground" />
-                <span className="text-xs">Policy Exemption</span>
+                <CalendarClockIcon className='size-3 text-muted-foreground' />
+                <span className='text-xs'>Policy Exemption</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -127,17 +127,17 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
               onClick={() => handleToogleActiveState(id, active)}
             >
               {active ? (
-                <UserLockIcon className="size-3 text-error-foreground" />
+                <UserLockIcon className='size-3 text-error-foreground' />
               ) : (
-                <CheckIcon className="size-3 text-success-foreground" />
+                <CheckIcon className='size-3 text-success-foreground' />
               )}
               <span
                 className={cn(
-                  "text-xs ",
-                  active ? "text-error-foreground" : "text-success-foreground",
+                  'text-xs ',
+                  active ? 'text-error-foreground' : 'text-success-foreground',
                 )}
               >
-                {active ? "Deactivate User" : "Activate User"}
+                {active ? 'Deactivate User' : 'Activate User'}
               </span>
             </DropdownMenuItem>
           </CustomDropdownContent>
@@ -155,9 +155,9 @@ export function UserAvatar({
   userName: string;
   image?: string;
 }) {
-  const avatar = createAvatar(initials, {
+  const avatar = new DiceBearAvatar(initials, {
     seed: userName,
-    fontFamily: ["Raleway"],
+    fontFamily: ['Raleway'],
     fontWeight: 700,
     fontSize: 32,
   });
@@ -165,12 +165,12 @@ export function UserAvatar({
   const dataUri = avatar.toDataUri();
 
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="size-8">
+    <div className='flex items-center gap-2'>
+      <Avatar className='size-8'>
         <AvatarImage src={image ?? dataUri} alt={userName} />
         <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
-      <p className="capitalize">{userName.toLowerCase()}</p>
+      <p className='capitalize'>{userName.toLowerCase()}</p>
     </div>
   );
 }
