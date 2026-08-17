@@ -11,8 +11,6 @@ export const env = createEnv({
     RESEND_FROM_EMAIL: z.email().optional(),
     IT_MANAGER_EMAIL: z.email().optional(),
     CRON_SECRET: z.string().min(1).optional(),
-    UPLOADTHING_SECRET: z.string().min(1),
-    UPLOADTHING_APP_ID: z.string().min(1),
     BCRYPT_ROUNDS: z.string().min(1),
     SESSION_SECRET: z.string().min(1),
     SECONDARY_API_URL: z.string().min(1),
