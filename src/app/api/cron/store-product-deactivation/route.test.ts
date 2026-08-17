@@ -54,14 +54,16 @@ describe('GET /api/cron/store-product-deactivation', () => {
       trigger: 'store/run.product-deactivation',
       requestId: expect.any(String),
     });
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: 'store/run.product-deactivation',
-      data: {
-        requestId: expect.any(String),
-        source: 'vercel-cron',
-        triggeredAt: expect.any(String),
-      },
-    });
+    expect(inngest.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'store/run.product-deactivation',
+        data: {
+          requestId: expect.any(String),
+          source: 'vercel-cron',
+          triggeredAt: expect.any(String),
+        },
+      }),
+    );
     expect(deactivateAndLogStaleProducts).not.toHaveBeenCalled();
     expect(notifyStoreAdminsOfDeactivation).not.toHaveBeenCalled();
   });

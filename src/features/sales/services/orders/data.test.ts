@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/drizzle/db', () => ({
   default: {},
@@ -10,7 +10,12 @@ vi.mock('@/features/sales/utils/sale-helpers', () => ({
   saleUser: vi.fn(),
 }));
 
-import { getSaleOrderNo } from '@/features/sales/services/orders/data';
+import db from '@/drizzle/db';
+import {
+  getSaleOrderNo,
+  getSalesOrders,
+} from '@/features/sales/services/orders/data';
+import { saleUser } from '@/features/sales/utils/sale-helpers';
 
 const getQueryText = (query: any): string => {
   if (!query) return '';
@@ -81,19 +86,15 @@ describe('getSaleOrderNo', () => {
 });
 
 describe('getSalesOrders', () => {
-  it('includes current financial year date filter when no search params are provided', async () => {
-    const { saleUser } = await import('@/features/sales/utils/sale-helpers');
-    const { getSalesOrders } = await import(
-      '@/features/sales/services/orders/data'
-    );
-    const dbModule = await import('@/drizzle/db');
+  afterEach(() => {
+    // db is a bare object from the module mock, so the stub below has to be
+    // removed by hand or it leaks into every test that runs after this file.
+    delete (db as Partial<typeof db>).select;
+    vi.clearAllMocks();
+  });
 
-    vi.mocked(saleUser).mockResolvedValueOnce({
-      isSalesAdmin: true,
-      userId: 'user-1',
-    });
-
-    let capturedWhereFilters: any = null;
+  const captureWhereFilters = () => {
+    const captured: { filters: unknown } = { filters: null };
 
     const mockQueryBuilder = {
       from: vi.fn().mockReturnThis(),
@@ -102,68 +103,95 @@ describe('getSalesOrders', () => {
       innerJoin: vi.fn().mockReturnThis(),
       leftJoin: vi.fn().mockReturnThis(),
       where: vi.fn((whereClause) => {
-        capturedWhereFilters = whereClause;
+        captured.filters = whereClause;
         return mockQueryBuilder;
       }),
-      orderBy: vi.fn().mockResolvedValue([]),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
     };
 
-    (dbModule.default as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
+    (db as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
 
-    await getSalesOrders({
-      search: '',
-      account: '',
-      salesPerson: '',
-      from: undefined,
-      to: undefined,
+    return { captured, mockQueryBuilder };
+  };
+
+  const noFilters = {
+    search: '',
+    account: '',
+    salesPerson: '',
+    from: null,
+    to: null,
+  };
+
+  it('includes current financial year date filter when no search params are provided', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
     });
 
-    expect(capturedWhereFilters).toBeDefined();
-    const queryStr = getQueryText(capturedWhereFilters);
-    expect(queryStr).toContain('date_raised');
+    const { captured } = captureWhereFilters();
+
+    await getSalesOrders(noFilters);
+
+    expect(captured.filters).toBeDefined();
+    expect(getQueryText(captured.filters)).toContain('date_raised');
   });
 
   it('disregards date filter when search params are provided', async () => {
-    const { saleUser } = await import('@/features/sales/utils/sale-helpers');
-    const { getSalesOrders } = await import(
-      '@/features/sales/services/orders/data'
-    );
-    const dbModule = await import('@/drizzle/db');
-
     vi.mocked(saleUser).mockResolvedValueOnce({
       isSalesAdmin: true,
       userId: 'user-1',
     });
 
-    let capturedWhereFilters: any = null;
+    const { captured } = captureWhereFilters();
 
-    const mockQueryBuilder = {
-      from: vi.fn().mockReturnThis(),
-      groupBy: vi.fn().mockReturnThis(),
-      as: vi.fn().mockReturnThis(),
-      innerJoin: vi.fn().mockReturnThis(),
-      leftJoin: vi.fn().mockReturnThis(),
-      where: vi.fn((whereClause) => {
-        capturedWhereFilters = whereClause;
-        return mockQueryBuilder;
-      }),
-      orderBy: vi.fn().mockResolvedValue([]),
-    };
+    await getSalesOrders({ ...noFilters, search: 'Acme' });
 
-    (dbModule.default as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
-
-    await getSalesOrders({
-      search: 'Acme',
-      account: '',
-      salesPerson: '',
-      from: undefined,
-      to: undefined,
-    });
-
-    expect(capturedWhereFilters).toBeDefined();
-    const queryStr = getQueryText(capturedWhereFilters);
+    const queryStr = getQueryText(captured.filters);
     expect(queryStr).not.toContain('date_raised');
     expect(queryStr).toContain('Acme');
   });
-});
 
+  it('disregards date filter when a non-admin rep searches', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: false,
+      userId: 'user-1',
+    });
+
+    const { captured } = captureWhereFilters();
+
+    await getSalesOrders({ ...noFilters, search: 'Acme' });
+
+    const queryStr = getQueryText(captured.filters);
+    expect(queryStr).not.toContain('date_raised');
+    expect(queryStr).toContain('Acme');
+  });
+
+  it('keeps the date filter for a non-admin rep when salesPerson is the only param', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: false,
+      userId: 'user-1',
+    });
+
+    const { captured } = captureWhereFilters();
+
+    // salesPerson is ignored for non-admins, so on its own it must not lift the
+    // financial year bound.
+    await getSalesOrders({ ...noFilters, salesPerson: 'user-2' });
+
+    expect(getQueryText(captured.filters)).toContain('date_raised');
+  });
+
+  it('caps the number of rows returned', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
+    });
+
+    const { mockQueryBuilder } = captureWhereFilters();
+
+    await getSalesOrders({ ...noFilters, search: 'Acme' });
+
+    expect(mockQueryBuilder.limit).toHaveBeenCalledWith(500);
+  });
+});

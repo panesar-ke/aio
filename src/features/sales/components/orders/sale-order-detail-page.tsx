@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 
 import { format } from 'date-fns';
 import { TriangleAlertIcon } from 'lucide-react';
-import Link from 'next/link';
 
 import type { SaleOrderDetails } from '@/features/sales/utils/sales.types';
 

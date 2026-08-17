@@ -44,7 +44,7 @@ async function SuspendedSaleOrderDetails({ params }: PageProps) {
   return (
     <div className='space-y-6'>
       <Button variant='link' asChild>
-        <Link href='/sales/orders'>
+        <Link href='/sales/orders' prefetch={false}>
           <ArrowLeftIcon className='size-4' />
           Back to Sale Orders
         </Link>
