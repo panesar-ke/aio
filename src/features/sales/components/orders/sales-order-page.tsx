@@ -116,7 +116,8 @@ function SalesOrdersDatatable({ orders }: { orders: Array<SaleOrder> }) {
     {
       accessorKey: 'company',
       header: 'Account',
-      cell: ({ row }) => row.original.company.toUpperCase(),
+      cell: ({ row }) =>
+        row.original.company ? row.original.company.toUpperCase() : '—',
     },
     {
       accessorKey: 'salesRepName',

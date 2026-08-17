@@ -1,13 +1,12 @@
+import Link from 'next/link';
+import { ArrowLeftIcon } from 'lucide-react';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { notFound } from 'next/navigation';
-
+import { Button } from '@/components/ui/button';
 import { ErrorBoundaryWithSuspense } from '@/components/custom/error-boundary-with-suspense';
 import { SaleOrderDetailPageContent } from '@/features/sales/components/orders/sale-order-detail-page';
 import { getSaleOrderDetails } from '@/features/sales/services/orders/data';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ArrowLeftIcon } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Sale Order Details',
