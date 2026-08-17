@@ -1,5 +1,5 @@
-import { initials } from '@dicebear/collection';
-import { Avatar as DiceBearAvatar } from '@dicebear/core';
+import initials from '@dicebear/styles/initials.json' with { type: 'json' };
+import { Avatar as DiceBearAvatar, Style } from '@dicebear/core';
 
 import type { User } from '@/types/index.types';
 
@@ -12,12 +12,12 @@ interface UserAvatarProps {
   className?: string;
 }
 
+const style = new Style(initials);
 export function UserAvatar({ user, className }: UserAvatarProps) {
-  const avatar = new DiceBearAvatar(initials, {
+  const avatar = new DiceBearAvatar(style, {
     seed: user.name,
     fontFamily: ['Open Sans'],
     fontWeight: 500,
-    fontSize: 32,
   });
 
   const dataUri = avatar.toDataUri();
@@ -39,11 +39,10 @@ export function CreatorAvatar({
   userName: string;
   image?: string;
 }) {
-  const avatar = new DiceBearAvatar(initials, {
+  const avatar = new DiceBearAvatar(style, {
     seed: userName,
     fontFamily: ['Open Sans'],
     fontWeight: 500,
-    fontSize: 32,
   });
 
   const dataUri = avatar.toDataUri();
