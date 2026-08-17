@@ -33,6 +33,13 @@ import { toSaleOrderFormValues } from '@/features/sales/utils/sale-order-mapper'
 import { getFinancialYearRanges } from '@/lib/helpers/dates';
 import { dateFormat, titleCase } from '@/lib/helpers/formatters';
 
+/**
+ * Caps the unpaginated sale order list. Searching or filtering drops the
+ * financial year bound, so without this a broad search would scan - and cache -
+ * every order ever raised.
+ */
+const SALES_ORDERS_LIMIT = 500;
+
 async function salesOrderInternal({
   isSalesAdmin,
   userId,
@@ -46,15 +53,22 @@ async function salesOrderInternal({
   cacheTag(getSalesOrdersGlobalTag());
 
   const filters: Array<SQL> = [];
+  // Tracked alongside the pushes below rather than re-derived from the raw
+  // params: a filter only lifts the financial year bound if it was actually
+  // applied to the query.
+  let hasSearchParams = false;
 
   if (!isSalesAdmin) {
+    // Scope, not a filter - a rep is always restricted to their own orders.
     filters.push(eq(salesOrdersHeader.salesRepId, userId));
   } else if (salesPerson && salesPerson.trim().length > 0) {
     filters.push(eq(salesOrdersHeader.salesRepId, salesPerson));
+    hasSearchParams = true;
   }
 
   if (account && account.trim().length > 0) {
     filters.push(eq(salesOrdersHeader.accountId, account));
+    hasSearchParams = true;
   }
   if (search && search.trim().length > 0) {
     const searchFilters = or(
@@ -63,6 +77,7 @@ async function salesOrderInternal({
     );
     if (searchFilters) {
       filters.push(searchFilters);
+      hasSearchParams = true;
     }
   }
 
@@ -71,7 +86,11 @@ async function salesOrderInternal({
       gte(salesOrdersHeader.dateRaised, from),
       lte(salesOrdersHeader.dateRaised, to),
     );
-  } else {
+  } else if (from) {
+    filters.push(gte(salesOrdersHeader.dateRaised, from));
+  } else if (to) {
+    filters.push(lte(salesOrdersHeader.dateRaised, to));
+  } else if (!hasSearchParams) {
     const financialYearRanges = getFinancialYearRanges();
     filters.push(
       gte(
@@ -113,7 +132,8 @@ async function salesOrderInternal({
     .leftJoin(orderItemsAgg, eq(salesOrdersHeader.id, orderItemsAgg.headerId))
     .innerJoin(users, eq(salesOrdersHeader.salesRepId, users.id))
     .where(and(...filters))
-    .orderBy(desc(salesOrdersHeader.dateRaised));
+    .orderBy(desc(salesOrdersHeader.dateRaised))
+    .limit(SALES_ORDERS_LIMIT);
 }
 
 export async function getNextSaleOrderNoPreview() {

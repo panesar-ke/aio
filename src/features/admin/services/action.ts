@@ -30,6 +30,7 @@ import {
   userSchema,
 } from '@/features/admin/utils/schema';
 import { inngest } from '@/inngest/client';
+import { sendNewPasswordEvent } from '@/inngest/events';
 import { validateFields } from '@/lib/action-validator';
 import {
   internationalizePhoneNumber,
@@ -221,14 +222,13 @@ export const upsertUser = async (values: unknown) => {
     });
 
     if (!id) {
-      await inngest.send({
-        name: 'user/send.new.password',
-        data: {
+      await inngest.send(
+        sendNewPasswordEvent.create({
           contact: internationalizePhoneNumber(contact, true),
           password,
           name: titleCase(name.split(' ')[0]),
-        },
-      });
+        }),
+      );
     }
 
     revalidateUserTags(userId);

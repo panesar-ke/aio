@@ -20,7 +20,6 @@ import { DatePicker } from '@/components/custom/date-range';
 import { MiniSelect } from '@/components/custom/mini-select';
 import Search from '@/components/custom/search';
 import { ActionButton } from '@/components/ui/action-button';
-import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/ui/empty';
 import { useSalesOrdersFilters } from '@/features/sales/hooks/leads/use-filters';
@@ -29,13 +28,9 @@ import {
   formatSaleOrderAmount,
   formatSaleOrderNo,
 } from '@/features/sales/utils/sale-order-format';
-import {
-  canEditDeleteSaleOrder,
-  saleOrderStatusLabel,
-  saleOrderStatusVariant,
-} from '@/features/sales/utils/sale-order-permissions';
+import { canEditDeleteSaleOrder } from '@/features/sales/utils/sale-order-permissions';
 import { getFinancialYearRanges } from '@/lib/helpers/dates';
-import { dateFormat, titleCase } from '@/lib/helpers/formatters';
+import { dateFormat } from '@/lib/helpers/formatters';
 import { cn } from '@/lib/utils';
 
 type PageProps = {
@@ -116,20 +111,17 @@ function SalesOrdersDatatable({ orders }: { orders: Array<SaleOrder> }) {
     {
       accessorKey: 'company',
       header: 'Account',
-      cell: ({ row }) => titleCase(row.original.company),
+      cell: ({ row }) =>
+        row.original.company ? row.original.company.toUpperCase() : '—',
+    },
+    {
+      accessorKey: 'salesRepName',
+      header: 'Sales Rep',
+      cell: ({ row }) => row.original.salesRepName?.toUpperCase(),
     },
     {
       accessorKey: 'totalItems',
       header: 'Total Items',
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <Badge variant={saleOrderStatusVariant(row.original.status)}>
-          {saleOrderStatusLabel(row.original.status)}
-        </Badge>
-      ),
     },
     {
       accessorKey: 'total',

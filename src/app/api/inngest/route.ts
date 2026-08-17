@@ -5,6 +5,8 @@ import { processProductImport } from "@/inngest/functions/products-import";
 import { runStoreProductDeactivation } from "@/inngest/functions/store-product-deactivation";
 import { sendUserNewPassword } from "@/inngest/functions/users";
 
+export const maxDuration = 60;
+
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
@@ -12,5 +14,5 @@ export const { GET, POST, PUT } = serve({
     processProductImport,
     runStoreProductDeactivation,
   ],
-  streaming: "allow",
+  streaming: true,
 });

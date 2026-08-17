@@ -25,6 +25,17 @@ export type TextFieldProps = {
   'type' | 'value' | 'onChange' | 'onBlur'
 >;
 
+export function coerceTextFieldValue(
+  type: TextFieldProps['type'],
+  value: string,
+) {
+  if (type !== 'number') {
+    return value;
+  }
+
+  return value === '' ? '' : Number(value);
+}
+
 export function TextField({
   label,
   required,
@@ -38,10 +49,9 @@ export function TextField({
 }: TextFieldProps & ComponentProps<'input'>) {
   const field = useFieldContext();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-  const isNumber = type === 'number';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = isNumber ? +e.target.value : e.target.value;
+    const value = coerceTextFieldValue(type, e.target.value);
     field.handleChange(value);
   };
   return (

@@ -1779,6 +1779,8 @@ export const users = pgTable(
     hasAdminPriviledges: boolean('has_admin_priviledges')
       .default(false)
       .notNull(),
+    promptPasswordChange: boolean('prompt_password_change').default(false),
+    resetToken: text('reset_token'),
   },
   (table) => [
     uniqueIndex('contact_idx').using(

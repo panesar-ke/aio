@@ -11,7 +11,6 @@ import {
   IMPORT_TEMPLATE_HEADERS,
   MAX_IMPORT_FILE_SIZE_BYTES,
   MAX_IMPORT_ROWS,
-  PRODUCTS_IMPORT_EVENT,
 } from "@/features/procurement/services/products-import/constants";
 import {
   headersMatchTemplate,
@@ -23,6 +22,7 @@ import {
 } from "@/features/procurement/utils/cache";
 import { productImportHeaderSchema } from "@/features/procurement/utils/products-import/schemas";
 import { inngest } from "@/inngest/client";
+import { productsImportRequestedEvent } from "@/inngest/events";
 import { parseOrFail, runAction } from "@/lib/actions/safe-action";
 import { requireAnyPermission } from "@/lib/permissions/guards";
 import { getCurrentUser } from "@/lib/session";
@@ -111,7 +111,7 @@ export const queueProductImport = async (formData: FormData) =>
       .returning({ id: productImportBatches.id });
 
     try {
-      await inngest.send({ name: PRODUCTS_IMPORT_EVENT, data: { batchId } });
+      await inngest.send(productsImportRequestedEvent.create({ batchId }));
     } catch (error) {
       console.error("Error dispatching product import event:", error);
       await db

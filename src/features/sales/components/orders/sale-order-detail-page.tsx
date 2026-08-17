@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 
 import { format } from 'date-fns';
 import { TriangleAlertIcon } from 'lucide-react';
-import Link from 'next/link';
 
 import type { SaleOrderDetails } from '@/features/sales/utils/sales.types';
 
@@ -186,22 +185,7 @@ export function SaleOrderDetailPageContent({
               label='Order Date'
               value={dateFormat(order.dateRaised, 'reporting')}
             />
-            <ReadOnlyField
-              label='Account'
-              value={
-                order.accountId ? (
-                  <Link
-                    prefetch={false}
-                    href={`/sales/accounts/${order.accountId}/details`}
-                    className='text-info-foreground hover:underline'
-                  >
-                    {company}
-                  </Link>
-                ) : (
-                  company
-                )
-              }
-            />
+            <ReadOnlyField label='Account' value={company.toUpperCase()} />
             <ReadOnlyField
               label='VAT Type'
               value={VAT_TYPE_LABELS[order.vatType]}
@@ -286,7 +270,7 @@ export function SaleOrderDetailPageContent({
                       {index + 1}
                     </td>
                     <td className='px-3 py-2.5 text-sm font-medium'>
-                      {line.item}
+                      {line.item.toUpperCase()}
                     </td>
                     <td className='px-3 py-2.5 text-right text-sm tabular-nums'>
                       {numberFormat(line.qty, 0)}
