@@ -38,6 +38,54 @@ export const createNotification = async (data: {
   await query;
 };
 
+/**
+ * Bulk sibling of createNotification: one insert for the whole batch. The
+ * policy reminder cron fans out to every non-compliant user, and a round trip
+ * each risks the function timeout well before the batch is exhausted.
+ */
+export const createNotifications = async (
+  rows: Array<{
+    title: string;
+    path: string;
+    message: string;
+    userId: string;
+    notificationType: string;
+    eventId?: string;
+  }>
+) => {
+  if (rows.length === 0) {
+    return;
+  }
+
+  const values = rows.map((row) => ({
+    title: row.title,
+    path: row.path,
+    message: row.message,
+    addressedTo: row.userId,
+    notificationType: row.notificationType,
+    eventId: row.eventId,
+  }));
+
+  // Mirrors createNotification: the unique index only covers rows with an
+  // eventId, so the conflict target is only meaningful when every row has one.
+  if (values.every((value) => value.eventId)) {
+    await db
+      .insert(notifications)
+      .values(values)
+      .onConflictDoNothing({
+        target: [
+          notifications.addressedTo,
+          notifications.notificationType,
+          notifications.eventId,
+        ],
+        where: sql`${notifications.eventId} is not null`,
+      });
+    return;
+  }
+
+  await db.insert(notifications).values(values);
+};
+
 export const markNotificationAsRead = async (notificationId: string) => {
   const currentUser = await getCurrentUserOrNull();
   if (!currentUser) return;

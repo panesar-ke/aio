@@ -106,20 +106,26 @@ function collectOffenders(
 }
 
 describe('next/link usage', () => {
-  test('sets prefetch={false} on every direct Link usage', () => {
-    const offenders = getTsxFiles(SRC_DIR).flatMap((filePath) => {
-      const source = fs.readFileSync(filePath, 'utf8');
-      const sourceFile = ts.createSourceFile(
-        filePath,
-        source,
-        ts.ScriptTarget.Latest,
-        true,
-        ts.ScriptKind.TSX
-      );
+  // This test reads every .tsx file under src to verify Link components use prefetch={false}.
+  // Its runtime grows with the codebase, so it needs a generous timeout beyond the 5s default.
+  test(
+    'sets prefetch={false} on every direct Link usage',
+    () => {
+      const offenders = getTsxFiles(SRC_DIR).flatMap((filePath) => {
+        const source = fs.readFileSync(filePath, 'utf8');
+        const sourceFile = ts.createSourceFile(
+          filePath,
+          source,
+          ts.ScriptTarget.Latest,
+          true,
+          ts.ScriptKind.TSX
+        );
 
-      return collectOffenders(sourceFile, filePath);
-    });
+        return collectOffenders(sourceFile, filePath);
+      });
 
-    expect(offenders).toEqual([]);
-  });
+      expect(offenders).toEqual([]);
+    },
+    60000
+  );
 });

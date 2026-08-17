@@ -30,8 +30,6 @@ export const getUsers = async (q?: string) => {
       password: false,
       contactVerified: false,
       defaultMenu: false,
-      promptPasswordChange: false,
-      resetToken: false,
     },
     where: q
       ? (users, { ilike, or }) =>
@@ -53,8 +51,6 @@ export const getUser = async (userId: string) => {
       password: false,
       contactVerified: false,
       defaultMenu: false,
-      promptPasswordChange: false,
-      resetToken: false,
     },
     where: (users, { eq }) => eq(users.id, userId),
   });

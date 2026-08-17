@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 
 import db from '@/drizzle/db';
 import { getCurrentUser } from '@/lib/session';
@@ -10,7 +11,18 @@ export const metadata: Metadata = {
   title: 'Dashboard',
 };
 
-export default async function Home() {
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardRedirect />
+    </Suspense>
+  );
+}
+
+// The heading renders inside the boundary, not beside it: anything in the
+// static shell paints before the redirect resolves, so every user with a
+// defaultMenu would see an empty Dashboard heading flash on the way out.
+async function DashboardRedirect() {
   await connection();
   const redirectPath = await getRedirectPage();
 

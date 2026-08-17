@@ -24,6 +24,13 @@ export const requiredTrimmedStringSchemaEntry = (message?: string) =>
     .trim()
     .min(1, { message: message || 'This field is required' });
 
+// Passwords are the one string that must not be normalised. Trimming or
+// lowercasing silently changes the secret, so what gets hashed stops matching
+// what the user typed — and any entry point that normalises differently from
+// the one that wrote the hash locks the account out.
+export const requiredPasswordSchemaEntry = (message?: string) =>
+  z.string().min(1, { message: message || 'This field is required' });
+
 export const nullableTrimmedString = z
   .string()
   .trim()

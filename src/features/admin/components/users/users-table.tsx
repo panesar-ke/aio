@@ -4,7 +4,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
-import { BanIcon, CheckIcon, Undo2Icon, UserLockIcon } from "lucide-react";
+import {
+  BanIcon,
+  CalendarClockIcon,
+  CheckIcon,
+  Undo2Icon,
+  UserLockIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
@@ -105,6 +111,15 @@ export function UsersDatatable({ users }: { users: Array<User> }) {
               <Link href={`/admin/users/${id}/reset-password`} prefetch={false}>
                 <Undo2Icon className="size-3 text-muted-foreground" />
                 <span className="text-xs">Reset Password</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/admin/users/${id}/policy-exemption`}
+                prefetch={false}
+              >
+                <CalendarClockIcon className="size-3 text-muted-foreground" />
+                <span className="text-xs">Policy Exemption</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem

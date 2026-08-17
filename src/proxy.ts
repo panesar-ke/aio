@@ -3,9 +3,18 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import type { SessionPayload } from '@/types/index.types';
 
+import {
+  parsePolicyDeadline,
+  shouldGate,
+} from '@/features/auth/utils/password-policy';
 import { decrypt } from '@/lib/session';
 
-const publicRoutes = ['/login', '/forgot-password', '/api/inngest'];
+const publicRoutes = [
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/api/inngest',
+];
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!,
@@ -60,7 +69,11 @@ export default async function proxy(req: NextRequest) {
     return new Response(null, { status: 403 });
   }
 
-  const isPublicRoute = publicRoutes.includes(path);
+  // Prefix match, so /reset-password/<token> is public while
+  // /reset-password-admin is not.
+  const isPublicRoute = publicRoutes.some(
+    route => path === route || path.startsWith(`${route}/`)
+  );
   const hasSession = Boolean(session);
 
   if (!isPublicRoute && !hasSession) {
@@ -69,6 +82,29 @@ export default async function proxy(req: NextRequest) {
 
   if (isPublicRoute && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+  }
+
+  const deadline = parsePolicyDeadline(process.env.PASSWORD_POLICY_DEADLINE);
+
+  // `/change-password` must stay reachable or the gate redirects to itself.
+  const isPolicyExempt = path === '/change-password' || path.startsWith('/api/');
+
+  if (
+    hasSession &&
+    !isPolicyExempt &&
+    shouldGate({
+      // A session predating the policy has no claim; treat it as compliant and
+      // let the next login settle it, rather than gating on stale data.
+      compliant: session?.policyCompliant !== false,
+      deadline,
+      // Per-user exemptions are not in the JWT and the proxy cannot reach the
+      // database. A user gated on a stale claim is released by
+      // releasePolicyGateAction when they land on /change-password.
+      exemptUntil: null,
+      now: new Date(),
+    })
+  ) {
+    return NextResponse.redirect(new URL('/change-password', req.nextUrl));
   }
 
   return NextResponse.next();

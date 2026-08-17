@@ -164,7 +164,7 @@ export const upsertUser = async (values: unknown) => {
       ? normalizePermissions(assignedPermissions)
       : [];
 
-  const password = generatePassword(8);
+  const password = generatePassword();
   const hashedPassword = await hashPassword(password);
 
   try {
@@ -191,7 +191,6 @@ export const upsertUser = async (values: unknown) => {
           email,
           userType,
           active: true,
-          promptPasswordChange: true,
         })
         .onConflictDoUpdate({
           target: users.id,
@@ -279,7 +278,7 @@ export const resetPassword = async (data: ResetPasswordFormValues) => {
 
   let newPassword: string;
   if (resetMethod === 'automatic') {
-    newPassword = generatePassword(8);
+    newPassword = generatePassword();
   } else {
     newPassword = password as string;
   }
@@ -288,7 +287,30 @@ export const resetPassword = async (data: ResetPasswordFormValues) => {
 
   await db
     .update(users)
-    .set({ password: hashedPassword })
+    .set({
+      password: hashedPassword,
+      // An admin-set password has not been judged against the policy and is
+      // known to someone other than its owner, so drop the user back to
+      // version 0. loginAction only ever upgrades compliance, so without this
+      // an already-compliant user would stay flagged compliant forever and
+      // neither the gate nor the banner would ask them to change it.
+      passwordPolicyVersion: 0,
+      passwordChangedAt: new Date(),
+    })
     .where(eq(users.id, userId));
+
+  revalidateUserTags(userId);
+
   return newPassword;
+};
+
+export const grantPolicyExemption = async (userId: string, until: Date) => {
+  await requirePermission('admin:admin');
+
+  await db
+    .update(users)
+    .set({ passwordPolicyExemptUntil: until })
+    .where(eq(users.id, userId));
+
+  revalidateUserTags(userId);
 };

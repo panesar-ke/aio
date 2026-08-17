@@ -1,0 +1,1 @@
+ALTER TABLE "users" DROP COLUMN "prompt_password_change";

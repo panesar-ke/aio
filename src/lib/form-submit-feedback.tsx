@@ -9,7 +9,7 @@ type HandleSubmitFeedbackParams<T> = {
   errorTitle: string;
   successTitle: string;
   fallbackMessage: string;
-  onSuccess: (data?: T) => void;
+  onSuccess: (data?: T, message?: string) => void;
 };
 
 export async function handleSubmitFeedback<T>({
@@ -28,7 +28,7 @@ export async function handleSubmitFeedback<T>({
     }
 
     notify.success(successTitle, res.message);
-    onSuccess(res.data);
+    onSuccess(res.data, res.message);
   } catch {
     notify.error(errorTitle, fallbackMessage);
   }

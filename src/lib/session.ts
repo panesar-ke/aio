@@ -35,7 +35,10 @@ export async function decrypt(session: string | undefined = '') {
   }
 }
 
-export async function createSession(userId: string) {
+export async function createSession(
+  userId: string,
+  options?: { policyCompliant?: boolean },
+) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   const createdSession = await db
@@ -47,6 +50,7 @@ export async function createSession(userId: string) {
     userId,
     sessionId: createdSession[0].id,
     expiresAt,
+    policyCompliant: options?.policyCompliant,
   });
 
   const cookieStore = await cookies();
@@ -122,6 +126,21 @@ export const getCurrentUserOrNull = cache(async () => {
     return null;
   }
 
+  // A signed JWT cannot be withdrawn, so the session row is what makes a
+  // cookie usable: password resets and password changes delete a user's rows,
+  // and a cookie whose row is gone stops working here rather than lingering
+  // until its 7-day expiry. The proxy cannot make this check — it has no
+  // database access — so a revoked cookie still reads as a session there and
+  // is cleared by /api/auth/session-expired.
+  const liveSession = await db.query.sessions.findFirst({
+    columns: { id: true },
+    where: (model, { eq }) => eq(model.id, session.sessionId),
+  });
+
+  if (!liveSession) {
+    return null;
+  }
+
   const user = await db.query.users.findFirst({
     columns: {
       id: true,
@@ -130,6 +149,8 @@ export const getCurrentUserOrNull = cache(async () => {
       name: true,
       email: true,
       userType: true,
+      passwordPolicyVersion: true,
+      passwordPolicyExemptUntil: true,
     },
     where: (model, { eq }) => eq(model.id, session.userId),
   });
@@ -148,7 +169,10 @@ export const getCurrentUser = cache(
       if (mode === 'action' || mode === 'api') {
         throw new UnauthorizedError();
       }
-      return redirect('/login');
+      // Not /login directly: a revoked cookie still satisfies the proxy, which
+      // bounces /login to /dashboard and lands back here in a loop. The route
+      // drops the cookie first, then sends them on.
+      return redirect('/api/auth/session-expired');
     }
 
     return user;

@@ -19,6 +19,9 @@ export interface SessionPayload extends JWTPayload {
   userId: string;
   sessionId: string;
   expiresAt: Date;
+  // Absent on sessions issued before the policy shipped; treated as compliant
+  // so nobody is gated on a stale cookie, and refreshed at next login.
+  policyCompliant?: boolean;
 }
 
 export interface Session {
