@@ -2,8 +2,9 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { initials } from '@dicebear/collection';
-import { Avatar as DiceBearAvatar } from '@dicebear/core';
+import { Avatar as DiceBearAvatar, Style } from '@dicebear/core';
+import initials from '@dicebear/styles/initials.json' with { type: 'json' };
+
 import {
   BanIcon,
   CalendarClockIcon,
@@ -155,11 +156,11 @@ export function UserAvatar({
   userName: string;
   image?: string;
 }) {
-  const avatar = new DiceBearAvatar(initials, {
+  const style = new Style(initials);
+  const avatar = new DiceBearAvatar(style, {
     seed: userName,
     fontFamily: ['Raleway'],
     fontWeight: 700,
-    fontSize: 32,
   });
 
   const dataUri = avatar.toDataUri();
