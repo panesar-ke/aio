@@ -116,20 +116,16 @@ function SalesOrdersDatatable({ orders }: { orders: Array<SaleOrder> }) {
     {
       accessorKey: 'company',
       header: 'Account',
-      cell: ({ row }) => titleCase(row.original.company),
+      cell: ({ row }) => row.original.company.toUpperCase(),
+    },
+    {
+      accessorKey: 'salesRepName',
+      header: 'Sales Rep',
+      cell: ({ row }) => row.original.salesRepName?.toUpperCase(),
     },
     {
       accessorKey: 'totalItems',
       header: 'Total Items',
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <Badge variant={saleOrderStatusVariant(row.original.status)}>
-          {saleOrderStatusLabel(row.original.status)}
-        </Badge>
-      ),
     },
     {
       accessorKey: 'total',
