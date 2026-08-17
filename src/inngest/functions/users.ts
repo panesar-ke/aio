@@ -1,9 +1,12 @@
 import { inngest } from '@/inngest/client';
+import { sendNewPasswordEvent } from '@/inngest/events';
 import { sendSms } from '@/lib/sms';
 
 export const sendUserNewPassword = inngest.createFunction(
-  { id: 'send-new-user-password' },
-  { event: 'user/send.new.password' },
+  {
+    id: 'send-new-user-password',
+    triggers: [sendNewPasswordEvent],
+  },
   async ({ event, step }) => {
     const { contact, password, name } = event.data;
 
@@ -13,5 +16,5 @@ export const sendUserNewPassword = inngest.createFunction(
         to: [contact],
       });
     });
-  }
+  },
 );

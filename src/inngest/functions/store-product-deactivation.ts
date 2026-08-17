@@ -3,13 +3,17 @@ import {
   notifyStoreAdminsOfDeactivation,
 } from '@/features/store/services/product-deactivation/actions';
 import { inngest } from '@/inngest/client';
+import { storeProductDeactivationEvent } from '@/inngest/events';
 
 const PRODUCT_DEACTIVATION_CHUNK_SIZE = 25;
 const MAX_PRODUCT_DEACTIVATION_CHUNKS = 400;
 
 export const runStoreProductDeactivation = inngest.createFunction(
-  { id: 'run-store-product-deactivation', retries: 2 },
-  { event: 'store/run.product-deactivation' },
+  {
+    id: 'run-store-product-deactivation',
+    retries: 2,
+    triggers: [storeProductDeactivationEvent],
+  },
   async ({ event, step }) => {
     const { requestId, source, triggeredAt } = event.data;
 

@@ -1,26 +1,26 @@
-import { and, eq } from "drizzle-orm";
-import ExcelJS from "exceljs";
-import { revalidateTag } from "next/cache";
+import { and, eq } from 'drizzle-orm';
+import ExcelJS from 'exceljs';
+import { revalidateTag } from 'next/cache';
 
-import db from "@/drizzle/db";
+import db from '@/drizzle/db';
 import {
   productImportBatches,
   productImportBatchRows,
   products,
   stockMovements,
-} from "@/drizzle/schema";
+} from '@/drizzle/schema';
 import {
   DEFAULT_IMPORT_CATEGORY_ID,
   DEFAULT_IMPORT_UOM_ID,
-  PRODUCTS_IMPORT_EVENT,
-} from "@/features/procurement/services/products-import/constants";
+} from '@/features/procurement/services/products-import/constants';
 import {
   getProductsGlobalTag,
   revalidateProductImportBatches,
-} from "@/features/procurement/utils/cache";
-import { productImportRowSchema } from "@/features/procurement/utils/products-import/schemas";
-import { invalidateStockBalanceSnapshots } from "@/features/store/services/stock-balance/utils";
-import { inngest } from "@/inngest/client";
+} from '@/features/procurement/utils/cache';
+import { productImportRowSchema } from '@/features/procurement/utils/products-import/schemas';
+import { invalidateStockBalanceSnapshots } from '@/features/store/services/stock-balance/utils';
+import { inngest } from '@/inngest/client';
+import { productsImportRequestedEvent } from '@/inngest/events';
 
 interface ParsedRow {
   rowNumber: number;
@@ -29,23 +29,24 @@ interface ParsedRow {
     price: number | null;
     opening_qty: number | null;
   };
-  status: "success" | "error";
+  status: 'success' | 'error';
   errorMessage: string | null;
 }
 
 function parseCellNumber(value: ExcelJS.CellValue): number | null {
-  if (value === null || value === undefined || value === "") return null;
+  if (value === null || value === undefined || value === '') return null;
   const raw =
-    typeof value === "object" && value !== null && "result" in value
+    typeof value === 'object' && value !== null && 'result' in value
       ? (value as { result: unknown }).result
       : value;
-  const num = typeof raw === "number" ? raw : Number(raw);
+  const num = typeof raw === 'number' ? raw : Number(raw);
   return Number.isFinite(num) ? num : Number.NaN;
 }
 
 export const processProductImport = inngest.createFunction(
   {
-    id: "process-product-import",
+    id: 'process-product-import',
+    triggers: [productsImportRequestedEvent],
     onFailure: async ({ event }) => {
       const { batchId } = event.data.event.data;
 
@@ -54,9 +55,9 @@ export const processProductImport = inngest.createFunction(
       });
       if (
         !batch ||
-        batch.status === "completed" ||
-        batch.status === "completed_with_errors" ||
-        batch.status === "failed"
+        batch.status === 'completed' ||
+        batch.status === 'completed_with_errors' ||
+        batch.status === 'failed'
       ) {
         return;
       }
@@ -65,13 +66,16 @@ export const processProductImport = inngest.createFunction(
         where: (model, { eq: eqOp }) => eqOp(model.batchId, batchId),
         columns: { status: true },
       });
-      const successCount = rows.filter((row) => row.status === "success").length;
-      const failedCount = rows.length > 0 ? rows.length - successCount : batch.totalRows;
+      const successCount = rows.filter(
+        (row) => row.status === 'success',
+      ).length;
+      const failedCount =
+        rows.length > 0 ? rows.length - successCount : batch.totalRows;
 
       await db
         .update(productImportBatches)
         .set({
-          status: "failed",
+          status: 'failed',
           completedAt: new Date(),
           successRows: successCount,
           failedRows: failedCount,
@@ -79,15 +83,14 @@ export const processProductImport = inngest.createFunction(
         .where(eq(productImportBatches.id, batchId));
 
       revalidateProductImportBatches(batchId);
-      revalidateTag(getProductsGlobalTag(), "max");
-      revalidateTag("stock-balance", "max");
+      revalidateTag(getProductsGlobalTag(), 'max');
+      revalidateTag('stock-balance', 'max');
     },
   },
-  { event: PRODUCTS_IMPORT_EVENT },
   async ({ event, step }) => {
     const { batchId } = event.data;
 
-    const batch = await step.run("load-batch", async () => {
+    const batch = await step.run('load-batch', async () => {
       const record = await db.query.productImportBatches.findFirst({
         where: (model, { eq: eqOp }) => eqOp(model.id, batchId),
       });
@@ -95,14 +98,14 @@ export const processProductImport = inngest.createFunction(
       return record;
     });
 
-    const claimed = await step.run("mark-processing", async () => {
+    const claimed = await step.run('mark-processing', async () => {
       const claimedRows = await db
         .update(productImportBatches)
-        .set({ status: "processing", startedAt: new Date() })
+        .set({ status: 'processing', startedAt: new Date() })
         .where(
           and(
             eq(productImportBatches.id, batchId),
-            eq(productImportBatches.status, "queued"),
+            eq(productImportBatches.status, 'queued'),
           ),
         )
         .returning({ id: productImportBatches.id });
@@ -115,10 +118,10 @@ export const processProductImport = inngest.createFunction(
     // whichever run gets there first; a second run finds the batch already
     // out of "queued" and must stop here instead of double-processing rows.
     if (!claimed) {
-      return { batchId, status: "skipped-duplicate" as const };
+      return { batchId, status: 'skipped-duplicate' as const };
     }
 
-    const defaultsExist = await step.run("verify-defaults", async () => {
+    const defaultsExist = await step.run('verify-defaults', async () => {
       const [category, uom] = await Promise.all([
         db.query.productCategories.findFirst({
           where: (model, { eq: eqOp }) =>
@@ -132,21 +135,21 @@ export const processProductImport = inngest.createFunction(
     });
 
     if (!defaultsExist) {
-      await step.run("fail-missing-defaults", async () => {
+      await step.run('fail-missing-defaults', async () => {
         await db
           .update(productImportBatches)
           .set({
-            status: "failed",
+            status: 'failed',
             completedAt: new Date(),
             failedRows: batch.totalRows,
           })
           .where(eq(productImportBatches.id, batchId));
         revalidateProductImportBatches(batchId);
       });
-      return { batchId, status: "failed" as const };
+      return { batchId, status: 'failed' as const };
     }
 
-    const parsedRows = await step.run("parse-and-validate-rows", async () => {
+    const parsedRows = await step.run('parse-and-validate-rows', async () => {
       const workbook = new ExcelJS.Workbook();
       // exceljs's bundled .d.ts resolves `Buffer` against a different @types/node
       // shape than this file's ambient scope resolves it to (pre-existing multi-version
@@ -155,7 +158,7 @@ export const processProductImport = inngest.createFunction(
       // declarations, so the escape has to go through `any`. Runtime value is a plain
       // Node.js Buffer either way.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await workbook.xlsx.load(Buffer.from(batch.fileData, "base64") as any);
+      await workbook.xlsx.load(Buffer.from(batch.fileData, 'base64') as any);
       const worksheet = workbook.worksheets[0];
       if (!worksheet) return [];
 
@@ -173,7 +176,7 @@ export const processProductImport = inngest.createFunction(
         if (isBlankRow) continue;
 
         const rawData = {
-          product_name: String(productNameValue ?? "").trim(),
+          product_name: String(productNameValue ?? '').trim(),
           price: parseCellNumber(priceValue),
           opening_qty: parseCellNumber(qtyValue),
         };
@@ -182,19 +185,19 @@ export const processProductImport = inngest.createFunction(
         results.push({
           rowNumber,
           rawData,
-          status: parsed.success ? "success" : "error",
+          status: parsed.success ? 'success' : 'error',
           errorMessage: parsed.success
             ? null
-            : (parsed.error.issues[0]?.message ?? "Invalid row."),
+            : (parsed.error.issues[0]?.message ?? 'Invalid row.'),
         });
       }
       return results;
     });
 
     const insertResult = await step.run(
-      "insert-products-and-movements",
+      'insert-products-and-movements',
       async () => {
-        const validRows = parsedRows.filter((row) => row.status === "success");
+        const validRows = parsedRows.filter((row) => row.status === 'success');
         const createdProductIdsByRow = new Map<number, string>();
 
         await db.transaction(async (tx) => {
@@ -230,7 +233,7 @@ export const processProductImport = inngest.createFunction(
                 transactionDate: batch.asOfDate,
                 itemId: productId,
                 qty: String(row.rawData.opening_qty ?? 0),
-                transactionType: "OPENING_BAL" as const,
+                transactionType: 'OPENING_BAL' as const,
                 transactionId: productId,
                 createdBy: batch.uploadedBy,
                 storeId: batch.storeId,
@@ -262,14 +265,14 @@ export const processProductImport = inngest.createFunction(
       },
     );
 
-    const finalStatus = await step.run("finalize-batch", async () => {
+    const finalStatus = await step.run('finalize-batch', async () => {
       const { successCount, failedCount } = insertResult;
       const status =
         successCount === 0
-          ? ("failed" as const)
+          ? ('failed' as const)
           : failedCount === 0
-            ? ("completed" as const)
-            : ("completed_with_errors" as const);
+            ? ('completed' as const)
+            : ('completed_with_errors' as const);
 
       await db
         .update(productImportBatches)
@@ -282,8 +285,8 @@ export const processProductImport = inngest.createFunction(
         .where(eq(productImportBatches.id, batchId));
 
       revalidateProductImportBatches(batchId);
-      revalidateTag(getProductsGlobalTag(), "max");
-      revalidateTag("stock-balance", "max");
+      revalidateTag(getProductsGlobalTag(), 'max');
+      revalidateTag('stock-balance', 'max');
       return status;
     });
 

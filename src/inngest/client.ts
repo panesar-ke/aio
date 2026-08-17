@@ -1,28 +1,9 @@
-import { EventSchemas, Inngest } from "inngest";
-
-type Events = {
-  "user/send.new.password": {
-    data: {
-      contact: string;
-      password: string;
-      name: string;
-    };
-  };
-  "products/import.requested": {
-    data: {
-      batchId: string;
-    };
-  }; 
-  "store/run.product-deactivation": {
-    data: {
-      requestId: string;
-      source: "vercel-cron";
-      triggeredAt: string;
-    };
-  };
-};
+import { Inngest } from 'inngest';
 
 export const inngest = new Inngest({
-  id: "pkl-aio",
-  schemas: new EventSchemas().fromRecord<Events>(),
+  id: 'pkl-aio',
+  isDev: process.env.NODE_ENV !== 'production',
+  checkpointing: {
+    maxRuntime: '50s',
+  },
 });

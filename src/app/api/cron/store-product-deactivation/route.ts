@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { env } from '@/env/server';
 import { inngest } from '@/inngest/client';
+import { storeProductDeactivationEvent } from '@/inngest/events';
 
 function getCronSecret(request: NextRequest): string | null {
   const auth = request.headers.get('authorization');
@@ -28,14 +29,13 @@ export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
-    await inngest.send({
-      name: 'store/run.product-deactivation',
-      data: {
+    await inngest.send(
+      storeProductDeactivationEvent.create({
         requestId,
         source: 'vercel-cron',
         triggeredAt: new Date().toISOString(),
-      },
-    });
+      }),
+    );
 
     return NextResponse.json({
       queued: true,
