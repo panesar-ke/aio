@@ -66,12 +66,24 @@ async function salesOrderInternal({
     }
   }
 
+  const hasSearchParams = Boolean(
+    (search && search.trim().length > 0) ||
+      (account && account.trim().length > 0) ||
+      (salesPerson && salesPerson.trim().length > 0) ||
+      from ||
+      to,
+  );
+
   if (from && to) {
     filters.push(
       gte(salesOrdersHeader.dateRaised, from),
       lte(salesOrdersHeader.dateRaised, to),
     );
-  } else {
+  } else if (from) {
+    filters.push(gte(salesOrdersHeader.dateRaised, from));
+  } else if (to) {
+    filters.push(lte(salesOrdersHeader.dateRaised, to));
+  } else if (!hasSearchParams) {
     const financialYearRanges = getFinancialYearRanges();
     filters.push(
       gte(

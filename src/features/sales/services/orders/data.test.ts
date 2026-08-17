@@ -12,17 +12,20 @@ vi.mock('@/features/sales/utils/sale-helpers', () => ({
 
 import { getSaleOrderNo } from '@/features/sales/services/orders/data';
 
-const getQueryText = (query: { queryChunks: Array<unknown> }) =>
-  query.queryChunks
-    .map((chunk) =>
-      typeof chunk === 'object' &&
-      chunk !== null &&
-      'value' in chunk &&
-      Array.isArray(chunk.value)
-        ? chunk.value.join('')
-        : '',
-    )
-    .join('');
+const getQueryText = (query: any): string => {
+  if (!query) return '';
+  if (typeof query === 'string') return query;
+  if (query.name) return query.name;
+  if (query.value) {
+    if (Array.isArray(query.value)) return query.value.join('');
+    if (typeof query.value === 'string') return query.value;
+    if (typeof query.value === 'object') return getQueryText(query.value);
+  }
+  if (Array.isArray(query.queryChunks)) {
+    return query.queryChunks.map(getQueryText).join(' ');
+  }
+  return '';
+};
 
 describe('getSaleOrderNo', () => {
   it('locks sale order number allocation before selecting the next number', async () => {
@@ -76,3 +79,91 @@ describe('getSaleOrderNo', () => {
     );
   });
 });
+
+describe('getSalesOrders', () => {
+  it('includes current financial year date filter when no search params are provided', async () => {
+    const { saleUser } = await import('@/features/sales/utils/sale-helpers');
+    const { getSalesOrders } = await import(
+      '@/features/sales/services/orders/data'
+    );
+    const dbModule = await import('@/drizzle/db');
+
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
+    });
+
+    let capturedWhereFilters: any = null;
+
+    const mockQueryBuilder = {
+      from: vi.fn().mockReturnThis(),
+      groupBy: vi.fn().mockReturnThis(),
+      as: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn((whereClause) => {
+        capturedWhereFilters = whereClause;
+        return mockQueryBuilder;
+      }),
+      orderBy: vi.fn().mockResolvedValue([]),
+    };
+
+    (dbModule.default as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
+
+    await getSalesOrders({
+      search: '',
+      account: '',
+      salesPerson: '',
+      from: undefined,
+      to: undefined,
+    });
+
+    expect(capturedWhereFilters).toBeDefined();
+    const queryStr = getQueryText(capturedWhereFilters);
+    expect(queryStr).toContain('date_raised');
+  });
+
+  it('disregards date filter when search params are provided', async () => {
+    const { saleUser } = await import('@/features/sales/utils/sale-helpers');
+    const { getSalesOrders } = await import(
+      '@/features/sales/services/orders/data'
+    );
+    const dbModule = await import('@/drizzle/db');
+
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
+    });
+
+    let capturedWhereFilters: any = null;
+
+    const mockQueryBuilder = {
+      from: vi.fn().mockReturnThis(),
+      groupBy: vi.fn().mockReturnThis(),
+      as: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn((whereClause) => {
+        capturedWhereFilters = whereClause;
+        return mockQueryBuilder;
+      }),
+      orderBy: vi.fn().mockResolvedValue([]),
+    };
+
+    (dbModule.default as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
+
+    await getSalesOrders({
+      search: 'Acme',
+      account: '',
+      salesPerson: '',
+      from: undefined,
+      to: undefined,
+    });
+
+    expect(capturedWhereFilters).toBeDefined();
+    const queryStr = getQueryText(capturedWhereFilters);
+    expect(queryStr).not.toContain('date_raised');
+    expect(queryStr).toContain('Acme');
+  });
+});
+
