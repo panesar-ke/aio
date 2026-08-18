@@ -1906,12 +1906,11 @@ export const sessions = pgTable(
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
     userId: uuid('user_id').notNull(),
-    expiresAt: timestamp('expires_at', { mode: 'string' }).notNull(),
-    createdAt: timestamp('created_at', { mode: 'string' })
-      .defaultNow()
-      .notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
     userAgent: text('user_agent'),
     ipAddress: text('ip_address'),
+    lastActivityAt: timestamp('last_activity_at'),
   },
   (table) => [
     foreignKey({
