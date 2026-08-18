@@ -103,7 +103,11 @@ const NAV_ITEMS: Array<NavItem> = [
     title: 'Admin',
     items: [
       { icon: Users2, label: 'Users', href: '/admin/users' },
-      { icon: ListTreeIcon, label: 'User Rights', href: '/admin/rights' },
+      {
+        icon: ListTreeIcon,
+        label: 'Active Sessions',
+        href: '/admin/active-sessions',
+      },
     ],
     permissions: ['admin:admin'],
   },

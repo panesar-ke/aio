@@ -1,7 +1,7 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { jwtVerify, SignJWT } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
@@ -14,6 +14,7 @@ import { UnauthorizedError } from '@/lib/permissions/errors';
 
 const secretKey = env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
+const ACTIVITY_UPDATE_THRESHOLD_MS = 5 * 60 * 1000;
 
 export async function encrypt(payload: SessionPayload) {
   return new SignJWT(payload)
@@ -35,15 +36,30 @@ export async function decrypt(session: string | undefined = '') {
   }
 }
 
+function getClientIp(headersList: Headers): string | null {
+  // Vercel's edge network sets x-forwarded-for; first value is the original client.
+  const forwardedFor = headersList.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  return headersList.get('x-real-ip');
+}
+
 export async function createSession(
   userId: string,
   options?: { policyCompliant?: boolean },
 ) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const headersList = await headers();
 
   const createdSession = await db
     .insert(sessions)
-    .values({ expiresAt: expiresAt.toISOString(), userId })
+    .values({
+      expiresAt,
+      userId,
+      userAgent: headersList.get('user-agent'),
+      ipAddress: getClientIp(headersList),
+    })
     .returning({ id: sessions.id });
 
   const session = await encrypt({
@@ -75,7 +91,7 @@ export async function updateSession() {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   await db
     .update(sessions)
-    .set({ expiresAt: expiresAt.toISOString() })
+    .set({ expiresAt })
     .where(eq(sessions.id, payload.sessionId as string));
 
   cookieStore.set('session', session, {
@@ -133,12 +149,32 @@ export const getCurrentUserOrNull = cache(async () => {
   // database access — so a revoked cookie still reads as a session there and
   // is cleared by /api/auth/session-expired.
   const liveSession = await db.query.sessions.findFirst({
-    columns: { id: true },
+    columns: { id: true, lastActivityAt: true },
     where: (model, { eq }) => eq(model.id, session.sessionId),
   });
 
   if (!liveSession) {
     return null;
+  }
+
+  const now = new Date();
+  const lastActivity = liveSession.lastActivityAt
+    ? new Date(liveSession.lastActivityAt)
+    : null;
+
+  if (
+    !lastActivity ||
+    now.getTime() - lastActivity.getTime() > ACTIVITY_UPDATE_THRESHOLD_MS
+  ) {
+    await db
+      .update(sessions)
+      .set({ lastActivityAt: now })
+      .where(
+        and(
+          eq(sessions.id, session.sessionId),
+          or(isNull(sessions.lastActivityAt), lt(sessions.lastActivityAt, now)),
+        ),
+      );
   }
 
   const user = await db.query.users.findFirst({
@@ -157,7 +193,7 @@ export const getCurrentUserOrNull = cache(async () => {
 
   if (!user) return null;
 
-  return { ...user, email: user.email as string };
+  return { ...user, email: user.email as string, session };
 });
 
 type GetCurrentUserMode = 'page' | 'action' | 'api';
@@ -176,5 +212,5 @@ export const getCurrentUser = cache(
     }
 
     return user;
-  }
+  },
 );

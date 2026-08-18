@@ -1,7 +1,7 @@
 'use server';
 
-import { and, eq, ne } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
+import { and, eq, inArray, ne } from 'drizzle-orm';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import type {
@@ -14,12 +14,14 @@ import type { ApiFailureWithoutData } from '@/types/index.types';
 
 import db from '@/drizzle/db';
 import {
+  sessions,
   permissions as userPermissions,
   userRights,
   users,
 } from '@/drizzle/schema';
 import { getUser } from '@/features/admin/services/data';
 import {
+  getActiveSessionsGlobalTag,
   getUserFormsGlobalTag,
   revalidateUserTags,
 } from '@/features/admin/utils/cache';
@@ -32,19 +34,21 @@ import {
 import { inngest } from '@/inngest/client';
 import { sendNewPasswordEvent } from '@/inngest/events';
 import { validateFields } from '@/lib/action-validator';
+import { runAction } from '@/lib/actions/safe-action';
 import {
   internationalizePhoneNumber,
   titleCase,
 } from '@/lib/helpers/formatters';
 import { requirePermission } from '@/lib/permissions/guards';
 import { normalizePermissions } from '@/lib/permissions/service';
+import { getCurrentUser } from '@/lib/session';
 
 export async function updateUserRights(values: unknown) {
   await requirePermission('admin:admin');
 
   const { data, error } = validateFields<UserRightsFormValue>(
     values,
-    userRightsFormSchema
+    userRightsFormSchema,
   );
   if (error !== null) {
     return {
@@ -55,12 +59,12 @@ export async function updateUserRights(values: unknown) {
   try {
     const { userId, rights } = data;
 
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       await tx.delete(userRights).where(eq(userRights.userId, userId));
 
       const rightsToInsert = rights
-        .filter(right => right.hasAccess)
-        .map(right => ({
+        .filter((right) => right.hasAccess)
+        .map((right) => ({
           userId,
           formId: right.formId,
         }));
@@ -90,7 +94,7 @@ export const cloneUserRights = async (values: unknown) => {
 
   const { data, error } = validateFields<CloneUserRightsFormValues>(
     values,
-    cloneUserRightsFormSchema
+    cloneUserRightsFormSchema,
   );
   if (error !== null) {
     return {
@@ -114,7 +118,7 @@ export const cloneUserRights = async (values: unknown) => {
       };
     }
 
-    const rightsToClone = userFromRights.map(right => ({
+    const rightsToClone = userFromRights.map((right) => ({
       userId: cloningTo,
       formId: right.formId,
     }));
@@ -181,7 +185,7 @@ export const upsertUser = async (values: unknown) => {
       };
     }
 
-    const userId = await db.transaction(async tx => {
+    const userId = await db.transaction(async (tx) => {
       const [{ id: savedUserId }] = await tx
         .insert(users)
         .values({
@@ -211,10 +215,10 @@ export const upsertUser = async (values: unknown) => {
 
       if (permissionsToSave.length > 0) {
         await tx.insert(userPermissions).values(
-          permissionsToSave.map(permission => ({
+          permissionsToSave.map((permission) => ({
             userId: savedUserId,
             permission,
-          }))
+          })),
         );
       }
 
@@ -244,7 +248,7 @@ export const upsertUser = async (values: unknown) => {
 
 export const toggleUserActiveState = async (
   userId: string,
-  currentState: boolean
+  currentState: boolean,
 ) => {
   await requirePermission('admin:admin');
 
@@ -314,3 +318,32 @@ export const grantPolicyExemption = async (userId: string, until: Date) => {
 
   revalidateUserTags(userId);
 };
+
+export const revokeSession = async (sessionId: string | Array<string>) =>
+  runAction('revoke-session', async () => {
+    await requirePermission('admin:admin');
+    const { session } = await getCurrentUser('action');
+    const sessionIds = Array.isArray(sessionId) ? sessionId : [sessionId];
+
+    if (sessionIds.includes(session.sessionId)) {
+      return {
+        error: true,
+        message: 'You cannot revoke your current session.',
+      };
+    }
+
+    await db
+      .delete(sessions)
+      .where(
+        Array.isArray(sessionId)
+          ? inArray(sessions.id, sessionIds)
+          : eq(sessions.id, sessionId),
+      );
+    revalidateTag(getActiveSessionsGlobalTag(), 'max');
+    revalidatePath('/admin/active-sessions');
+
+    return {
+      error: false,
+      message: 'Session revoked successfully',
+    };
+  });

@@ -1,18 +1,19 @@
-"use cache";
-import { and, asc, eq, sql } from "drizzle-orm";
-import { cacheTag } from "next/cache";
-import { notFound } from "next/navigation";
+'use cache';
+import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { cacheTag } from 'next/cache';
+import { notFound } from 'next/navigation';
 
-import type { User } from "@/types/index.types";
+import type { User } from '@/types/index.types';
 
-import db from "@/drizzle/db";
-import { forms, userRights } from "@/drizzle/schema";
+import db from '@/drizzle/db';
+import { forms, sessions, userRights, users } from '@/drizzle/schema';
 import {
+  getActiveSessionsGlobalTag,
   getFormsGlobalTag,
   getUserFormsGlobalTag,
   getUsersGlobalTag,
   getUserTag,
-} from "@/features/admin/utils/cache";
+} from '@/features/admin/utils/cache';
 
 export const getForms = async () => {
   cacheTag(getFormsGlobalTag());
@@ -61,11 +62,11 @@ export const getUser = async (userId: string) => {
 
 export const getUserForms = async (
   userId: string,
-  userType: User["userType"],
+  userType: User['userType'],
 ) => {
   cacheTag(getUserFormsGlobalTag(userId));
 
-  if (userType === "STANDARD USER") {
+  if (userType === 'STANDARD USER') {
     return db
       .select({
         id: forms.id,
@@ -85,3 +86,34 @@ export const getUserForms = async (
     orderBy: (forms, { asc }) => [asc(forms.moduleId), asc(forms.menuOrder)],
   });
 };
+
+export async function getActiveSessions(search?: string) {
+  cacheTag(getActiveSessionsGlobalTag());
+
+  return db
+    .select({
+      id: sessions.id,
+      userId: sessions.userId,
+      userName: users.name,
+      userEmail: users.email,
+      createdAt: sessions.createdAt,
+      expiresAt: sessions.expiresAt,
+      lastActivityAt: sessions.lastActivityAt,
+      ipAddress: sessions.ipAddress,
+      userAgent: sessions.userAgent,
+    })
+    .from(sessions)
+    .innerJoin(users, eq(sessions.userId, users.id))
+    .where(
+      and(
+        sql`${sessions.expiresAt} > now()`,
+        search
+          ? or(
+              ilike(users.name, `%${search}%`),
+              ilike(users.email, `%${search}%`),
+            )
+          : undefined,
+      ),
+    )
+    .orderBy(sql`${sessions.lastActivityAt} desc nulls last`);
+}

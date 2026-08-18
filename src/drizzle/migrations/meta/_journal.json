@@ -281,6 +281,13 @@
       "when": 1786953679089,
       "tag": "0039_chief_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1787036265822,
+      "tag": "0040_wandering_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
