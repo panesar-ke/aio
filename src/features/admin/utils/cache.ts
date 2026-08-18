@@ -22,3 +22,11 @@ export function getFormsGlobalTag() {
 export function getUserFormsGlobalTag(userId: string) {
   return getIdTag('forms', userId);
 }
+
+export function getActiveSessionsGlobalTag() {
+  return getGlobalTag('active-sessions');
+}
+
+export const revalidateActiveSessionsTag = () => {
+  revalidateTag(getActiveSessionsGlobalTag(), 'max');
+};
