@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useActiveSessionsFilters } from '@/features/admin/hooks/use-filters';
 
 import { revokeSession } from '../../services/action';
+import { getRevocableSessionIds, isSessionSelectable } from './selection';
 
 export function ClientActiveSessionsPage({
   sessions,
@@ -31,7 +32,16 @@ export function ClientActiveSessionsPage({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const handleRevokeMultipleSessions = async () => {
-    await revokeSession(Object.keys(rowSelection));
+    const revocableSessionIds = getRevocableSessionIds(
+      rowSelection,
+      session.sessionId,
+    );
+
+    if (revocableSessionIds.length === 0) {
+      return;
+    }
+
+    await revokeSession(revocableSessionIds);
     setRowSelection({});
   };
 
@@ -51,6 +61,7 @@ export function ClientActiveSessionsPage({
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
+          disabled={!row.getCanSelect()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label='Select row'
         />
@@ -104,7 +115,7 @@ export function ClientActiveSessionsPage({
         },
       }) => (
         <span className='text-sm'>
-          {format(new Date(createdAt), 'dd MMM, HH:mm a')}
+          {format(new Date(createdAt), 'dd MMM, hh:mm a')}
         </span>
       ),
     },
@@ -153,15 +164,18 @@ export function ClientActiveSessionsPage({
         onHandleSearch={onHandleSearch}
         parentClassName='max-w-xl'
       />
-      {Object.keys(rowSelection).length > 0 && (
+      {getRevocableSessionIds(rowSelection, session.sessionId).length > 0 && (
         <Button className='w-fit' onClick={handleRevokeMultipleSessions}>
-          Revoke selected ({Object.keys(rowSelection).length})
+          Revoke selected (
+          {getRevocableSessionIds(rowSelection, session.sessionId).length})
         </Button>
       )}
       <DataTable
         columns={columns}
         data={sessions}
-        enableRowSelection={true}
+        enableRowSelection={(row) =>
+          isSessionSelectable(row.original.id, session.sessionId)
+        }
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         getRowId={(row) => row.id}

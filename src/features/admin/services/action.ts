@@ -41,6 +41,7 @@ import {
 } from '@/lib/helpers/formatters';
 import { requirePermission } from '@/lib/permissions/guards';
 import { normalizePermissions } from '@/lib/permissions/service';
+import { getCurrentUser } from '@/lib/session';
 
 export async function updateUserRights(values: unknown) {
   await requirePermission('admin:admin');
@@ -321,12 +322,21 @@ export const grantPolicyExemption = async (userId: string, until: Date) => {
 export const revokeSession = async (sessionId: string | Array<string>) =>
   runAction('revoke-session', async () => {
     await requirePermission('admin:admin');
+    const { session } = await getCurrentUser('action');
+    const sessionIds = Array.isArray(sessionId) ? sessionId : [sessionId];
+
+    if (sessionIds.includes(session.sessionId)) {
+      return {
+        error: true,
+        message: 'You cannot revoke your current session.',
+      };
+    }
 
     await db
       .delete(sessions)
       .where(
         Array.isArray(sessionId)
-          ? inArray(sessions.id, sessionId)
+          ? inArray(sessions.id, sessionIds)
           : eq(sessions.id, sessionId),
       );
     revalidateTag(getActiveSessionsGlobalTag(), 'max');

@@ -1,5 +1,5 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -169,7 +169,12 @@ export const getCurrentUserOrNull = cache(async () => {
     await db
       .update(sessions)
       .set({ lastActivityAt: now })
-      .where(eq(sessions.id, session.sessionId));
+      .where(
+        and(
+          eq(sessions.id, session.sessionId),
+          or(isNull(sessions.lastActivityAt), lt(sessions.lastActivityAt, now)),
+        ),
+      );
   }
 
   const user = await db.query.users.findFirst({

@@ -105,12 +105,15 @@ export async function getActiveSessions(search?: string) {
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
     .where(
-      search
-        ? or(
-            ilike(users.name, `%${search}%`),
-            ilike(users.email, `%${search}%`),
-          )
-        : undefined,
+      and(
+        sql`${sessions.expiresAt} > now()`,
+        search
+          ? or(
+              ilike(users.name, `%${search}%`),
+              ilike(users.email, `%${search}%`),
+            )
+          : undefined,
+      ),
     )
-    .orderBy(desc(sessions.lastActivityAt));
+    .orderBy(sql`${sessions.lastActivityAt} desc nulls last`);
 }

@@ -5,6 +5,7 @@ import PageHeader from '@/components/custom/page-header';
 import { ClientActiveSessionsPage } from '@/features/admin/components/active-sessions/active-sessions-page';
 import { getActiveSessions } from '@/features/admin/services/data';
 import { loadActiveSessionsSearchParams } from '@/features/admin/utils/search-params';
+import { requirePermission } from '@/lib/permissions/guards';
 import { getCurrentUser } from '@/lib/session';
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default async function ActiveSessionsPage({
 async function SuspendedActiveSessionsPage({
   searchParams,
 }: Pick<PageProps<'/admin/active-sessions'>, 'searchParams'>) {
+  await requirePermission('admin:admin', { mode: 'page' });
   const { search } = await loadActiveSessionsSearchParams(searchParams);
   const { session } = await getCurrentUser('page');
   const sessions = await getActiveSessions(search);
