@@ -33,6 +33,7 @@ export function LoginForm() {
         successTitle: 'Welcome back',
         fallbackMessage: 'Failed to sign in. Please try again.',
         onSuccess: (destination) => {
+          form.reset();
           const safeDestination =
             destination &&
             destination.startsWith('/') &&
