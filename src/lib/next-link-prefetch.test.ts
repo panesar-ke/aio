@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript6';
+import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
 const SRC_DIR = path.join(process.cwd(), 'src');

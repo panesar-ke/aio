@@ -17,9 +17,20 @@ import {
 } from '@/features/sales/services/orders/data';
 import { saleUser } from '@/features/sales/utils/sale-helpers';
 
-const getQueryText = (query: any): string => {
+type QueryObject = {
+  name?: string;
+  value?: unknown;
+  queryChunks?: Array<unknown>;
+};
+
+function isQueryObject(value: unknown): value is QueryObject {
+  return typeof value === 'object' && value !== null;
+}
+
+const getQueryText = (query: unknown): string => {
   if (!query) return '';
   if (typeof query === 'string') return query;
+  if (!isQueryObject(query)) return '';
   if (query.name) return query.name;
   if (query.value) {
     if (Array.isArray(query.value)) return query.value.join('');
@@ -110,7 +121,11 @@ describe('getSalesOrders', () => {
       limit: vi.fn().mockResolvedValue([]),
     };
 
-    (db as any).select = vi.fn().mockReturnValue(mockQueryBuilder);
+    (
+      db as Partial<typeof db> & {
+        select?: ReturnType<typeof vi.fn>;
+      }
+    ).select = vi.fn().mockReturnValue(mockQueryBuilder);
 
     return { captured, mockQueryBuilder };
   };
