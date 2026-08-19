@@ -76,7 +76,7 @@ describe('GET /api/cron/daily', () => {
   it('returns 500 when CRON_SECRET is not configured', async () => {
     const { GET } = await loadRouteWithCronSecret(undefined);
 
-    const response = await GET(request);
+    const response = await GET(request());
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
