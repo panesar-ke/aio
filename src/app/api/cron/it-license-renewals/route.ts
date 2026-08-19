@@ -8,6 +8,7 @@ import {
   itLicenses,
 } from '@/drizzle/schema';
 import { env } from '@/env/server';
+import { getCronSecret } from '@/lib/cron-token';
 import { dateFormat } from '@/lib/helpers/formatters';
 import { sendSubscriptionReminderEmail } from '@/lib/resend';
 
@@ -30,13 +31,6 @@ function addUtcDays(date: Date, days: number): Date {
   const next = new Date(date);
   next.setUTCDate(next.getUTCDate() + days);
   return next;
-}
-
-function getCronSecret(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization');
-  if (!auth) return null;
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() ?? null;
 }
 
 export async function GET(request: NextRequest) {
