@@ -9,13 +9,7 @@ import {
 } from '@/features/auth/utils/password-policy';
 import { policyReminderNotification } from '@/features/auth/utils/policy-notification';
 import { createNotifications } from '@/features/global/services/actions';
-
-function getCronSecret(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization');
-  if (!auth) return null;
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() ?? null;
-}
+import { getCronSecret } from '@/lib/cron-token';
 
 export async function GET(request: NextRequest) {
   if (!env.CRON_SECRET) {

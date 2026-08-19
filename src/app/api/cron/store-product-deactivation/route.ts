@@ -3,13 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env/server';
 import { inngest } from '@/inngest/client';
 import { storeProductDeactivationEvent } from '@/inngest/events';
-
-function getCronSecret(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization');
-  if (!auth) return null;
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() ?? null;
-}
+import { getCronSecret } from '@/lib/cron-token';
 
 export async function GET(request: NextRequest) {
   if (!env.CRON_SECRET) {
