@@ -1,6 +1,9 @@
 import { format, parse } from 'date-fns';
 
-import { numberFormat } from '@/lib/helpers/formatters';
+import {
+  compactNumberFormatter,
+  numberFormat,
+} from '@/lib/helpers/formatters';
 
 export function getDateValue(date: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -25,4 +28,8 @@ export function formatTableDate(date: string) {
  */
 export function formatCurrency(amount: number | string) {
   return `KES ${numberFormat(amount, 0)}`;
+}
+
+export function formatCompactCurrency(amount: number | string) {
+  return `KES ${compactNumberFormatter(amount)}`;
 }

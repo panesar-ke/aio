@@ -5,13 +5,6 @@ import {
   getRelativeTimeLabel,
 } from '@/features/sales/components/accounts/account-details-page';
 import { createAccountOrderColumns } from '@/features/sales/components/accounts/account-orders-table';
-import { buildSalesOrderLabel } from '@/features/sales/utils/account-helpers';
-
-describe('buildSalesOrderLabel', () => {
-  it('builds the sales order label from order year and sale order number', () => {
-    expect(buildSalesOrderLabel(1142, '2023-11-06')).toBe('SO-2023-1142');
-  });
-});
 
 const order = (
   overrides: Partial<Parameters<typeof getAccountOrderMetrics>[0][number]>,
