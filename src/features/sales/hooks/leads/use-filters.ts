@@ -5,6 +5,7 @@ import {
   AccountTier,
   leadSearchParams,
   LeadStatus,
+  salesDashboardSearchParams,
   salesOrderSearchParams,
 } from '@/features/sales/utils/search-params';
 import { dateFormat } from '@/lib/helpers/formatters';
@@ -115,5 +116,34 @@ export function useSalesOrdersFilters() {
     onReset,
     onAccountChange,
     onDateChange,
+  };
+}
+
+export function useSalesDashboardFilters() {
+  const [filters, setFilters] = useQueryStates(salesDashboardSearchParams, {
+    shallow: false,
+    limitUrlUpdates: throttle(120),
+  });
+
+  function onFinancialYearChange(financialYear: string) {
+    setFilters({ financialYear });
+  }
+
+  function onSalesPersonChange(salesPerson: string) {
+    setFilters({ salesPerson });
+  }
+
+  function onReset() {
+    setFilters({
+      financialYear: null,
+      salesPerson: '',
+    });
+  }
+
+  return {
+    filters,
+    onFinancialYearChange,
+    onSalesPersonChange,
+    onReset,
   };
 }

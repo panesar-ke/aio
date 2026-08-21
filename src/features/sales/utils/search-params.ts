@@ -1,5 +1,7 @@
 import { createLoader, parseAsString, parseAsStringEnum } from 'nuqs/server';
 
+import { getFinancialYearStart } from '@/lib/helpers/dates';
+
 export enum LeadStatus {
   all = 'all',
   new = 'new',
@@ -41,6 +43,11 @@ export const salesOrderSearchParams = {
   to: parseAsString,
 };
 
+export const salesDashboardSearchParams = {
+  financialYear: parseAsString.withDefault(getFinancialYearStart().toString()),
+  salesPerson: parseAsString.withDefault(''),
+};
+
 export const newSalesOrderSearchParams = {
   account: parseAsString,
 };
@@ -48,6 +55,13 @@ export const newSalesOrderSearchParams = {
 export const loadLeadSearchParams = createLoader(leadSearchParams);
 export const loadAccountSearchParams = createLoader(accountSearchParams);
 export const loadSalesOrderSearchParams = createLoader(salesOrderSearchParams);
+export const loadSalesDashboardSearchParams = createLoader(
+  salesDashboardSearchParams,
+);
 export const loadNewSalesOrderSearchParams = createLoader(
   newSalesOrderSearchParams,
 );
+
+export type SalesDashboardFilters = Awaited<
+  ReturnType<typeof loadSalesDashboardSearchParams>
+>;
