@@ -13,6 +13,7 @@ vi.mock('@/features/sales/utils/sale-helpers', () => ({
 import db from '@/drizzle/db';
 import { getSalesDashboard } from '@/features/sales/services/dashboard/data';
 import { saleUser } from '@/features/sales/utils/sale-helpers';
+import { getFinancialYearStart } from '@/lib/helpers/dates';
 
 type QueryObject = {
   name?: string;
@@ -46,10 +47,11 @@ describe('getSalesDashboard', () => {
     vi.clearAllMocks();
   });
 
-  const captureWhereClauses = () => {
+  const createSelectMock = (results: Array<Array<Record<string, unknown>>> = []) => {
     const captured: Array<unknown> = [];
+    let selectCall = 0;
 
-    const createBuilder = () => {
+    const createBuilder = (result: Array<Record<string, unknown>>) => {
       const builder = {
         from: vi.fn().mockReturnThis(),
         innerJoin: vi.fn().mockReturnThis(),
@@ -60,17 +62,19 @@ describe('getSalesDashboard', () => {
         }),
         groupBy: vi.fn().mockReturnThis(),
         orderBy: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
+        limit: vi.fn().mockResolvedValue(result),
         then: (resolve: (value: Array<Record<string, unknown>>) => unknown) =>
-          Promise.resolve(resolve([])),
+          Promise.resolve(resolve(result)),
       };
 
       return builder;
     };
 
-    (db as { select?: unknown }).select = vi.fn(() => createBuilder());
+    (db as { select?: unknown }).select = vi.fn(() =>
+      createBuilder(results[selectCall++] ?? []),
+    );
 
-    return captured;
+    return { captured };
   };
 
   it('defaults to the selected financial year range when no sales person filter is provided', async () => {
@@ -79,7 +83,7 @@ describe('getSalesDashboard', () => {
       userId: 'user-1',
     });
 
-    const clauses = captureWhereClauses();
+    const { captured: clauses } = createSelectMock();
 
     await getSalesDashboard({
       financialYear: '2026',
@@ -96,7 +100,7 @@ describe('getSalesDashboard', () => {
       userId: 'rep-1',
     });
 
-    const clauses = captureWhereClauses();
+    const { captured: clauses } = createSelectMock();
 
     await getSalesDashboard({
       financialYear: '2026',
@@ -107,5 +111,68 @@ describe('getSalesDashboard', () => {
     expect(queryText).toContain('sales_rep_id');
     expect(queryText).toContain('rep-1');
     expect(queryText).not.toContain('rep-2');
+  });
+
+  it('falls back to the current financial year when the requested year is outside the dashboard options', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
+    });
+
+    createSelectMock();
+
+    await expect(
+      getSalesDashboard({
+        financialYear: '1900',
+        salesPerson: '',
+      }),
+    ).resolves.toMatchObject({
+      filters: {
+        financialYear: getFinancialYearStart().toString(),
+      },
+    });
+  });
+
+  it('builds recent order activity titles with the shared sales order label helper', async () => {
+    vi.mocked(saleUser).mockResolvedValueOnce({
+      isSalesAdmin: true,
+      userId: 'user-1',
+    });
+
+    createSelectMock([
+      [{ revenue: 0, orders: 0, activeAccounts: 0 }],
+      [{ revenue: 0, orders: 0, activeAccounts: 0 }],
+      [{ total: 0 }],
+      [{ total: 0 }],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [
+        {
+          id: 9,
+          date: '2026-08-20',
+          saleOrderNo: 42,
+          company: 'ACME',
+          amount: '1000',
+        },
+      ],
+      [],
+      [],
+    ]);
+
+    await expect(
+      getSalesDashboard({
+        financialYear: getFinancialYearStart().toString(),
+        salesPerson: '',
+      }),
+    ).resolves.toMatchObject({
+      recentActivity: [
+        expect.objectContaining({
+          title: 'Sale order SO-2026-42',
+        }),
+      ],
+    });
   });
 });

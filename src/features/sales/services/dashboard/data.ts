@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gte,
+  lt,
   lte,
   sql,
 } from 'drizzle-orm';
@@ -22,11 +23,13 @@ import {
   getLeadsGlobalTag,
   getSalesOrdersGlobalTag,
 } from '@/features/sales/utils/cache';
+import { buildSalesOrderLabel } from '@/features/sales/utils/account-helpers';
 import type { SalesDashboardFilters } from '@/features/sales/utils/search-params';
 import { saleUser } from '@/features/sales/utils/sale-helpers';
 import {
   getFinancialYearLabel,
   getFinancialYearMonths,
+  getFinancialYearOptions,
   getFinancialYearStart,
   getMonthsElapsedInFinancialYear,
 } from '@/lib/helpers/dates';
@@ -34,6 +37,8 @@ import { dateFormat, titleCase } from '@/lib/helpers/formatters';
 import { toNumber } from '@/lib/helpers/numbers';
 
 const ACCOUNT_TIERS = ['high', 'medium', 'low'] as const;
+const SALES_DASHBOARD_FINANCIAL_YEAR_BACK = 4;
+const SALES_DASHBOARD_FINANCIAL_YEAR_FORWARD = 0;
 
 type AccountTier = (typeof ACCOUNT_TIERS)[number];
 
@@ -53,17 +58,25 @@ type DashboardTrend = {
 
 function parseFinancialYearStart(financialYear: string) {
   const parsed = Number(financialYear);
+  const validFinancialYears = new Set(
+    getFinancialYearOptions(
+      SALES_DASHBOARD_FINANCIAL_YEAR_BACK,
+      SALES_DASHBOARD_FINANCIAL_YEAR_FORWARD,
+    ).map(option => Number(option.value)),
+  );
 
-  if (!Number.isInteger(parsed)) {
+  if (!Number.isInteger(parsed) || !validFinancialYears.has(parsed)) {
     return getFinancialYearStart();
   }
 
   return parsed;
 }
 
-function getDashboardDateRange(financialYear: string): DashboardDateRange {
+function getDashboardDateRange(
+  financialYear: string,
+  referenceDate: Date,
+): DashboardDateRange {
   const financialYearStart = parseFinancialYearStart(financialYear);
-  const referenceDate = new Date();
   const currentFinancialYearStart = getFinancialYearStart(referenceDate);
   const isCurrentFinancialYear = financialYearStart === currentFinancialYearStart;
 
@@ -113,12 +126,25 @@ function getAccountTier(totalRevenue: number): AccountTier {
   return 'low';
 }
 
+function getLocalTimestampRange(from: Date, to: Date) {
+  const start = `${dateFormat(from)} 00:00:00`;
+  const nextDay = new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1);
+  const endExclusive = `${dateFormat(nextDay)} 00:00:00`;
+
+  return { start, endExclusive };
+}
+
 async function getSalesDashboardInternal({
   isSalesAdmin,
   userId,
   financialYear,
   salesPerson,
-}: SalesDashboardFilters & { isSalesAdmin: boolean; userId: string }) {
+  todayBucket,
+}: SalesDashboardFilters & {
+  isSalesAdmin: boolean;
+  userId: string;
+  todayBucket: string;
+}) {
   'use cache';
   cacheTag(getSalesOrdersGlobalTag());
   cacheTag(getAccountsGlobalTag());
@@ -126,6 +152,7 @@ async function getSalesDashboardInternal({
 
   const salesRepId = isSalesAdmin ? salesPerson.trim() : userId;
   const shouldScopeToRep = !isSalesAdmin || salesRepId.length > 0;
+  const referenceDate = new Date(`${todayBucket}T00:00:00`);
   const {
     from,
     to,
@@ -133,7 +160,12 @@ async function getSalesDashboardInternal({
     comparisonTo,
     financialYearStart,
     financialYearLabel,
-  } = getDashboardDateRange(financialYear);
+  } = getDashboardDateRange(financialYear, referenceDate);
+  const currentLeadRange = getLocalTimestampRange(from, to);
+  const comparisonLeadRange = getLocalTimestampRange(
+    comparisonFrom,
+    comparisonTo,
+  );
 
   const orderFilters = [
     gte(salesOrdersHeader.dateRaised, dateFormat(from)),
@@ -149,15 +181,15 @@ async function getSalesDashboardInternal({
 
   const leadFilters = [
     eq(saleAccounts.state, 'lead'),
-    gte(saleAccounts.createdAt, from.toISOString()),
-    lte(saleAccounts.createdAt, to.toISOString()),
+    gte(saleAccounts.createdAt, currentLeadRange.start),
+    lt(saleAccounts.createdAt, currentLeadRange.endExclusive),
     shouldScopeToRep ? eq(saleAccounts.salesRepId, salesRepId) : undefined,
   ];
 
   const comparisonLeadFilters = [
     eq(saleAccounts.state, 'lead'),
-    gte(saleAccounts.createdAt, comparisonFrom.toISOString()),
-    lte(saleAccounts.createdAt, comparisonTo.toISOString()),
+    gte(saleAccounts.createdAt, comparisonLeadRange.start),
+    lt(saleAccounts.createdAt, comparisonLeadRange.endExclusive),
     shouldScopeToRep ? eq(saleAccounts.salesRepId, salesRepId) : undefined,
   ];
 
@@ -169,6 +201,7 @@ async function getSalesDashboardInternal({
     monthlySalesRows,
     previousMonthlySalesRows,
     accountRevenueRows,
+    accountLifetimeRevenueRows,
     topCategoryRows,
     recentOrders,
     recentLeads,
@@ -231,6 +264,21 @@ async function getSalesDashboardInternal({
       })
       .from(salesOrdersHeader)
       .where(and(...orderFilters))
+      .groupBy(salesOrdersHeader.accountId),
+    db
+      .select({
+        accountId: salesOrdersHeader.accountId,
+        revenue:
+          sql<number>`cast(coalesce(sum(${salesOrdersHeader.totalAmountInLocalCurrency}), 0) as numeric)`,
+      })
+      .from(salesOrdersHeader)
+      .where(
+        and(
+          shouldScopeToRep
+            ? eq(salesOrdersHeader.salesRepId, salesRepId)
+            : undefined,
+        ),
+      )
       .groupBy(salesOrdersHeader.accountId),
     db
       .select({
@@ -302,6 +350,11 @@ async function getSalesDashboardInternal({
   const previousRevenueByMonth = new Map(
     previousMonthlySalesRows.map(row => [row.month, toNumber(row.revenue)]),
   );
+  const lifetimeRevenueByAccountId = new Map(
+    accountLifetimeRevenueRows
+      .filter(row => row.accountId)
+      .map(row => [row.accountId, toNumber(row.revenue)]),
+  );
 
   const monthlySales = months.map(({ date, label }, index) => {
     const currentKey = dateFormat(date);
@@ -330,7 +383,10 @@ async function getSalesDashboardInternal({
 
   for (const row of accountRevenueRows) {
     const revenue = toNumber(row.revenue);
-    tierRevenue[getAccountTier(revenue)] += revenue;
+    const lifetimeRevenue = row.accountId
+      ? lifetimeRevenueByAccountId.get(row.accountId) ?? revenue
+      : revenue;
+    tierRevenue[getAccountTier(lifetimeRevenue)] += revenue;
   }
 
   const recentActivity = [
@@ -338,7 +394,7 @@ async function getSalesDashboardInternal({
       id: `order-${order.id}`,
       type: 'order' as const,
       date: order.date,
-      title: `Sale order SO-${new Date(order.date).getFullYear()}-${order.saleOrderNo}`,
+      title: `Sale order ${buildSalesOrderLabel(order.saleOrderNo, order.date)}`,
       description: order.company
         ? `${order.company.toUpperCase()} • KES ${toNumber(order.amount).toLocaleString('en-KE')}`
         : `KES ${toNumber(order.amount).toLocaleString('en-KE')}`,
@@ -416,6 +472,7 @@ export async function getSalesDashboard(searchParams: SalesDashboardFilters) {
   return getSalesDashboardInternal({
     isSalesAdmin,
     userId,
+    todayBucket: dateFormat(new Date()),
     ...searchParams,
   });
 }
