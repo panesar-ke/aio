@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.url().optional(),
+    DATABASE_URL: z.url(),
     SMS_API_KEY: z.string().min(1),
     SMS_USER_NAME: z.string().min(1),
     SMS_SENDER_ID: z.string().min(1),
@@ -19,8 +19,6 @@ export const env = createEnv({
     APP_URL: z.url(),
     SUPPORT_EMAIL: z.email().default('support@panesar.co.ke'),
     PASSWORD_POLICY_DEADLINE: z.iso.datetime().optional(),
-    NEON_DATABASE_URL: z.url(),
-    NEON_DATABASE_URL_UNPOOLED: z.url(),
   },
   runtimeEnv: process.env,
 });
