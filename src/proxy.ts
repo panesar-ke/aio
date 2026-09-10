@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import type { SessionPayload } from '@/types/index.types';
 
+import { env } from '@/env/server';
 import {
   parsePolicyDeadline,
   shouldGate,
@@ -17,8 +18,15 @@ const publicRoutes = [
 ];
 
 const aj = arcjet({
-  key: process.env.ARCJET_KEY!,
-  characteristics: ['sessionId'],
+  key: env.ARCJET_KEY,
+  // Keyed on the pair, not on `sessionId` alone. Every unauthenticated request
+  // resolves to the same `'anonymous'` session, so a lone characteristic put
+  // the whole internet in one bucket — one client could exhaust it and 403
+  // every login company-wide. `ip.src` is Arcjet's own value, so it cannot be
+  // spoofed through a request header the way `x-forwarded-for` can.
+  // `sessionId` stays: it is what buckets signed-in staff individually rather
+  // than collapsing the office NAT into a single IP bucket.
+  characteristics: ['ip.src', 'sessionId'],
   rules: [
     shield({ mode: 'LIVE' }),
     detectBot({
@@ -65,8 +73,38 @@ export default async function proxy(req: NextRequest) {
 
   const decision = await aj.protect(req, { sessionId });
 
-  if (decision.isDenied()) {
-    return new Response(null, { status: 403 });
+  // Fail open. Arcjet being unreachable must not take sign-in down with it, and
+  // login no longer depends on it alone: the per-identifier throttle in
+  // login-throttle.ts stands in front of every credential check regardless of
+  // what this decision says.
+  // Alert on this line — it means the whole edge layer is silently off.
+  if (decision.isErrored()) {
+    console.error('ARCJET_DECISION_ERROR', {
+      message: decision.reason.message,
+      path,
+    });
+  } else if (decision.isDenied()) {
+    // The body stays empty either way: telling a caller which rule stopped them
+    // is free reconnaissance. Retry-After is different — it is advice a blocked
+    // legitimate client can act on, and it reveals nothing beyond the window
+    // length already implied by the limit.
+    const headers = new Headers();
+
+    if (decision.reason.isRateLimit()) {
+      const resetSeconds =
+        decision.reason.resetTime === undefined
+          ? decision.reason.reset
+          : Math.max(
+              0,
+              Math.ceil(
+                (decision.reason.resetTime.getTime() - Date.now()) / 1000,
+              ),
+            );
+
+      headers.set('Retry-After', String(resetSeconds));
+    }
+
+    return new Response(null, { headers, status: 403 });
   }
 
   // Prefix match, so /reset-password/<token> is public while
