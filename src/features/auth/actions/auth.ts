@@ -51,13 +51,21 @@ const INVALID_CREDENTIALS_MESSAGE = 'Invalid email/contact or password';
 const dummyPasswordHash = hashPassword(randomBytes(32).toString('base64url'));
 
 // Marked handled so a hashing failure at import time cannot surface as an
-// unhandled rejection. The `await` below still observes the same rejection.
+// unhandled rejection. The `await` below still observes the same rejection,
+// and catches it rather than letting it answer differently from a wrong
+// password.
 dummyPasswordHash.catch(() => {});
 
 /**
- * Names roughly when the caller can retry. Safe to be specific: the throttle
- * counts identifiers, not accounts, so a nonexistent identifier reaches this
- * message on exactly the same terms as a real one.
+ * Names roughly when the caller can retry. A nonexistent identifier reaches
+ * this message on exactly the same terms as a real one, so it answers nothing
+ * about whether an account exists.
+ *
+ * It does answer "are these two identifiers the same account?" for someone who
+ * already knows both strings and will spend a whole budget on one of them to
+ * find out, because the budget is shared across an account's email and contact.
+ * Accepted deliberately: the alternative was two independent budgets, which is
+ * twice as many password guesses against every account reachable both ways.
  */
 function throttleMessage(retryAfter: Date | null, now: Date) {
   const minutes =
@@ -95,24 +103,53 @@ export const loginAction = async (
     };
 
     const now = new Date();
-    const throttle = await isThrottled(identifier, now);
-
-    // Checked before the user lookup, so a throttled identifier costs one
-    // indexed count and never touches the users table.
-    if (throttle.throttled) {
-      await recordLoginAttempt({ ...attemptContext, succeeded: false });
-      throw new ActionError(throttleMessage(throttle.retryAfter, now));
-    }
 
     const user = await db.query.users.findFirst({
       where: (users, { eq, or }) =>
         or(eq(users.email, identifier), eq(users.contact, identifier)),
     });
 
+    // Every identifier that reaches the same account shares one budget. The
+    // lookup above accepts either an email or a contact, so counting the
+    // submitted string alone gave a user with both two independent budgets —
+    // ten tries per window against one account rather than the five
+    // login-throttle.ts documents. Resolving the user first costs a throttled
+    // caller one indexed lookup they used to be spared; Arcjet's per-IP limit
+    // is what caps how fast that can be repeated.
+    const throttleIdentifiers = [
+      ...new Set(
+        [identifier, user?.contact, user?.email].filter(
+          (value): value is string => Boolean(value),
+        ),
+      ),
+    ];
+
+    const throttle = await isThrottled(throttleIdentifiers, now);
+
+    // Nothing is written for a refusal. Recording them pushed `retryAfter`
+    // later with every retry, so the block stopped expiring for anyone who
+    // followed the message's own advice — see recordLoginAttempt.
+    if (throttle.throttled) {
+      throw new ActionError(throttleMessage(throttle.retryAfter, now));
+    }
+
     if (!user) {
-      // Pay the bcrypt cost anyway. The result is discarded — it exists purely
-      // so this branch takes as long as the wrong-password branch below.
-      await bcrypt.compare(data.password, await dummyPasswordHash);
+      // Pay the same bcrypt cost as a real check. `verifyPassword` compares
+      // twice on every path, so this branch compares twice as well; both
+      // results are discarded.
+      try {
+        const dummy = await dummyPasswordHash;
+
+        await bcrypt.compare(data.password, dummy);
+        await bcrypt.compare(data.password.toLowerCase(), dummy);
+      } catch (equalizationError) {
+        // A hashing failure at import time would otherwise escape as a generic
+        // 'Something went wrong' here while a wrong password still returned the
+        // shared message — a cleaner existence oracle than the timing this
+        // block exists to hide. Fall through to the shared message instead.
+        console.error('Failed to equalize login timing:', equalizationError);
+      }
+
       await recordLoginAttempt({ ...attemptContext, succeeded: false });
       throw new ActionError(INVALID_CREDENTIALS_MESSAGE);
     }
@@ -145,15 +182,22 @@ export const loginAction = async (
       throw new ActionError('Account is deactivated');
     }
 
-    await recordLoginAttempt({
-      ...attemptContext,
-      succeeded: true,
-      userId: user.id,
-    });
+    // Audit only, and no more essential than the rehash below: the credentials
+    // are already proved by this point, so a write failure must not turn a
+    // valid login into 'Something went wrong'.
+    try {
+      await recordLoginAttempt({
+        ...attemptContext,
+        succeeded: true,
+        userId: user.id,
+      });
 
-    // Self-heals the counter now rather than leaving someone who mistyped a
-    // few times one slip from being throttled for the rest of the window.
-    await clearLoginFailures(identifier);
+      // Self-heals the counter now rather than leaving someone who mistyped a
+      // few times one slip from being throttled for the rest of the window.
+      await clearLoginFailures(throttleIdentifiers, now);
+    } catch (attemptError) {
+      console.error('Failed to record successful login:', attemptError);
+    }
 
     // TRANSITIONAL: this hash predates the casing fix and is a hash of
     // lowercased input. Re-store it as typed so the account self-heals.

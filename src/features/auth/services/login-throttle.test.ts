@@ -1,15 +1,14 @@
+import { and, eq, gte, inArray } from 'drizzle-orm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-const { deleteReturning, deleteWhere, findMany, insertValues } = vi.hoisted(
-  () => ({
-    findMany: vi.fn(),
-    insertValues: vi.fn(),
-    deleteWhere: vi.fn(),
-    deleteReturning: vi.fn(),
-  })
-);
+const { deleteWhere, findMany, insertValues, selectLimit } = vi.hoisted(() => ({
+  findMany: vi.fn(),
+  insertValues: vi.fn(),
+  deleteWhere: vi.fn(),
+  selectLimit: vi.fn(),
+}));
 
 vi.mock('@/env/server', () => ({
   env: { DATABASE_URL: 'postgres://test' },
@@ -19,12 +18,18 @@ vi.mock('@/drizzle/db', () => ({
   default: {
     query: { loginAttempts: { findMany } },
     insert: vi.fn(() => ({ values: insertValues })),
-    delete: vi.fn(() => ({
-      where: deleteWhere.mockReturnValue({ returning: deleteReturning }),
+    delete: vi.fn(() => ({ where: deleteWhere })),
+    // The prune narrows each chunk with a subquery; its shape does not matter
+    // here, only that one statement is issued per chunk.
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({ limit: selectLimit })),
+      })),
     })),
   },
 }));
 
+import { loginAttempts } from '@/drizzle/schema';
 import {
   clearLoginFailures,
   deleteLoginAttemptsBefore,
@@ -61,7 +66,7 @@ describe('isThrottled', () => {
   test('allows an identifier with no history', async () => {
     findMany.mockResolvedValue([]);
 
-    expect(await isThrottled('someone@example.com', NOW)).toEqual({
+    expect(await isThrottled(['someone@example.com'], NOW)).toEqual({
       throttled: false,
       retryAfter: null,
     });
@@ -70,7 +75,7 @@ describe('isThrottled', () => {
   test('does not trigger one attempt below the limit', async () => {
     findMany.mockResolvedValue(failures(LOGIN_ATTEMPT_LIMIT - 1, 10));
 
-    const state = await isThrottled('someone@example.com', NOW);
+    const state = await isThrottled(['someone@example.com'], NOW);
 
     expect(state.throttled).toBe(false);
     expect(state.retryAfter).toBeNull();
@@ -80,7 +85,7 @@ describe('isThrottled', () => {
     const rows = failures(LOGIN_ATTEMPT_LIMIT, 10);
     findMany.mockResolvedValue(rows);
 
-    const state = await isThrottled('someone@example.com', NOW);
+    const state = await isThrottled(['someone@example.com'], NOW);
 
     expect(state.throttled).toBe(true);
     // At the limit the oldest failure is the one whose expiry reopens sign-in.
@@ -93,7 +98,7 @@ describe('isThrottled', () => {
     const rows = failures(LOGIN_ATTEMPT_LIMIT + 2, 12);
     findMany.mockResolvedValue(rows);
 
-    const state = await isThrottled('someone@example.com', NOW);
+    const state = await isThrottled(['someone@example.com'], NOW);
 
     // Three must expire to drop the count from 7 back under 5, so the third
     // oldest — index 2 — is the one that matters, not the oldest.
@@ -105,14 +110,33 @@ describe('isThrottled', () => {
   test('counts only failures inside the window', async () => {
     findMany.mockResolvedValue([]);
 
-    await isThrottled('someone@example.com', NOW);
+    await isThrottled(['someone@example.com'], NOW);
 
-    // The cutoff is pushed into the query rather than filtered in memory.
-    expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        columns: { createdAt: true },
-        limit: expect.any(Number),
-      })
+    // Asserted as the whole clause, not merely that a query ran: dropping the
+    // cutoff would turn the rolling window into a permanent block, and an
+    // assertion on the shape of the call alone would not notice.
+    expect(findMany.mock.calls[0][0].where).toEqual(
+      and(
+        inArray(loginAttempts.identifier, ['someone@example.com']),
+        eq(loginAttempts.succeeded, false),
+        gte(loginAttempts.createdAt, loginAttemptWindowStart(NOW))
+      )
+    );
+  });
+
+  test('counts every identifier the same account answers to', async () => {
+    findMany.mockResolvedValue([]);
+
+    await isThrottled(['jane@example.com', '0700000000'], NOW);
+
+    // One budget across both, or an account reachable by email and contact
+    // gets twice the documented limit.
+    expect(findMany.mock.calls[0][0].where).toEqual(
+      and(
+        inArray(loginAttempts.identifier, ['jane@example.com', '0700000000']),
+        eq(loginAttempts.succeeded, false),
+        gte(loginAttempts.createdAt, loginAttemptWindowStart(NOW))
+      )
     );
   });
 });
@@ -156,21 +180,57 @@ describe('recordLoginAttempt', () => {
   });
 });
 
-describe('clearLoginFailures / deleteLoginAttemptsBefore', () => {
+describe('clearLoginFailures', () => {
   beforeEach(() => {
-    deleteWhere.mockClear();
-    deleteReturning.mockReset();
+    deleteWhere.mockReset();
+    deleteWhere.mockResolvedValue({ rowCount: 0 });
   });
 
-  test('clearing issues a delete', async () => {
-    await clearLoginFailures('someone@example.com');
+  test('clears only the failures inside the window, for every identifier', async () => {
+    await clearLoginFailures(['jane@example.com', '0700000000'], NOW);
 
+    // Bounded on purpose. An unbounded delete let a slow grind that finally
+    // guessed right erase its own history on the way in.
+    expect(deleteWhere).toHaveBeenCalledTimes(1);
+    expect(deleteWhere.mock.calls[0][0]).toEqual(
+      and(
+        inArray(loginAttempts.identifier, ['jane@example.com', '0700000000']),
+        eq(loginAttempts.succeeded, false),
+        gte(loginAttempts.createdAt, loginAttemptWindowStart(NOW))
+      )
+    );
+  });
+});
+
+describe('deleteLoginAttemptsBefore', () => {
+  beforeEach(() => {
+    deleteWhere.mockReset();
+    selectLimit.mockReturnValue('chunk-subquery');
+  });
+
+  test('reports how many rows went, counted by the driver', async () => {
+    deleteWhere.mockResolvedValue({ rowCount: 2 });
+
+    // A short chunk that comes back unfilled ends the loop.
+    expect(await deleteLoginAttemptsBefore(NOW, 10)).toBe(2);
     expect(deleteWhere).toHaveBeenCalledTimes(1);
   });
 
-  test('pruning reports how many rows went', async () => {
-    deleteReturning.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
+  test('keeps going while each chunk comes back full', async () => {
+    deleteWhere
+      .mockResolvedValueOnce({ rowCount: 2 })
+      .mockResolvedValueOnce({ rowCount: 2 })
+      .mockResolvedValueOnce({ rowCount: 1 });
 
-    expect(await deleteLoginAttemptsBefore(NOW)).toBe(2);
+    // Chunked so one unbounded DELETE cannot lock the table for the whole
+    // retention backlog or outrun the Inngest step timeout.
+    expect(await deleteLoginAttemptsBefore(NOW, 2)).toBe(5);
+    expect(deleteWhere).toHaveBeenCalledTimes(3);
+  });
+
+  test('treats a missing rowCount as nothing deleted', async () => {
+    deleteWhere.mockResolvedValue({ rowCount: null });
+
+    expect(await deleteLoginAttemptsBefore(NOW, 10)).toBe(0);
   });
 });

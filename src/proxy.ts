@@ -77,6 +77,14 @@ export default async function proxy(req: NextRequest) {
   // login no longer depends on it alone: the per-identifier throttle in
   // login-throttle.ts stands in front of every credential check regardless of
   // what this decision says.
+  //
+  // That reasoning covers /login and nothing else. An errored decision carries
+  // no rule attribution, so this cannot fail open on the rate limit alone:
+  // while Arcjet is unreachable, shield and bot detection are off across the
+  // entire matcher too, and nothing inside the app replaces them. Arcjet also
+  // returns an error decision when a declared characteristic cannot be
+  // resolved, so a deployment where `ip.src` is unavailable runs permanently
+  // unprotected while looking healthy.
   // Alert on this line — it means the whole edge layer is silently off.
   if (decision.isErrored()) {
     console.error('ARCJET_DECISION_ERROR', {
