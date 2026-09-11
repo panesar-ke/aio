@@ -11,13 +11,14 @@ import type { ActionResult } from '@/lib/actions/types';
 
 import db from '@/drizzle/db';
 import { users } from '@/drizzle/schema';
+import { env } from '@/env/server';
 import { hashPassword } from '@/features/admin/utils/helpers';
 import { loginSchema } from '@/features/auth/actions/schema';
 import {
   clearLoginFailures,
-  isThrottled,
   LOGIN_ATTEMPT_WINDOW_MINUTES,
-  recordLoginAttempt,
+  markLoginAttemptSucceeded,
+  reserveLoginAttempt,
 } from '@/features/auth/services/login-throttle';
 import { verifyPassword } from '@/features/auth/utils/password';
 import {
@@ -39,22 +40,56 @@ import { createSession, deleteSession } from '@/lib/session';
  */
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid email/contact or password';
 
+const dummyPassword = randomBytes(32).toString('base64url');
+
 /**
- * A hash of throwaway random input, computed once at module load at the same
- * cost factor as every real password (`hashPassword` reads BCRYPT_ROUNDS).
+ * A hash of throwaway random input, computed once at module load at the cost
+ * factor `hashPassword` reads from BCRYPT_ROUNDS.
  *
  * Compared against when no user matches, so that branch spends the same bcrypt
  * time as a genuine wrong-password check. Skipping the comparison — as this
  * action used to — made "no such account" measurably faster to return and
  * leaked account existence by timing even once the messages were unified.
  */
-const dummyPasswordHash = hashPassword(randomBytes(32).toString('base64url'));
+let dummyPasswordHash = hashPassword(dummyPassword);
+
+/**
+ * The cost factor `dummyPasswordHash` was written at. BCRYPT_ROUNDS is only
+ * the opening guess: bcrypt.compare works at whatever cost the *stored* hash
+ * carries, so raising BCRYPT_ROUNDS for new passwords while existing accounts
+ * still verify at the old cost would leave this branch several times slower
+ * than a real check — reopening, in the opposite direction, the very oracle it
+ * exists to close.
+ */
+let dummyRounds = Number(env.BCRYPT_ROUNDS);
 
 // Marked handled so a hashing failure at import time cannot surface as an
 // unhandled rejection. The `await` below still observes the same rejection,
 // and catches it rather than letting it answer differently from a wrong
 // password.
 dummyPasswordHash.catch(() => {});
+
+/**
+ * Re-derives the dummy hash whenever a real stored hash turns out to carry a
+ * different cost factor, so the two paths stay matched across a rounds change
+ * without a second query to go looking for a representative hash.
+ */
+function noteStoredRounds(storedHash: string) {
+  let rounds: number;
+
+  try {
+    rounds = bcrypt.getRounds(storedHash);
+  } catch {
+    // Not a hash a cost can be read off. Nothing to learn from it.
+    return;
+  }
+
+  if (!Number.isInteger(rounds) || rounds === dummyRounds) return;
+
+  dummyRounds = rounds;
+  dummyPasswordHash = bcrypt.hash(dummyPassword, rounds);
+  dummyPasswordHash.catch(() => {});
+}
 
 /**
  * Names roughly when the caller can retry. A nonexistent identifier reaches
@@ -97,8 +132,11 @@ export const loginAction = async (
     // which a caller cannot set through a header.
     const attemptContext = {
       identifier,
+      // `||`, not `??`: a header that is present but empty trims to '', which
+      // is not nullish and would land in the column beside the NULLs that mean
+      // "unknown".
       ipAddress:
-        headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? null,
+        headersList.get('x-forwarded-for')?.split(',')[0].trim() || null,
       userAgent: headersList.get('user-agent'),
     };
 
@@ -124,13 +162,31 @@ export const loginAction = async (
       ),
     ];
 
-    const throttle = await isThrottled(throttleIdentifiers, now);
+    // Claimed, not merely checked. Counting the budget and recording the
+    // attempt as two statements let a burst of simultaneous submissions all
+    // read the same under-limit count before any of them wrote a row, so the
+    // documented five-per-window held only for callers who waited their turn.
+    //
+    // The reservation writes the attempt row up front — a failure until the
+    // password proves out — so nothing below has to record one, and a request
+    // that dies mid-flight still counts. A refusal writes nothing: see
+    // reserveLoginAttempt on why counting refusals stopped the window from
+    // ever expiring.
+    //
+    // It is also the one write every login performs, successful or not, which
+    // is what keeps a broken table (an unmigrated environment, say) from
+    // answering differently for a right password than a wrong one.
+    const reservation = await reserveLoginAttempt(
+      {
+        ...attemptContext,
+        identifiers: throttleIdentifiers,
+        userId: user?.id ?? null,
+      },
+      now,
+    );
 
-    // Nothing is written for a refusal. Recording them pushed `retryAfter`
-    // later with every retry, so the block stopped expiring for anyone who
-    // followed the message's own advice — see recordLoginAttempt.
-    if (throttle.throttled) {
-      throw new ActionError(throttleMessage(throttle.retryAfter, now));
+    if (!reservation.reserved) {
+      throw new ActionError(throttleMessage(reservation.retryAfter, now));
     }
 
     if (!user) {
@@ -150,9 +206,10 @@ export const loginAction = async (
         console.error('Failed to equalize login timing:', equalizationError);
       }
 
-      await recordLoginAttempt({ ...attemptContext, succeeded: false });
       throw new ActionError(INVALID_CREDENTIALS_MESSAGE);
     }
+
+    noteStoredRounds(user.password);
 
     const verification = await verifyPassword(data.password, user.password, {
       // Only a hash that has never been rewritten since the casing fix can be
@@ -161,11 +218,7 @@ export const loginAction = async (
     });
 
     if (!verification.ok) {
-      await recordLoginAttempt({
-        ...attemptContext,
-        succeeded: false,
-        userId: user.id,
-      });
+      // The reserved row already stands as this failure.
       throw new ActionError(INVALID_CREDENTIALS_MESSAGE);
     }
 
@@ -174,11 +227,6 @@ export const loginAction = async (
     // them the account is deactivated explains the problem to its owner
     // without answering "does this account exist" for anyone else.
     if (!user.active) {
-      await recordLoginAttempt({
-        ...attemptContext,
-        succeeded: false,
-        userId: user.id,
-      });
       throw new ActionError('Account is deactivated');
     }
 
@@ -186,11 +234,7 @@ export const loginAction = async (
     // are already proved by this point, so a write failure must not turn a
     // valid login into 'Something went wrong'.
     try {
-      await recordLoginAttempt({
-        ...attemptContext,
-        succeeded: true,
-        userId: user.id,
-      });
+      await markLoginAttemptSucceeded(reservation.attemptId);
 
       // Self-heals the counter now rather than leaving someone who mistyped a
       // few times one slip from being throttled for the rest of the window.

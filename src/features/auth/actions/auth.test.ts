@@ -9,13 +9,13 @@ const {
   findFirst,
   hashPassword,
   headersGet,
-  isThrottled,
-  recordLoginAttempt,
+  markLoginAttemptSucceeded,
+  reserveLoginAttempt,
   verifyPassword,
 } = vi.hoisted(() => ({
   findFirst: vi.fn(),
-  isThrottled: vi.fn(),
-  recordLoginAttempt: vi.fn(),
+  reserveLoginAttempt: vi.fn(),
+  markLoginAttemptSucceeded: vi.fn(),
   clearLoginFailures: vi.fn(),
   verifyPassword: vi.fn(),
   createSession: vi.fn(),
@@ -50,8 +50,8 @@ vi.mock('@/features/admin/utils/helpers', () => ({
 }));
 
 vi.mock('@/features/auth/services/login-throttle', () => ({
-  isThrottled,
-  recordLoginAttempt,
+  reserveLoginAttempt,
+  markLoginAttemptSucceeded,
   clearLoginFailures,
   LOGIN_ATTEMPT_WINDOW_MINUTES: 15,
 }));
@@ -88,10 +88,13 @@ describe('loginAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    isThrottled.mockResolvedValue({ throttled: false, retryAfter: null });
+    reserveLoginAttempt.mockResolvedValue({
+      reserved: true,
+      attemptId: 'attempt-1',
+    });
     // clearAllMocks keeps implementations, so anything a test makes reject has
     // to be put back explicitly.
-    recordLoginAttempt.mockResolvedValue(undefined);
+    markLoginAttemptSucceeded.mockResolvedValue(undefined);
     clearLoginFailures.mockResolvedValue(undefined);
     hashPassword.mockResolvedValue('hashed');
     headersGet.mockReturnValue(null);
@@ -185,8 +188,8 @@ describe('loginAction', () => {
 
   describe('throttling', () => {
     test('refuses once the account is throttled, before any password check', async () => {
-      isThrottled.mockResolvedValue({
-        throttled: true,
+      reserveLoginAttempt.mockResolvedValue({
+        reserved: false,
         retryAfter: new Date(Date.now() + 8 * 60 * 1000),
       });
 
@@ -198,22 +201,27 @@ describe('loginAction', () => {
       expect(verifyPassword).not.toHaveBeenCalled();
     });
 
-    test('a refusal is not recorded, so retrying cannot extend the block', async () => {
-      isThrottled.mockResolvedValue({
-        throttled: true,
+    test('a refusal leaves no trace the caller could accumulate', async () => {
+      reserveLoginAttempt.mockResolvedValue({
+        reserved: false,
         retryAfter: new Date(Date.now() + 8 * 60 * 1000),
       });
 
       await loginAction(credentials());
 
-      // isThrottled reads retryAfter off the row at `count - LIMIT`, so every
-      // extra row pushes it later: recording refusals meant the window only
-      // expired for a caller who stopped following its own advice.
-      expect(recordLoginAttempt).not.toHaveBeenCalled();
+      // The reservation is the only writer, and it writes nothing when it
+      // refuses — retryAfter is read off the row at `count - LIMIT`, so a
+      // recorded refusal pushed the block later every time the caller followed
+      // the message's own advice.
+      expect(markLoginAttemptSucceeded).not.toHaveBeenCalled();
+      expect(clearLoginFailures).not.toHaveBeenCalled();
     });
 
     test('does not refuse while under the threshold', async () => {
-      isThrottled.mockResolvedValue({ throttled: false, retryAfter: null });
+      reserveLoginAttempt.mockResolvedValue({
+        reserved: true,
+        attemptId: 'attempt-1',
+      });
 
       const result = await loginAction(credentials());
 
@@ -228,12 +236,12 @@ describe('loginAction', () => {
 
       // loginSchema trims and lowercases before anything sees it, so a varied
       // capitalization cannot buy a fresh budget.
-      expect(isThrottled).toHaveBeenCalledWith(
-        ['jane@example.com', '0700000000'],
+      expect(reserveLoginAttempt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          identifier: 'jane@example.com',
+          identifiers: ['jane@example.com', '0700000000'],
+        }),
         expect.any(Date)
-      );
-      expect(recordLoginAttempt).toHaveBeenCalledWith(
-        expect.objectContaining({ identifier: 'jane@example.com' })
       );
     });
 
@@ -242,8 +250,10 @@ describe('loginAction', () => {
 
       // Counting the submitted string alone gave an account reachable both
       // ways two independent budgets — ten tries per window, not five.
-      expect(isThrottled).toHaveBeenCalledWith(
-        ['0700000000', 'jane@example.com'],
+      expect(reserveLoginAttempt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          identifiers: ['0700000000', 'jane@example.com'],
+        }),
         expect.any(Date)
       );
     });
@@ -253,30 +263,57 @@ describe('loginAction', () => {
 
       await loginAction(credentials({ userName: 'nobody@example.com' }));
 
-      expect(isThrottled).toHaveBeenCalledWith(
-        ['nobody@example.com'],
+      expect(reserveLoginAttempt).toHaveBeenCalledWith(
+        expect.objectContaining({ identifiers: ['nobody@example.com'] }),
         expect.any(Date)
       );
     });
 
-    test('a failed attempt is recorded against the resolved user', async () => {
+    test('the claimed attempt carries the resolved user', async () => {
       verifyPassword.mockResolvedValue({ ok: false });
 
       await loginAction(credentials());
 
-      expect(recordLoginAttempt).toHaveBeenCalledWith(
-        expect.objectContaining({ succeeded: false, userId: 'user-1' })
+      // Claimed up front and left standing as a failure: nothing marks it
+      // succeeded, and nothing clears the counter.
+      expect(reserveLoginAttempt).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'user-1' }),
+        expect.any(Date)
       );
+      expect(markLoginAttemptSucceeded).not.toHaveBeenCalled();
       expect(clearLoginFailures).not.toHaveBeenCalled();
+    });
+
+    test('a throttle write failure denies every login the same way', async () => {
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      reserveLoginAttempt.mockRejectedValue(new Error('relation not found'));
+
+      const known = await loginAction(credentials());
+
+      findFirst.mockResolvedValue(undefined);
+      const unknown = await loginAction(credentials());
+
+      // The reservation runs before the password check, so an unmigrated or
+      // broken table takes down right and wrong passwords alike. Recording
+      // only on the failure paths made a broken table answer 'Something went
+      // wrong' for every failure while successes sailed through — a cleaner
+      // oracle than any of the timing this action guards against.
+      expect(known).toEqual({
+        error: true,
+        message: 'Something went wrong. Please try again.',
+      });
+      expect(unknown).toEqual(known);
+
+      consoleError.mockRestore();
     });
   });
 
   test('a successful login records the success and clears prior failures', async () => {
     const result = await loginAction(credentials());
 
-    expect(recordLoginAttempt).toHaveBeenCalledWith(
-      expect.objectContaining({ succeeded: true, userId: 'user-1' })
-    );
+    expect(markLoginAttemptSucceeded).toHaveBeenCalledWith('attempt-1');
     expect(clearLoginFailures).toHaveBeenCalledWith(
       ['jane@example.com', '0700000000'],
       expect.any(Date)
@@ -293,7 +330,9 @@ describe('loginAction', () => {
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    recordLoginAttempt.mockRejectedValue(new Error('connection terminated'));
+    markLoginAttemptSucceeded.mockRejectedValue(
+      new Error('connection terminated')
+    );
 
     const result = await loginAction(credentials());
 
@@ -331,15 +370,28 @@ describe('loginAction', () => {
 
     await loginAction(credentials());
 
-    expect(recordLoginAttempt).toHaveBeenCalledWith(
+    expect(reserveLoginAttempt).toHaveBeenCalledWith(
       expect.objectContaining({
         ipAddress: '203.0.113.7',
         userAgent: 'Mozilla/5.0 (test)',
-      })
+        // Nothing gates on the audit fields: the budget keys on identifiers.
+        identifiers: ['jane@example.com', '0700000000'],
+      }),
+      expect.any(Date)
     );
-    // Nothing gates on it: the throttle sees only identifiers.
-    expect(isThrottled).toHaveBeenCalledWith(
-      ['jane@example.com', '0700000000'],
+  });
+
+  test('an empty forwarding header is stored as unknown, not as blank', async () => {
+    headersGet.mockImplementation((name: string) =>
+      name === 'x-forwarded-for' ? '   ' : null
+    );
+
+    await loginAction(credentials());
+
+    // '' is not nullish, so `?? null` kept it and the column ended up holding
+    // a mix of NULL and '' for the same "we do not know".
+    expect(reserveLoginAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({ ipAddress: null }),
       expect.any(Date)
     );
   });

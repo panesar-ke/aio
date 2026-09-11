@@ -38,11 +38,12 @@ export async function decrypt(session: string | undefined = '') {
 
 function getClientIp(headersList: Headers): string | null {
   // Vercel's edge network sets x-forwarded-for; first value is the original client.
-  const forwardedFor = headersList.get('x-forwarded-for');
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
-  }
-  return headersList.get('x-real-ip');
+  const forwardedFor = headersList.get('x-forwarded-for')?.split(',')[0].trim();
+
+  // `||` throughout: a header that is present but empty trims to '', which is
+  // not nullish, so `??` would store an empty string in the column where every
+  // other "unknown" is NULL.
+  return forwardedFor || headersList.get('x-real-ip')?.trim() || null;
 }
 
 export async function createSession(

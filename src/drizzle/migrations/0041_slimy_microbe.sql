@@ -1,1 +1,1 @@
-DROP TABLE "login_attempts" CASCADE;
+DROP TABLE IF EXISTS "login_attempts" CASCADE;
