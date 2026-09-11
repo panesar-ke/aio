@@ -81,6 +81,17 @@ function failures(n: number, minutesAgo: number) {
   }));
 }
 
+/**
+ * The values a `sql` template will bind as parameters, in order. Literal SQL
+ * arrives as `StringChunk` objects and the interpolated primitives sit between
+ * them untouched, so the primitives are the params.
+ */
+function boundParams(query: unknown) {
+  return (query as { queryChunks: Array<unknown> }).queryChunks.filter(
+    chunk => chunk === null || typeof chunk !== 'object'
+  );
+}
+
 function reserve(identifiers: Array<string>) {
   return reserveLoginAttempt(
     { identifiers, identifier: identifiers[0] },
@@ -257,6 +268,26 @@ describe('reserveLoginAttempt', () => {
     // Signing in by email and by contact must serialize against each other, or
     // the shared budget is only shared for callers who take turns.
     expect(execute.mock.calls[1][0]).toEqual(execute.mock.calls[0][0]);
+  });
+
+  test('builds a lock key Postgres will accept as a parameter', async () => {
+    findMany.mockResolvedValue([]);
+
+    await reserve(['jane@example.com', '0700000000']);
+
+    const key = boundParams(execute.mock.calls[0][0]).find(
+      value => typeof value === 'string'
+    );
+
+    // The key is bound, not inlined, and Postgres text cannot carry a NUL
+    // byte: a separator no identifier can contain is worthless if it also
+    // cannot reach the server. Joining on one failed every login by a user
+    // with both an email and a contact, before the password was ever checked,
+    // with `invalid byte sequence for encoding "UTF8": 0x00`.
+    expect(key).not.toMatch(/\u0000/);
+    // Still a separator, though: concatenating bare would let two different
+    // identifier sets hash to one key and serialize against each other.
+    expect(key).not.toBe('0700000000jane@example.com');
   });
 
   test('bounds the client-controlled strings it stores', async () => {

@@ -76,11 +76,17 @@ type ThrottleReader = Pick<typeof db, 'query'>;
 /**
  * One lock key per identifier *set*, sorted so the same account serializes on
  * the same key whether the caller submitted its email or its contact. Joined
- * on NUL, which a normalized identifier cannot contain, so no two sets can
- * collide by concatenating to the same string.
+ * on a unit separator, which a normalized identifier cannot contain, so no two
+ * sets can collide by concatenating to the same string.
+ *
+ * Not NUL, the obvious separator for that job: the key is bound as a query
+ * parameter, and Postgres text cannot carry a NUL byte. It never reached the
+ * server — it failed the statement outright with `invalid byte sequence for
+ * encoding "UTF8": 0x00`, and with it every login by a user who has both an
+ * email and a contact, before the password was ever checked.
  */
 function throttleLockKey(identifiers: ReadonlyArray<string>) {
-  return [...identifiers].sort().join('\u0000');
+  return [...identifiers].sort().join('\u001f');
 }
 
 /**
