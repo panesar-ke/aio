@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { MAX_LOGIN_IDENTIFIER_LENGTH } from '@/features/auth/utils/login-attempt-fields';
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/password-policy';
 import {
   requiredPasswordSchemaEntry,
@@ -8,7 +9,13 @@ import {
 } from '@/lib/schema-rules';
 
 export const loginSchema = z.object({
-  userName: requiredStringSchemaEntry('Email/contact is required'),
+  // Bounded, unlike most identifiers in this app: every failed sign-in stores
+  // this string in an indexed column, so an unbounded one breaks the insert
+  // and with it the throttle — see login-attempt-fields.ts.
+  userName: requiredStringSchemaEntry('Email/contact is required').max(
+    MAX_LOGIN_IDENTIFIER_LENGTH,
+    'Email/contact is too long'
+  ),
   password: requiredPasswordSchemaEntry('Password is required').min(
     6,
     'Password must be at least 6 characters long'
@@ -16,7 +23,10 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  identifier: requiredStringSchemaEntry('Email or contact is required'),
+  identifier: requiredStringSchemaEntry('Email or contact is required').max(
+    MAX_LOGIN_IDENTIFIER_LENGTH,
+    'Email or contact is too long'
+  ),
 });
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;

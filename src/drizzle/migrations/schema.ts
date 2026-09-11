@@ -1893,14 +1893,6 @@ export const mrqHeaders = pgTable(
   ],
 );
 
-export const loginAttempts = pgTable('login_attempts', {
-  id: uuid().defaultRandom().primaryKey().notNull(),
-  userName: text('user_name').notNull(),
-  timestamp: timestamp({ mode: 'string' }).defaultNow().notNull(),
-  success: text().notNull(),
-  ipAddress: text('ip_address').notNull(),
-});
-
 export const sessions = pgTable(
   'sessions',
   {
