@@ -9,8 +9,8 @@ import {
 export function useDashboardPeriod() {
   return useQueryState(
     'period',
-    parseAsStringEnum<DashboardPeriod>([...DASHBOARD_PERIODS]).withDefault(
-      DEFAULT_DASHBOARD_PERIOD,
-    ),
+    parseAsStringEnum<DashboardPeriod>([...DASHBOARD_PERIODS])
+      .withDefault(DEFAULT_DASHBOARD_PERIOD)
+      .withOptions({ shallow: false }),
   );
 }
