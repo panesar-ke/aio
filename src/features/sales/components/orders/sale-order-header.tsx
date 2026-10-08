@@ -1,4 +1,8 @@
-import { queryOptions, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
 import type { Option } from '@/types/index.types';
@@ -28,6 +32,38 @@ const exchangeRateOptions = () =>
     refetchOnWindowFocus: false,
     refetchInterval: 60 * 60 * 1000,
   });
+
+const kraPinOptions = (accountId: string) =>
+  queryOptions({
+    queryKey: ['account-kra-pin', accountId],
+    queryFn: async () => {
+      const res = await fetch(`/api/sales/accounts/${accountId}/kra-pin`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch KRA PIN');
+      }
+      const data: { kraPin: string | null } = await res.json();
+      return data.kraPin;
+    },
+    refetchOnWindowFocus: false,
+  });
+
+function AccountKraPin({ accountId }: { accountId: string }) {
+  const { data, isPending, isFetching } = useQuery({
+    ...kraPinOptions(accountId),
+    enabled: Boolean(accountId),
+  });
+  const loading = Boolean(accountId) && (isPending || isFetching);
+  return (
+    <Field>
+      <FieldLabel>KRA PIN</FieldLabel>
+      <Input
+        readOnly
+        value={loading ? '' : data?.trim() || 'N/A'}
+        placeholder={loading ? 'Loading...' : undefined}
+      />
+    </Field>
+  );
+}
 
 export const SaleOrderHeader = withForm({
   ...saleOrderFormOpts(),
@@ -115,6 +151,9 @@ export const SaleOrderHeader = withForm({
                 )}
               </form.AppField>
             )}
+          </form.Subscribe>
+          <form.Subscribe selector={(state) => state.values.accountId}>
+            {(accountId) => <AccountKraPin accountId={accountId} />}
           </form.Subscribe>
         </FieldGroup>
         <FieldGroup className='grid grid-cols-1 gap-6 p-5 sm:grid-cols-3 pt-0'>
