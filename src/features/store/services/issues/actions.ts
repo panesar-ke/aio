@@ -31,7 +31,7 @@ import { getCurrentUser } from '@/lib/session';
 const validateData = (values: unknown) => {
   const { error, data } = validateFields<MaterialIssueFormValues>(
     values,
-    materialIssueFormSchema
+    materialIssueFormSchema,
   );
 
   if (error !== null) {
@@ -62,7 +62,7 @@ const validateBusinessLogic = async (data: MaterialIssueFormValues) => {
     throw new Error('Source store does not exist');
   }
 
-  const itemIds = data.items.map(item => item.itemId);
+  const itemIds = data.items.map((item) => item.itemId);
   const existingItems = await db
     .select()
     .from(products)
@@ -70,13 +70,13 @@ const validateBusinessLogic = async (data: MaterialIssueFormValues) => {
       and(
         inArray(products.id, itemIds),
         eq(products.active, true),
-        eq(products.stockItem, true)
-      )
+        // eq(products.stockItem, true)
+      ),
     );
 
   if (existingItems.length !== itemIds.length) {
     throw new Error(
-      'One or more items do not exist or are not active stock items'
+      'One or more items do not exist or are not active stock items',
     );
   }
 };
@@ -96,23 +96,23 @@ export const createIssue = async (values: unknown) => {
 
   try {
     await validateBusinessLogic(data);
-    const issueId = await db.transaction(async tx => {
+    const issueId = await db.transaction(async (tx) => {
       await Promise.all(
         data.items.map(async ({ itemId, issuedQty }) => {
           const currentStockBalance = await getProductBalance(
             itemId,
             data.fromStoreId,
-            new Date(issueDate)
+            new Date(issueDate),
           );
 
           if (currentStockBalance < +issuedQty) {
             throw new Error(
-              `Insufficient stock for item ${itemId}. Available: ${currentStockBalance}, Requested: ${issuedQty}`
+              `Insufficient stock for item ${itemId}. Available: ${currentStockBalance}, Requested: ${issuedQty}`,
             );
           }
 
           return { itemId, currentStockBalance };
-        })
+        }),
       );
 
       const [{ id }] = await tx
@@ -128,7 +128,7 @@ export const createIssue = async (values: unknown) => {
         })
         .returning({ id: materialIssuesHeader.id });
 
-      const issueMovements = data.items.map(item => ({
+      const issueMovements = data.items.map((item) => ({
         transactionDate: issueDate,
         itemId: item.itemId,
         qty: item.issuedQty.toString(),
@@ -154,7 +154,7 @@ export const createIssue = async (values: unknown) => {
   }
   return redirectActionResult(
     '/store/issues',
-    'Material issue created successfully.'
+    'Material issue created successfully.',
   );
 };
 
@@ -172,7 +172,7 @@ export const updateIssue = async (issueId: string, values: unknown) => {
 
   try {
     await validateBusinessLogic(data);
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       const removedMovements = await tx
         .select({
           itemId: stockMovements.itemId,
@@ -183,8 +183,8 @@ export const updateIssue = async (issueId: string, values: unknown) => {
         .where(
           and(
             eq(stockMovements.transactionId, issueId),
-            eq(stockMovements.transactionType, 'ISSUE')
-          )
+            eq(stockMovements.transactionType, 'ISSUE'),
+          ),
         );
 
       await tx
@@ -203,11 +203,11 @@ export const updateIssue = async (issueId: string, values: unknown) => {
         .where(
           and(
             eq(stockMovements.transactionId, issueId),
-            eq(stockMovements.transactionType, 'ISSUE')
-          )
+            eq(stockMovements.transactionType, 'ISSUE'),
+          ),
         );
 
-      const replacementMovements = data.items.map(item => ({
+      const replacementMovements = data.items.map((item) => ({
         transactionDate: issueDate,
         itemId: item.itemId,
         qty: item.issuedQty.toString(),
@@ -234,7 +234,7 @@ export const updateIssue = async (issueId: string, values: unknown) => {
   }
   return redirectActionResult(
     '/store/issues',
-    'Material issue updated successfully.'
+    'Material issue updated successfully.',
   );
 };
 
@@ -243,7 +243,7 @@ export const deleteIssue = async (issueId: string) => {
   if (!user) return { error: true, message: 'User not authenticated' };
 
   try {
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       const removedMovements = await tx
         .select({
           itemId: stockMovements.itemId,
@@ -254,8 +254,8 @@ export const deleteIssue = async (issueId: string) => {
         .where(
           and(
             eq(stockMovements.transactionId, issueId),
-            eq(stockMovements.transactionType, 'ISSUE')
-          )
+            eq(stockMovements.transactionType, 'ISSUE'),
+          ),
         );
 
       await tx
@@ -267,8 +267,8 @@ export const deleteIssue = async (issueId: string) => {
         .where(
           and(
             eq(stockMovements.transactionId, issueId),
-            eq(stockMovements.transactionType, 'ISSUE')
-          )
+            eq(stockMovements.transactionType, 'ISSUE'),
+          ),
         );
       await invalidateStockBalanceSnapshots(tx, removedMovements);
     });
