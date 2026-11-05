@@ -1,6 +1,7 @@
 import { serve } from "inngest/next";
 
 import { inngest } from "@/inngest/client";
+import { pruneLoginAttempts } from "@/inngest/functions/login-attempts-prune";
 import { processProductImport } from "@/inngest/functions/products-import";
 import { runStoreProductDeactivation } from "@/inngest/functions/store-product-deactivation";
 import { sendUserNewPassword } from "@/inngest/functions/users";
@@ -13,6 +14,7 @@ export const { GET, POST, PUT } = serve({
     sendUserNewPassword,
     processProductImport,
     runStoreProductDeactivation,
+    pruneLoginAttempts,
   ],
   streaming: true,
 });

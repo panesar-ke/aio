@@ -1,4 +1,5 @@
 import type { SQL } from 'drizzle-orm';
+import type * as ReactModule from 'react';
 
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -53,10 +54,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('react', async () => {
-  const actual = await vi.importActual<typeof import('react')>('react');
+  const actual = await vi.importActual<typeof ReactModule>('react');
   return {
     ...actual,
-    cache: <T extends (...args: Array<any>) => any>(fn: T) => fn,
+    cache: <T extends (...args: Array<never>) => unknown>(fn: T) => fn,
   };
 });
 
