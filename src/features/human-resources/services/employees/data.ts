@@ -115,6 +115,19 @@ export async function getEmployees(): Promise<{
 export async function getEmployeesForExport(ids: Array<number>) {
   if (ids.length === 0) return [];
 
+  const [records, onLeaveIds] = await Promise.all([
+    exportQuery(ids),
+    getOnLeaveIds(getNairobiToday()),
+  ]);
+
+  // Same derivation as the list, so exports match what users see.
+  return records.map(({ dbStatus, ...r }) => ({
+    ...r,
+    status: deriveDisplayStatus(dbStatus, onLeaveIds.has(r.id)),
+  }));
+}
+
+function exportQuery(ids: Array<number>) {
   const od = otherDetailsOnePerEmployee();
 
   return db
@@ -132,7 +145,7 @@ export async function getEmployeesForExport(ids: Array<number>) {
       designation: designations.designationName,
       employmentType: employees.employmentType,
       category: employees.employeeCategory,
-      status: employees.employeeStatus,
+      dbStatus: employees.employeeStatus,
       joiningDate: employees.joiningDate,
       contractDate: employees.contractDate,
       contractDuration: employees.contractDuration,

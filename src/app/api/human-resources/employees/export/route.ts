@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getEmployeesForExport } from '@/features/human-resources/services/employees/data';
+import { STATUS_LABELS } from '@/features/human-resources/utils/employees/employees.types';
 import {
   EXPORT_COLUMN_KEYS,
   EXPORT_COLUMNS,
@@ -16,7 +17,7 @@ import { requireAnyPermission } from '@/lib/permissions/guards';
 import { hasPermission } from '@/lib/permissions/service';
 
 const bodySchema = z.object({
-  ids: z.array(z.number().int()).min(1).max(5000),
+  ids: z.array(z.number().int()).min(1),
   columns: z.array(z.enum(EXPORT_COLUMN_KEYS as [ExportColumnKey, ...Array<ExportColumnKey>])).min(1),
 });
 
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       designation: r => r.designation,
       employmentType: r => enumText(r.employmentType),
       category: r => enumText(r.category),
-      status: r => enumText(r.status),
+      status: r => STATUS_LABELS[r.status],
       joiningDate: r => r.joiningDate ?? '',
       contractDate: r => r.contractDate ?? '',
       contractDuration: r => (r.contractDuration > 0 ? r.contractDuration : ''),

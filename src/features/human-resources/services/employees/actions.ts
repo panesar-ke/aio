@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import db from '@/drizzle/db';
@@ -82,10 +82,21 @@ export const exitEmployee = async (values: unknown) =>
       );
       if (dateError) throw new ActionError(dateError);
 
-      await tx
+      // Guard on ACTIVE so a concurrent exit can't also pass: the loser matches
+      // no row and rolls back before writing its termination record.
+      const exited = await tx
         .update(employees)
         .set({ employeeStatus: data.status })
-        .where(eq(employees.id, data.employeeId));
+        .where(
+          and(
+            eq(employees.id, data.employeeId),
+            eq(employees.employeeStatus, 'ACTIVE'),
+          ),
+        )
+        .returning({ id: employees.id });
+      if (exited.length === 0) {
+        throw new ActionError('This employee has already exited.');
+      }
 
       await tx.insert(employeeTerminations).values({
         id: crypto.randomUUID(),
@@ -123,21 +134,31 @@ export const reinstateEmployee = async (values: unknown) =>
         throw new ActionError('Only terminated, resigned or retired employees can be reinstated.');
       }
 
-      // A fresh hire replaces the joining date, so only check it otherwise.
+      // Always validate against the original joining date; a fresh hire only
+      // replaces it afterwards.
       const dateError = validateEffectiveDate(
         data.effectiveDate,
-        data.resetJoiningDate ? null : employee.joiningDate,
+        employee.joiningDate,
         getNairobiToday(),
       );
       if (dateError) throw new ActionError(dateError);
 
-      await tx
+      const reinstated = await tx
         .update(employees)
         .set({
           employeeStatus: 'ACTIVE',
           ...(data.resetJoiningDate ? { joiningDate: data.effectiveDate } : {}),
         })
-        .where(eq(employees.id, data.employeeId));
+        .where(
+          and(
+            eq(employees.id, data.employeeId),
+            inArray(employees.employeeStatus, [...REINSTATABLE_STATUSES]),
+          ),
+        )
+        .returning({ id: employees.id });
+      if (reinstated.length === 0) {
+        throw new ActionError('This employee has already been reinstated.');
+      }
 
       await setTerminationDetails(tx, data.employeeId, {
         terminated: false,

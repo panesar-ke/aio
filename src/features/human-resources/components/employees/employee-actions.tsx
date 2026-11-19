@@ -53,12 +53,12 @@ import {
   EXIT_STATUS_OPTIONS,
   REINSTATABLE_STATUSES,
 } from '@/features/human-resources/utils/employees/schema';
+import { getNairobiToday } from '@/features/human-resources/utils/employees/tenure';
 
 type ExitStatus = (typeof EXIT_STATUS_OPTIONS)[number]['value'];
 
-// Date inputs work in the browser's local date; Kenya has no DST so this
-// matches Nairobi for local users.
-const today = () => new Date().toLocaleDateString('en-CA');
+// The Nairobi calendar date the server validates against, whatever the browser's timezone.
+const today = () => getNairobiToday();
 
 export function EmployeeActions({
   employee,

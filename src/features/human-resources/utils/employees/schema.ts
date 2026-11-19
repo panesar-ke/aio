@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
 import { EXIT_STATUSES } from '@/features/human-resources/utils/employees/employees.types';
+import { isValidIsoDate } from '@/features/human-resources/utils/employees/tenure';
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Select a valid date');
+const isoDate = z.string().refine(isValidIsoDate, 'Select a valid date');
 
 export const exitEmployeeSchema = z.object({
   employeeId: z.number().int().positive(),

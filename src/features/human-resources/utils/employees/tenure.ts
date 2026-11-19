@@ -29,6 +29,19 @@ export function formatTenure(joined: string, today: string) {
     .join(' ');
 }
 
+/** True for a real yyyy-MM-dd calendar date (rejects 2026-02-30, accepts leap days). */
+export function isValidIsoDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const [year, month, day] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
 /**
  * Returns an error message if `effectiveDate` is not a valid exit/reinstatement
  * date, or null when it is fine. All dates are yyyy-MM-dd.
@@ -38,6 +51,7 @@ export function validateEffectiveDate(
   joiningDate: string | null,
   today: string,
 ) {
+  if (!isValidIsoDate(effectiveDate)) return 'Select a valid date.';
   if (effectiveDate > today) return 'The effective date cannot be in the future.';
   if (joiningDate && effectiveDate < joiningDate) {
     return 'The effective date cannot be before the employee’s joining date.';
