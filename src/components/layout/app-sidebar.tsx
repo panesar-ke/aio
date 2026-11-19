@@ -199,6 +199,17 @@ const NAV_ITEMS: Array<NavItem> = [
     ],
   },
   {
+    title: 'Human Resources',
+    permissions: ['hr:admin', 'hr:standard'],
+    items: [
+      {
+        label: 'Employees',
+        href: '/human-resources/employees',
+        icon: UsersIcon,
+      },
+    ],
+  },
+  {
     title: 'IT',
     permissions: ['it:admin', 'it:standard'],
     items: [
