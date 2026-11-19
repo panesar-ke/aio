@@ -75,7 +75,9 @@ export function ClientActiveSessionsPage({
       cell: ({ row }) => (
         <div className='flex items-center gap-x-2'>
           <CreatorAvatar userName={row.original.userName} />
-          <span className='text-sm capitalize'>{row.original.userName}</span>
+          <span className='text-sm capitalize'>
+            {row.original.userName.toLowerCase()}
+          </span>
         </div>
       ),
     },
