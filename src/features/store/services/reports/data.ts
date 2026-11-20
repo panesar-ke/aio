@@ -57,6 +57,7 @@ export const getStockMovementReport = async (values: unknown) => {
       sortDir === "desc"
         ? desc(products.productName)
         : asc(products.productName),
+      asc(stockMovements.itemId),
     )
     .limit(pageSize)
     .offset(offset);

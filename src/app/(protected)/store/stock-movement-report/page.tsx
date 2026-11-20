@@ -134,6 +134,10 @@ async function SuspendedStockMovementReport({
       page={page}
       pageSize={pageSize}
       sortDir={sortDir}
+      storeId={storeId}
+      from={from}
+      to={to}
+      search={search}
     />
   );
 }
