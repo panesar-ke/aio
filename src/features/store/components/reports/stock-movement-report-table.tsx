@@ -9,7 +9,9 @@ import type { StockMovementReportRow } from '@/features/store/utils/store.types'
 
 import { DataTable } from '@/components/custom/datatable';
 import { DataTableColumnHeader } from '@/components/custom/datatable-column-header';
+import { ExcelIcon } from '@/components/custom/icons';
 import Search from '@/components/custom/search';
+import { Button } from '@/components/ui/button';
 import { numberFormat } from '@/lib/helpers/formatters';
 
 type Props = {
@@ -18,6 +20,10 @@ type Props = {
   page: number;
   pageSize: number;
   sortDir: 'asc' | 'desc';
+  storeId: string;
+  from: string;
+  to: string;
+  search?: string;
 };
 
 const numericColumn = (
@@ -38,6 +44,10 @@ export function StockMovementReportTable({
   page,
   pageSize,
   sortDir,
+  storeId,
+  from,
+  to,
+  search,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -101,13 +111,31 @@ export function StockMovementReportTable({
     numericColumn('closingBalance', 'Closing Bal'),
   ];
 
+  const exportParams = new URLSearchParams({
+    storeId,
+    from,
+    to,
+    sortDir,
+  });
+  if (search) exportParams.set('search', search);
+
   return (
     <div className="space-y-4">
-      <Search
-        placeholder="Search by product name..."
-        onHandleSearch={handleSearchChange}
-        defaultValue={searchParams.get('search') ?? ''}
-      />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Search
+          placeholder="Search by product name..."
+          onHandleSearch={handleSearchChange}
+          defaultValue={searchParams.get('search') ?? ''}
+        />
+        {data.length > 0 && (
+          <Button variant="excelExport" asChild>
+            <a href={`/api/store/stock-movement-report/export?${exportParams.toString()}`}>
+              <ExcelIcon />
+              Export To Excel
+            </a>
+          </Button>
+        )}
+      </div>
       <DataTable
         columns={columns}
         data={data}
