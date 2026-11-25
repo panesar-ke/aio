@@ -183,12 +183,21 @@ describe('toFormValues', () => {
       ...src,
       employee: { ...src.employee, employmentType: 'PERMANENT' },
     });
-    expect(toDbRecords(values).employee).toMatchObject({
+    const records = toDbRecords(values);
+    expect(records.employee).toMatchObject({
       department: 3,
       designation: 7,
       employeeCategory: 'WORKFLOOR',
       workfloorType: 'UNIONISABLE',
       joiningDate: '2024-01-15',
     });
+    expect(records.qualifications[0]?.to).toBe('2020-05-01');
+  });
+
+  it('writes a changed qualification year instead of the stored full date', () => {
+    const values = toFormValues(src);
+    values.education[0]!.year = '2021';
+
+    expect(toDbRecords(values).qualifications[0]?.to).toBe('2021');
   });
 });

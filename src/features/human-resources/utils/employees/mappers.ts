@@ -22,8 +22,15 @@ export function contractMonths(start: string, end: string) {
 const nokPhone = (value: string) =>
   normalizeKenyanPhone(value) ?? orNull(value);
 
+export type EmployeeFormMapperValues = EmployeeFormValues & {
+  qualificationEndDates?: Record<string, string>;
+};
+
 /** Database-ready rows for one employee (no ids; the action supplies them). */
-export function toDbRecords(v: EmployeeFormValues) {
+export function toDbRecords(
+  v: EmployeeFormMapperValues,
+  qualificationEndDates = v.qualificationEndDates ?? {},
+) {
   const permanent = v.employmentTerms === 'PERMANENT';
   const contractDate = v.contractDate || v.joiningDate;
   const expiryDate = permanent ? null : orNull(v.expiryDate);
@@ -88,15 +95,21 @@ export function toDbRecords(v: EmployeeFormValues) {
       .map((d) => ({ childname: d.name, dob: d.dob })),
     qualifications: v.education
       .filter((e) => e.school)
-      .map((e) => ({
-        id: e.id,
-        qualificationType: e.type,
-        from: orNull(e.from),
-        to: orNull(e.year),
-        school: e.school,
-        attainment: orNull(e.attainment),
-        specialization: orNull(e.specialization),
-      })),
+      .map((e) => {
+        const storedEndDate = qualificationEndDates[e.id];
+        const endDate =
+          storedEndDate?.slice(0, 4) === e.year ? storedEndDate : e.year;
+
+        return {
+          id: e.id,
+          qualificationType: e.type,
+          from: orNull(e.from),
+          to: orNull(endDate),
+          school: e.school,
+          attainment: orNull(e.attainment),
+          specialization: orNull(e.specialization),
+        };
+      }),
   };
 }
 
@@ -163,7 +176,7 @@ type FormSource = {
 };
 
 /** Initial form values for editing, from the stored rows. */
-export function toFormValues(src: FormSource): EmployeeFormValues {
+export function toFormValues(src: FormSource): EmployeeFormMapperValues {
   const { employee: e, contact, nok, other } = src;
 
   // Older records used UNIONISABLE / NON-UNIONISABLE as the category itself.
@@ -227,6 +240,11 @@ export function toFormValues(src: FormSource): EmployeeFormValues {
       name: c.childname ?? '',
       dob: c.dob ?? '',
     })),
+    qualificationEndDates: Object.fromEntries(
+      src.qualifications
+        .filter((q) => q.id && q.to)
+        .map((q) => [q.id, q.to!]),
+    ),
     education: src.qualifications.map((q) => ({
       id: q.id,
       type: q.qualificationType,

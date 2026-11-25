@@ -328,6 +328,22 @@ export const saveEmployee = async (values: unknown, employeeId?: number) =>
             throw new ActionError('Only active employees can be edited.');
           }
           id = employeeId;
+
+          const storedQualifications = await tx
+            .select({
+              id: employeeQualifications.id,
+              to: employeeQualifications.to,
+            })
+            .from(employeeQualifications)
+            .where(eq(employeeQualifications.employeeId, id));
+          rec.qualifications = toDbRecords(
+            data,
+            Object.fromEntries(
+              storedQualifications
+                .filter((q) => q.to)
+                .map((q) => [q.id, q.to!]),
+            ),
+          ).qualifications;
         } else {
           // employees.id has no sequence; serialise id allocation.
           await tx.execute(
