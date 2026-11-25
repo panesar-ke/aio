@@ -105,6 +105,15 @@ describe('toDbRecords', () => {
             year: '2020',
           },
           {
+            id: 'q2',
+            type: 'training',
+            from: '',
+            school: '',
+            attainment: '',
+            specialization: '',
+            year: '',
+          },
+          {
             id: '',
             type: 'academic',
             from: '',
@@ -124,6 +133,15 @@ describe('toDbRecords', () => {
         to: '2020',
         school: 'KIM',
         attainment: 'Diploma',
+        specialization: null,
+      },
+      {
+        id: 'q2',
+        qualificationType: 'training',
+        from: null,
+        to: null,
+        school: null,
+        attainment: null,
         specialization: null,
       },
     ]);
@@ -199,5 +217,16 @@ describe('toFormValues', () => {
     values.education[0]!.year = '2021';
 
     expect(toDbRecords(values).qualifications[0]?.to).toBe('2021');
+  });
+
+  it('omits an existing qualification only after the user removes its row', () => {
+    const values = toFormValues({
+      ...src,
+      qualifications: [{ ...src.qualifications[0]!, school: null }],
+    });
+    expect(toDbRecords(values).qualifications).toHaveLength(1);
+
+    values.education = [];
+    expect(toDbRecords(values).qualifications).toEqual([]);
   });
 });

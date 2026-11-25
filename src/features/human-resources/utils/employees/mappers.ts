@@ -94,7 +94,9 @@ export function toDbRecords(
       .filter((d) => d.name && d.dob)
       .map((d) => ({ childname: d.name, dob: d.dob })),
     qualifications: v.education
-      .filter((e) => e.school)
+      // Existing rows must survive even if legacy data has no school. Only a
+      // new row with no institution is an unused form placeholder.
+      .filter((e) => e.id || e.school)
       .map((e) => {
         const storedEndDate = qualificationEndDates[e.id];
         const endDate =
@@ -105,7 +107,7 @@ export function toDbRecords(
           qualificationType: e.type,
           from: orNull(e.from),
           to: orNull(endDate),
-          school: e.school,
+          school: orNull(e.school),
           attainment: orNull(e.attainment),
           specialization: orNull(e.specialization),
         };
