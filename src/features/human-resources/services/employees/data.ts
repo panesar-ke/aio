@@ -1,11 +1,16 @@
 import { and, asc, desc, eq, gte, inArray, lte } from 'drizzle-orm';
 
+import type { Option } from '@/types/index.types';
+
 import db from '@/drizzle/db';
 import {
   departments,
   designations,
+  employeeQualifications,
   employees,
+  employeesChildren,
   employeesContacts,
+  employeesNoks,
   employeesOtherdetails,
   employeeTerminations,
   leaveApplications,
@@ -16,6 +21,7 @@ import {
   type EmployeeStats,
   isExited,
 } from '@/features/human-resources/utils/employees/employees.types';
+import { toFormValues } from '@/features/human-resources/utils/employees/mappers';
 import {
   formatTenure,
   getNairobiToday,
@@ -243,5 +249,84 @@ export async function getEmployeeDetails(
     // Same derivation as the list, so the status never differs between pages.
     status: deriveDisplayStatus(employee.dbStatus, onLeaveIds.has(id)),
     lastExit: lastExit ?? null,
+  };
+}
+
+/** Departments and designations for the employee form. */
+export async function getEmployeeFormOptions(currentDesignationId?: number) {
+  const [depts, desigs] = await Promise.all([
+    db
+      .select({ id: departments.id, name: departments.departmentName })
+      .from(departments)
+      .orderBy(asc(departments.departmentName)),
+    db
+      .select({
+        id: designations.id,
+        name: designations.designationName,
+        active: designations.active,
+      })
+      .from(designations)
+      .orderBy(asc(designations.designationName)),
+  ]);
+
+  return {
+    departments: depts.map<Option>((d) => ({ value: String(d.id), label: d.name })),
+    // Inactive designations are hidden, except the one an employee already holds.
+    designations: desigs
+      .filter((d) => d.active || d.id === currentDesignationId)
+      .map<Option>((d) => ({ value: String(d.id), label: d.name })),
+  };
+}
+
+/** Everything the form needs to edit one employee, or null if not found. */
+export async function getEmployeeForEdit(id: number) {
+  const [employee] = await db
+    .select({
+      surname: employees.surname,
+      otherNames: employees.otherNames,
+      gender: employees.gender,
+      dob: employees.dob,
+      maritalStatus: employees.maritalStatus,
+      idNo: employees.idNo,
+      payrollNo: employees.payrollNo,
+      department: employees.department,
+      designation: employees.designation,
+      employmentType: employees.employmentType,
+      contractDate: employees.contractDate,
+      joiningDate: employees.joiningDate,
+      expiryDate: employees.expiryDate,
+      employeeCategory: employees.employeeCategory,
+      workfloorType: employees.workfloorType,
+      nationality: employees.nationality,
+      ethnicity: employees.ethnicity,
+      remarks: employees.remarks,
+      status: employees.employeeStatus,
+    })
+    .from(employees)
+    .where(and(eq(employees.id, id), eq(employees.isDeleted, false)))
+    .limit(1);
+
+  if (!employee) return null;
+
+  const [[contact], [nok], [other], children, qualifications] = await Promise.all([
+    db.select().from(employeesContacts).where(eq(employeesContacts.employeeId, id)).limit(1),
+    db.select().from(employeesNoks).where(eq(employeesNoks.employeeId, id)).limit(1),
+    db.select().from(employeesOtherdetails).where(eq(employeesOtherdetails.employeeId, id)).limit(1),
+    db.select().from(employeesChildren).where(eq(employeesChildren.employeeId, id)),
+    db.select().from(employeeQualifications).where(eq(employeeQualifications.employeeId, id)),
+  ]);
+
+  const { status, ...rest } = employee;
+
+  return {
+    status,
+    values: toFormValues({
+      employee: rest,
+      contact: contact ?? null,
+      nok: nok ?? null,
+      other: other ?? null,
+      children,
+      qualifications,
+    }),
   };
 }
