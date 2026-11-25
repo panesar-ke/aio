@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(coderabbit:coderabbit-review)",
+      "Bash(npx tsc *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(sorted\\(list\\(d.get\\('dependencies',{}\\).keys\\(\\)\\)+list\\(d.get\\('devDependencies',{}\\).keys\\(\\)\\)\\)\\)\\)\")"
+    ]
+  }
+}

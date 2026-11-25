@@ -63,9 +63,11 @@ const today = () => getNairobiToday();
 export function EmployeeActions({
   employee,
   canDelete,
+  canEdit,
 }: {
   employee: EmployeeRow;
   canDelete: boolean;
+  canEdit: boolean;
 }) {
   const [dialog, setDialog] = useState<'exit' | 'reinstate' | null>(null);
   const exited = isExited(employee.status);
@@ -88,11 +90,15 @@ export function EmployeeActions({
             </Link>
           </DropdownMenuItem>
 
-          {!exited && (
-            // TODO: wire up once the shared employee form/action exists.
-            <DropdownMenuItem disabled>
-              <PencilIcon className='size-3 text-muted-foreground' />
-              Edit
+          {!exited && canEdit && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/human-resources/employees/${employee.id}/edit`}
+                prefetch={false}
+              >
+                <PencilIcon className='size-3 text-muted-foreground' />
+                Edit
+              </Link>
             </DropdownMenuItem>
           )}
 

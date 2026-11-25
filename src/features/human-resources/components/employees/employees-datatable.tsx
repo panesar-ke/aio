@@ -61,7 +61,10 @@ function matchesStatus(row: EmployeeRow, tab: EmployeeStatusTab) {
   return row.status === tab;
 }
 
-const getColumns = (canDelete: boolean): Array<ColumnDef<EmployeeRow>> => [
+const getColumns = (
+  canDelete: boolean,
+  canEdit: boolean,
+): Array<ColumnDef<EmployeeRow>> => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
@@ -141,7 +144,7 @@ const getColumns = (canDelete: boolean): Array<ColumnDef<EmployeeRow>> => [
   {
     id: 'actions',
     cell: ({ row: { original: e } }) => (
-      <EmployeeActions employee={e} canDelete={canDelete} />
+      <EmployeeActions employee={e} canDelete={canDelete} canEdit={canEdit} />
     ),
   },
 ];
@@ -151,6 +154,7 @@ type Props = {
   stats: EmployeeStats;
   canExportSensitive: boolean;
   canDelete: boolean;
+  canEdit: boolean;
 };
 
 export function EmployeesDatatable({
@@ -158,9 +162,13 @@ export function EmployeesDatatable({
   stats,
   canExportSensitive,
   canDelete,
+  canEdit,
 }: Props) {
   const [filters, setFilters] = useQueryStates(filterParsers);
-  const columns = useMemo(() => getColumns(canDelete), [canDelete]);
+  const columns = useMemo(
+    () => getColumns(canDelete, canEdit),
+    [canDelete, canEdit],
+  );
 
   const departments = useMemo(
     () => [...new Set(rows.map((r) => r.department))].sort(),

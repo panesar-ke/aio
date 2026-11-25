@@ -43,6 +43,7 @@ async function SuspendedEmployees() {
       stats={stats}
       canExportSensitive={isHrAdmin}
       canDelete={isHrAdmin}
+      canEdit={isHrAdmin}
     />
   );
 }
