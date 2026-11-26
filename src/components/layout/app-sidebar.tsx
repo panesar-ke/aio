@@ -207,6 +207,11 @@ const NAV_ITEMS: Array<NavItem> = [
         href: '/human-resources/employees',
         icon: UsersIcon,
       },
+      {
+        label: 'Leave Management',
+        href: '/human-resources/leave-management',
+        icon: ListCheckIcon,
+      },
     ],
   },
   {
