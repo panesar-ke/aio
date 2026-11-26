@@ -1,5 +1,6 @@
 'use client';
 
+import { format, parseISO } from 'date-fns';
 import {
   CalendarIcon,
   ChevronLeftIcon,
@@ -13,8 +14,9 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from 'nuqs';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 
+import { DatePicker } from '@/components/custom/date-range';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -40,8 +42,14 @@ import { LeaveStatusPill } from '@/features/human-resources/components/leave/lea
 import { printLeave } from '@/features/human-resources/components/leave/print-leave';
 import {
   getLeaveBalance,
+  type LeaveHistoryRow,
   type LeaveTypeAllocation,
 } from '@/features/human-resources/utils/leave/balance';
+import {
+  leaveDateParams,
+  type LeaveDateRange,
+  resolveLeaveDateRange,
+} from '@/features/human-resources/utils/leave/date-range';
 import {
   filterLeaves,
   formatLeaveDate,
@@ -53,6 +61,7 @@ import {
   type LeaveDecision,
   type LeaveRow,
 } from '@/features/human-resources/utils/leave/leave.types';
+import { cn } from '@/lib/utils';
 
 const ALL = 'all';
 const PAGE_SIZES = [10, 25, 50];
@@ -64,10 +73,15 @@ const filterParsers = {
   status: parseAsStringLiteral(LEAVE_STATUSES),
   page: parseAsInteger.withDefault(1),
   size: parseAsInteger.withDefault(PAGE_SIZES[0]),
+  // The dates narrow what the server fetches, so changing them reloads the rows.
+  from: leaveDateParams.from.withOptions({ shallow: false }),
+  to: leaveDateParams.to.withOptions({ shallow: false }),
 };
 
 type Props = {
   rows: Array<LeaveRow>;
+  balanceHistory: Array<LeaveHistoryRow>;
+  defaultDateRange: LeaveDateRange;
   leaveTypes: Array<{ id: number; name: string } & LeaveTypeAllocation>;
   employees: Array<{ id: number; name: string }>;
   canManage: boolean;
@@ -75,11 +89,15 @@ type Props = {
 
 export function LeaveDatatable({
   rows,
+  balanceHistory,
+  defaultDateRange,
   leaveTypes,
   employees,
   canManage,
 }: Props) {
-  const [query, setQuery] = useQueryStates(filterParsers);
+  const [isLoading, startTransition] = useTransition();
+  const [query, setQuery] = useQueryStates(filterParsers, { startTransition });
+  const dateRange = resolveLeaveDateRange(query, defaultDateRange);
   const [viewing, setViewing] = useState<number | null>(null);
   const [deciding, setDeciding] = useState<{
     decision: LeaveDecision;
@@ -112,7 +130,10 @@ export function LeaveDatatable({
 
   function print(leave: LeaveRow) {
     const type = leaveTypes.find((t) => t.id === leave.leaveTypeId);
-    void printLeave(leave, type ? getLeaveBalance(leave, rows, type) : null);
+    void printLeave(
+      leave,
+      type ? getLeaveBalance(leave, balanceHistory, type) : null,
+    );
   }
 
   /** Changing a filter always returns to the first page. */
@@ -152,6 +173,22 @@ export function LeaveDatatable({
           employees={employees}
           value={query.staff}
           onChange={(staff) => filterBy({ staff })}
+        />
+
+        <DatePicker
+          className='bg-card sm:w-72'
+          initialDateRange={{
+            from: parseISO(dateRange.from),
+            to: parseISO(dateRange.to),
+          }}
+          onDateChange={({ from, to }) =>
+            filterBy({
+              from: from ? format(from, 'yyyy-MM-dd') : null,
+              // A range with only its first day picked means that one day.
+              to: from ? format(to ?? from, 'yyyy-MM-dd') : null,
+            })
+          }
+          onReset={() => filterBy({ from: null, to: null })}
         />
       </div>
 
@@ -199,7 +236,13 @@ export function LeaveDatatable({
         </Tabs>
       </div>
 
-      <div className='bg-card overflow-hidden rounded-xl border'>
+      <div
+        aria-busy={isLoading}
+        className={cn(
+          'bg-card overflow-hidden rounded-xl border transition-opacity',
+          isLoading && 'opacity-60',
+        )}
+      >
         {visible.length === 0 ? (
           <div className='flex flex-col items-center gap-2 px-4 py-16 text-center'>
             <CalendarIcon className='text-muted-foreground size-8 stroke-[1.25]' />

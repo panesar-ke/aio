@@ -5,6 +5,17 @@ export type LeaveTypeAllocation = {
   allocationWorkshop: number;
 };
 
+/** What an earlier application contributes to a balance. */
+export type LeaveHistoryRow = Pick<
+  LeaveRow,
+  | 'leaveNo'
+  | 'employeeId'
+  | 'leaveTypeId'
+  | 'status'
+  | 'startDate'
+  | 'daysTaken'
+>;
+
 export type LeaveBalance = {
   due: number;
   taken: number;
@@ -22,7 +33,7 @@ export type LeaveBalance = {
  */
 export function getLeaveBalance(
   leave: LeaveRow,
-  rows: Array<LeaveRow>,
+  history: Array<LeaveHistoryRow>,
   allocation: LeaveTypeAllocation,
 ): LeaveBalance | null {
   const due =
@@ -32,7 +43,7 @@ export function getLeaveBalance(
   if (due <= 0) return null;
 
   const yearStart = `${leave.startDate.slice(0, 4)}-01-01`;
-  const taken = rows
+  const taken = history
     .filter(
       (r) =>
         r.leaveNo !== leave.leaveNo &&

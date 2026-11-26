@@ -1,5 +1,16 @@
 import 'server-only';
-import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lt,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
 
 import db from '@/drizzle/db';
 import {
@@ -10,6 +21,8 @@ import {
   leaveTypes,
   users,
 } from '@/drizzle/schema';
+import { type LeaveHistoryRow } from '@/features/human-resources/utils/leave/balance';
+import { type LeaveDateRange } from '@/features/human-resources/utils/leave/date-range';
 import { wasHalfDay } from '@/features/human-resources/utils/leave/days';
 import {
   formatPersonName,
@@ -71,7 +84,11 @@ export async function getLeaveFilterEmployees() {
   }));
 }
 
-export async function getLeaveApplications(): Promise<Array<LeaveRow>> {
+/** Applications with at least one day of leave inside the range. */
+export async function getLeaveApplications({
+  from,
+  to,
+}: LeaveDateRange): Promise<Array<LeaveRow>> {
   const records = await db
     .select({
       leaveNo: leaveApplications.leaveNo,
@@ -95,7 +112,13 @@ export async function getLeaveApplications(): Promise<Array<LeaveRow>> {
     .innerJoin(employees, eq(leaveApplications.employeeId, employees.id))
     .innerJoin(leaveTypes, eq(leaveApplications.leaveTypeId, leaveTypes.id))
     .leftJoin(users, eq(leaveApplications.approvedBy, users.id))
-    .where(eq(leaveApplications.isDeleted, false))
+    .where(
+      and(
+        eq(leaveApplications.isDeleted, false),
+        lte(leaveApplications.startDate, to),
+        gte(leaveApplications.endDate, from),
+      ),
+    )
     .orderBy(
       desc(leaveApplications.applicationDate),
       desc(leaveApplications.leaveNo),
@@ -108,6 +131,41 @@ export async function getLeaveApplications(): Promise<Array<LeaveRow>> {
     isUnpaid: r.isUnpaid ?? false,
     approvedBy: r.approvedBy ? formatPersonName(r.approvedBy) : null,
   }));
+}
+
+/**
+ * The approved leave needed to work out the balance on a printout of any of
+ * `rows`. It reaches back to 1 January, which may be before the listed range.
+ */
+export async function getLeaveBalanceHistory(
+  rows: Array<LeaveRow>,
+): Promise<Array<LeaveHistoryRow>> {
+  if (rows.length === 0) return [];
+  const startDates = rows.map((r) => r.startDate).sort();
+
+  const records = await db
+    .select({
+      leaveNo: leaveApplications.leaveNo,
+      employeeId: leaveApplications.employeeId,
+      leaveTypeId: leaveApplications.leaveTypeId,
+      status: leaveApplications.leaveStatus,
+      startDate: leaveApplications.startDate,
+      daysTaken: leaveApplications.daysTaken,
+    })
+    .from(leaveApplications)
+    .where(
+      and(
+        eq(leaveApplications.isDeleted, false),
+        eq(leaveApplications.leaveStatus, 'APPROVED'),
+        inArray(leaveApplications.employeeId, [
+          ...new Set(rows.map((r) => r.employeeId)),
+        ]),
+        gte(leaveApplications.startDate, `${startDates[0].slice(0, 4)}-01-01`),
+        lt(leaveApplications.startDate, startDates[startDates.length - 1]),
+      ),
+    );
+
+  return records.map((r) => ({ ...r, daysTaken: Number(r.daysTaken) }));
 }
 
 /**
