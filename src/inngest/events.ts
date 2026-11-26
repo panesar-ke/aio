@@ -18,8 +18,16 @@ type StoreProductDeactivationEventData = {
   triggeredAt: string;
 };
 
+type LeaveDecidedEventData = {
+  leaveNo: number;
+};
+
 export const sendNewPasswordEvent = eventType('user/send.new.password', {
   schema: staticSchema<SendNewPasswordEventData>(),
+});
+
+export const leaveDecidedEvent = eventType('hr/leave.decided', {
+  schema: staticSchema<LeaveDecidedEventData>(),
 });
 
 export const productsImportRequestedEvent = eventType(PRODUCTS_IMPORT_EVENT, {
